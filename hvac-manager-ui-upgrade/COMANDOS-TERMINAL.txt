@@ -1,0 +1,24 @@
+# Desde la raíz de tu proyecto HVAC Manager:
+
+# 1. Crear respaldo de App.jsx
+cp src/App.jsx src/App.backup.jsx
+
+# 2. Instalar Lucide si hace falta
+npm install lucide-react
+
+# 3. Copiar los archivos del paquete descargado dentro de tu proyecto
+# Ejemplo si descomprimes el paquete en Downloads:
+cp -R ~/Downloads/hvac-manager-ui-upgrade/src/components/layout src/components/
+cp -R ~/Downloads/hvac-manager-ui-upgrade/src/components/ui src/components/
+cp -R ~/Downloads/hvac-manager-ui-upgrade/src/pages src/
+cp ~/Downloads/hvac-manager-ui-upgrade/src/App.example.jsx src/App.example.jsx
+
+# 4. Probar con el App de ejemplo
+cp src/App.example.jsx src/App.jsx
+
+# 5. Correr proyecto
+npm run dev
+
+# 6. Si algo sale mal, regresar al respaldo
+cp src/App.backup.jsx src/App.jsx
+npm run dev

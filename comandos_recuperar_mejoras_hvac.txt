@@ -1,0 +1,5 @@
+# Ejecuta esto desde la raíz del proyecto hvac-manager
+
+cp -R ./src ./src_respaldo_antes_recuperacion
+unzip -o ~/Downloads/paquete_recuperacion_mejoras_hvac.zip -d .
+npm run dev -- --host --port 5174
