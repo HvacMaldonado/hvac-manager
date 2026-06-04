@@ -15,7 +15,7 @@ export async function obtenerClientesSupabase() {
 }
 
 export async function crearClienteSupabase(cliente) {
-  const { data, error } = await supabase
+  const { data: clienteCreado, error: clienteError } = await supabase
     .from("clientes")
     .insert({
       nombre: cliente.nombre,
@@ -27,7 +27,24 @@ export async function crearClienteSupabase(cliente) {
     .select()
     .single();
 
-  if (error) throw error;
+  if (clienteError) throw clienteError;
 
-  return data;
+  if (cliente.direccion) {
+    const { error: direccionError } = await supabase
+      .from("cliente_direcciones")
+      .insert({
+        cliente_id: clienteCreado.id,
+        etiqueta: "Principal",
+        direccion: cliente.direccion,
+        apartamento: cliente.apartamento || "",
+        edificio: cliente.edificio || "",
+        codigo_acceso: cliente.codigoAcceso || "",
+        principal: true,
+        activo: true,
+      });
+
+    if (direccionError) throw direccionError;
+  }
+
+  return clienteCreado;
 }
