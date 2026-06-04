@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { crearClienteSupabase } from "./services/clientesService";
+import { crearClienteSupabase, obtenerClientesSupabase } from "./services/clientesService";
 import {
   AlertCircle,
   AlertTriangle,
@@ -377,6 +377,40 @@ export default function App() {
   const [tecnicoHerramientasSeleccionado, setTecnicoHerramientasSeleccionado] = useState("");
   const [citaForm, setCitaForm] = useState({ clienteId: "", tecnicoId: "", fecha: "", hora: "", motivo: "", notas: "" });
   const [reporteFiltro, setReporteFiltro] = useState({ texto: "", tecnicoId: "", clienteId: "", estado: "", fechaInicio: "", fechaFin: "" });
+
+  useEffect(() => {
+    async function cargarClientesSupabase() {
+      try {
+        const clientesSupabase = await obtenerClientesSupabase();
+
+        const normalizados = clientesSupabase.map((cliente) => {
+          const direccionPrincipal =
+            cliente.cliente_direcciones?.find((d) => d.principal) ||
+            cliente.cliente_direcciones?.[0] ||
+            {};
+
+          return {
+            id: cliente.id,
+            nombre: cliente.nombre || "",
+            telefono: cliente.telefono || "",
+            email: cliente.email || "",
+            direccion: direccionPrincipal.direccion || "",
+            apartamento: direccionPrincipal.apartamento || "",
+            calle: "",
+            codigoAcceso: direccionPrincipal.codigo_acceso || "",
+            edificio: direccionPrincipal.edificio || "",
+            fechaCreacion: cliente.created_at || "",
+          };
+        });
+
+        setClientes(normalizados);
+      } catch (error) {
+        console.error("Error cargando clientes desde Supabase:", error);
+      }
+    }
+
+    cargarClientesSupabase();
+  }, []);
 
   useEffect(() => localStorage.setItem("clientes", JSON.stringify(clientes)), [clientes]);
   useEffect(() => localStorage.setItem("ordenes", JSON.stringify(ordenes)), [ordenes]);
