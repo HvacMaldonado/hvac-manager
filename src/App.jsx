@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { crearClienteSupabase } from "./services/clientesService";
 import {
   AlertCircle,
   AlertTriangle,
@@ -344,6 +345,8 @@ function normalizeOrden(orden) {
 }
 
 export default function App() {
+
+
   const [lang, setLang] = useState(() => localStorage.getItem("hvacLang") || "es");
   const t = (key) => TEXT[lang]?.[key] || TEXT.es[key] || key;
 
@@ -453,7 +456,7 @@ export default function App() {
     });
   };
 
-  const agregarCliente = () => {
+  const agregarCliente = async () => {
     if (!clienteForm.nombre || !clienteForm.telefono || !clienteForm.direccion) {
       return setMensaje("Nombre, teléfono y dirección son obligatorios.");
     }
@@ -473,12 +476,31 @@ export default function App() {
       return;
     }
 
-    const nuevo = {
-      id: Date.now(),
-      ...clienteForm,
-      telefono: formatPhoneUS(clienteForm.telefono),
-      fechaCreacion: new Date().toISOString(),
-    };
+    let nuevo;
+
+    try {
+      const clienteSupabase = await crearClienteSupabase({
+        ...clienteForm,
+        telefono: formatPhoneUS(clienteForm.telefono),
+      });
+
+      nuevo = {
+        id: clienteSupabase.id,
+        nombre: clienteSupabase.nombre,
+        telefono: clienteSupabase.telefono || "",
+        email: clienteSupabase.email || "",
+        direccion: clienteForm.direccion || "",
+        apartamento: clienteForm.apartamento || "",
+        calle: clienteForm.calle || "",
+        codigoAcceso: clienteForm.codigoAcceso || "",
+        edificio: clienteForm.edificio || "",
+        fechaCreacion: clienteSupabase.created_at || new Date().toISOString(),
+      };
+    } catch (error) {
+      console.error("Error guardando cliente en Supabase:", error);
+      setMensaje("No se pudo guardar el cliente en Supabase. Revisa la conexión o permisos.");
+      return;
+    }
 
     setClientes((actual) => [...actual, nuevo]);
     setOrdenForm((actual) => ({ ...actual, clienteId: String(nuevo.id) }));
