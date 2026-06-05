@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { crearClienteSupabase, obtenerClientesSupabase } from "./services/clientesService";
 import { obtenerTecnicosSupabase, crearTecnicoSupabase, actualizarTecnicoSupabase } from "./services/tecnicosService";
+import { obtenerCitasSupabase, crearCitaSupabase } from "./services/citasService";
 import {
   AlertCircle,
   AlertTriangle,
@@ -427,6 +428,20 @@ export default function App() {
     }
 
     cargarTecnicosSupabase();
+  }, []);
+
+
+  useEffect(() => {
+    async function cargarCitasSupabase() {
+      try {
+        const citasSupabase = await obtenerCitasSupabase();
+        setCitas(citasSupabase);
+      } catch (error) {
+        console.error("Error cargando citas desde Supabase:", error);
+      }
+    }
+
+    cargarCitasSupabase();
   }, []);
 
   useEffect(() => localStorage.setItem("clientes", JSON.stringify(clientes)), [clientes]);
@@ -1185,7 +1200,7 @@ const compartirOrden = async (orden, metodo) => {
     }
   };
 
-  const crearCita = () => {
+  const crearCita = async () => {
     if (!citaForm.clienteId || !citaForm.tecnicoId || !citaForm.fecha || !citaForm.hora) return setMensaje("Completa cliente, técnico, fecha y hora de la cita.");
 
     if (existeConflictoHorario({
@@ -1196,8 +1211,19 @@ const compartirOrden = async (orden, metodo) => {
       return setMensaje("Este técnico ya tiene una orden o cita programada para esa misma fecha y hora.");
     }
 
-    setCitas([...citas, { id: Date.now(), ...citaForm, estado: "Programada", fechaCreacion: new Date().toISOString() }]);
-    setCitaForm({ clienteId: "", tecnicoId: "", fecha: "", hora: "", motivo: "", notas: "" });
+    try {
+      const nuevaCita = await crearCitaSupabase({
+        ...citaForm,
+        estado: "Programada",
+      });
+
+      setCitas([...citas, nuevaCita]);
+      setCitaForm({ clienteId: "", tecnicoId: "", fecha: "", hora: "", motivo: "", notas: "" });
+    } catch (error) {
+      console.error("ERROR COMPLETO SUPABASE:", error);
+      alert(JSON.stringify(error, null, 2));
+      setMensaje("No se pudo guardar la cita en Supabase.");
+    }
   };
 
   const exportarCSV = (filas, nombre) => {
