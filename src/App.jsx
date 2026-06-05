@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { crearClienteSupabase, obtenerClientesSupabase } from "./services/clientesService";
 import { obtenerTecnicosSupabase, crearTecnicoSupabase, actualizarTecnicoSupabase } from "./services/tecnicosService";
 import { obtenerCitasSupabase, crearCitaSupabase } from "./services/citasService";
+import { obtenerOrdenesSupabase, crearOrdenSupabase } from "./services/ordenesService";
 import {
   AlertCircle,
   AlertTriangle,
@@ -444,6 +445,20 @@ export default function App() {
     cargarCitasSupabase();
   }, []);
 
+
+  useEffect(() => {
+    async function cargarOrdenesSupabase() {
+      try {
+        const ordenesSupabase = await obtenerOrdenesSupabase();
+        setOrdenes(ordenesSupabase);
+      } catch (error) {
+        console.error("Error cargando órdenes desde Supabase:", error);
+      }
+    }
+
+    cargarOrdenesSupabase();
+  }, []);
+
   useEffect(() => localStorage.setItem("clientes", JSON.stringify(clientes)), [clientes]);
   useEffect(() => localStorage.setItem("ordenes", JSON.stringify(ordenes)), [ordenes]);
   useEffect(() => localStorage.setItem("inventarioHVAC", JSON.stringify(inventario)), [inventario]);
@@ -608,7 +623,7 @@ export default function App() {
     return conflictoOrden || conflictoCita;
   };
 
-  const crearOrden = () => {
+  const crearOrden = async () => {
     const tecnicoSeleccionado = obtenerTecnico(ordenForm.tecnicoId);
 
     if (!ordenForm.clienteId || !ordenForm.tecnicoId || !ordenForm.problema) {
@@ -629,7 +644,6 @@ export default function App() {
 
     const fecha = new Date();
     const orden = {
-      id: Date.now(),
       clienteId: String(ordenForm.clienteId),
       tecnicoId: String(ordenForm.tecnicoId),
       problema: ordenForm.problema,
@@ -651,9 +665,16 @@ export default function App() {
       cancelReason: "",
     };
 
-    setOrdenes([...ordenes, orden]);
-    setOrdenForm({ clienteId: String(ordenForm.clienteId), problema: "", tecnicoId: "", prioridad: "Media", fechaProgramada: "", horaProgramada: "" });
-    setMensaje("Orden asignada correctamente. Ahora aparecerá en el panel del técnico seleccionado.");
+    try {
+      const nuevaOrden = await crearOrdenSupabase(orden);
+      setOrdenes([...ordenes, nuevaOrden]);
+      setOrdenForm({ clienteId: String(ordenForm.clienteId), problema: "", tecnicoId: "", prioridad: "Media", fechaProgramada: "", horaProgramada: "" });
+      setMensaje("Orden asignada correctamente. Ahora aparecerá en el panel del técnico seleccionado.");
+    } catch (error) {
+      console.error("Error guardando orden en Supabase:", error);
+      alert(JSON.stringify(error, null, 2));
+      setMensaje("No se pudo guardar la orden en Supabase.");
+    }
   };
 
   const convertirCitaEnOrden = (cita) => {
