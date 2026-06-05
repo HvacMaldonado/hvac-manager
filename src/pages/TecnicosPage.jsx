@@ -1,4 +1,5 @@
 import { TECNICO_COLOR_OPTIONS, getTecnicoTheme } from "../utils/tecnicoThemes";
+import { crearTecnicoSupabase } from "../services/tecnicosService";
 import { useMemo, useState } from "react";
 import {
   CalendarDays,
@@ -84,34 +85,39 @@ function NewTechnicianForm({ setTecnicos, tecnicos }) {
     setForm(next);
   };
 
-  const agregar = () => {
+  const agregar = async () => {
     if (!form.nombre.trim()) {
       alert("Ingresa el nombre del técnico.");
       return;
     }
 
-    const nuevo = {
-      id: makeTechnicianId(form.nombre),
-      nombre: form.nombre.trim(),
-      usuario: form.usuario.trim() || form.nombre.toLowerCase().replace(/\s+/g, "-"),
-      password: form.password || "1234",
-      telefono: form.telefono || "",
-      direccion: form.direccion || "",
-      fechaIngreso: form.fechaIngreso || "",
-      fechaSalida: "",
-      activo: true,
-    };
+    try {
+      const nuevo = await crearTecnicoSupabase({
+        nombre: form.nombre.trim(),
+        usuario: form.usuario.trim() || form.nombre.toLowerCase().replace(/\s+/g, "-"),
+        password: form.password || "1234",
+        telefono: form.telefono || "",
+        direccion: form.direccion || "",
+        fechaIngreso: form.fechaIngreso || "",
+        fechaSalida: "",
+        pagoHora: 0,
+        activo: true,
+      });
 
-    setTecnicos([...tecnicos, nuevo]);
+      setTecnicos([...tecnicos, nuevo]);
 
-    setForm({
-      nombre: "",
-      usuario: "",
-      password: "1234",
-      telefono: "",
-      direccion: "",
-      fechaIngreso: new Date().toISOString().slice(0, 10),
-    });
+      setForm({
+        nombre: "",
+        usuario: "",
+        password: "1234",
+        telefono: "",
+        direccion: "",
+        fechaIngreso: new Date().toISOString().slice(0, 10),
+      });
+    } catch (error) {
+      console.error("Error guardando técnico en Supabase:", error);
+      alert("No se pudo guardar el técnico en Supabase.");
+    }
   };
 
   return (

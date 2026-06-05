@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { crearClienteSupabase, obtenerClientesSupabase } from "./services/clientesService";
+import { obtenerTecnicosSupabase, crearTecnicoSupabase, actualizarTecnicoSupabase } from "./services/tecnicosService";
 import {
   AlertCircle,
   AlertTriangle,
@@ -410,6 +411,22 @@ export default function App() {
     }
 
     cargarClientesSupabase();
+  }, []);
+
+
+  useEffect(() => {
+    async function cargarTecnicosSupabase() {
+      try {
+        const tecnicosSupabase = await obtenerTecnicosSupabase();
+        if (tecnicosSupabase.length > 0) {
+          setTecnicos(tecnicosSupabase);
+        }
+      } catch (error) {
+        console.error("Error cargando técnicos desde Supabase:", error);
+      }
+    }
+
+    cargarTecnicosSupabase();
   }, []);
 
   useEffect(() => localStorage.setItem("clientes", JSON.stringify(clientes)), [clientes]);
@@ -1118,14 +1135,55 @@ const compartirOrden = async (orden, metodo) => {
   };
   const actualizarHerramienta = (id, campo, valor) => setHerramientas(herramientas.map((h) => h.id === id ? { ...h, [campo]: campo === "cantidad" ? Number(valor) : valor } : h));
 
-  const guardarTecnico = () => {
+  const guardarTecnico = async () => {
     const nombre = prompt("Nombre del técnico:");
     if (!nombre) return;
     const usuario = limpiarTexto(nombre).replace(/\s+/g, "-");
-    setTecnicos([...tecnicos, { id: `${usuario}-${Date.now()}`, nombre, usuario, password: "1234", activo: true, telefono: "", direccion: "", fechaIngreso: "", fechaSalida: "" }]);
+
+    try {
+      const nuevo = await crearTecnicoSupabase({
+        nombre,
+        usuario,
+        password: "1234",
+        activo: true,
+        telefono: "",
+        direccion: "",
+        fechaIngreso: "",
+        fechaSalida: "",
+        pagoHora: 0,
+      });
+
+      setTecnicos([...tecnicos, nuevo]);
+    } catch (error) {
+      console.error("Error guardando técnico en Supabase:", error);
+      setMensaje("No se pudo guardar el técnico en Supabase.");
+    }
   };
-  const actualizarTecnico = (id, campo, valor) => setTecnicos(tecnicos.map((tec) => tec.id === id ? { ...tec, [campo]: valor } : tec));
-  const darDeBajaTecnico = (id) => { const fecha = prompt("Fecha de salida:", new Date().toISOString().slice(0, 10)); if (fecha) setTecnicos(tecnicos.map((tec) => tec.id === id ? { ...tec, activo: false, fechaSalida: fecha } : tec)); };
+
+  const actualizarTecnico = async (id, campo, valor) => {
+    setTecnicos(tecnicos.map((tec) => tec.id === id ? { ...tec, [campo]: valor } : tec));
+
+    try {
+      await actualizarTecnicoSupabase(id, { [campo]: valor });
+    } catch (error) {
+      console.error("Error actualizando técnico en Supabase:", error);
+      setMensaje("No se pudo actualizar el técnico en Supabase.");
+    }
+  };
+
+  const darDeBajaTecnico = async (id) => {
+    const fecha = prompt("Fecha de salida:", new Date().toISOString().slice(0, 10));
+    if (!fecha) return;
+
+    setTecnicos(tecnicos.map((tec) => tec.id === id ? { ...tec, activo: false, fechaSalida: fecha } : tec));
+
+    try {
+      await actualizarTecnicoSupabase(id, { activo: false, fechaSalida: fecha });
+    } catch (error) {
+      console.error("Error dando de baja técnico en Supabase:", error);
+      setMensaje("No se pudo dar de baja el técnico en Supabase.");
+    }
+  };
 
   const crearCita = () => {
     if (!citaForm.clienteId || !citaForm.tecnicoId || !citaForm.fecha || !citaForm.hora) return setMensaje("Completa cliente, técnico, fecha y hora de la cita.");
