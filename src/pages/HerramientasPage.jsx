@@ -105,7 +105,7 @@ export default function HerramientasPage({
   const inputClass = "w-full rounded-2xl border border-slate-300 bg-white p-3 text-sm outline-none shadow-sm transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100";
   const rowInputClass = "w-full rounded-xl border border-slate-300 bg-white p-2 text-sm font-semibold text-slate-800 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100";
 
-  const agregarHerramientaParaTecnico = () => {
+  const agregarHerramientaParaTecnico = async () => {
     if (!tecnicoHerramientasSeleccionado) {
       alert("Selecciona un técnico antes de agregar herramientas.");
       return;
@@ -116,17 +116,13 @@ export default function HerramientasPage({
       return;
     }
 
-    const nueva = {
-      id: Date.now(),
+    await agregarHerramienta({
       nombre: herramientaForm.nombre,
       tecnicoId: tecnicoHerramientasSeleccionado,
       cantidad: Number(herramientaForm.cantidad || 1),
       estado: herramientaForm.estado || "Asignada",
       notas: herramientaForm.notas || "",
-      fechaAsignacion: new Date().toISOString(),
-    };
-
-    setHerramientas([...herramientas, nueva]);
+    });
 
     setHerramientaForm({
       nombre: "",

@@ -3,6 +3,7 @@ import { crearClienteSupabase, obtenerClientesSupabase } from "./services/client
 import { obtenerTecnicosSupabase, crearTecnicoSupabase, actualizarTecnicoSupabase } from "./services/tecnicosService";
 import { obtenerCitasSupabase, crearCitaSupabase } from "./services/citasService";
 import { obtenerOrdenesSupabase, crearOrdenSupabase } from "./services/ordenesService";
+import { obtenerHerramientasSupabase, crearHerramientaSupabase, actualizarHerramientaSupabase } from "./services/herramientasService";
 import {
   AlertCircle,
   AlertTriangle,
@@ -457,6 +458,20 @@ export default function App() {
     }
 
     cargarOrdenesSupabase();
+  }, []);
+
+
+  useEffect(() => {
+    async function cargarHerramientasSupabase() {
+      try {
+        const herramientasSupabase = await obtenerHerramientasSupabase();
+        setHerramientas(herramientasSupabase);
+      } catch (error) {
+        console.error("Error cargando herramientas desde Supabase:", error);
+      }
+    }
+
+    cargarHerramientasSupabase();
   }, []);
 
   useEffect(() => localStorage.setItem("clientes", JSON.stringify(clientes)), [clientes]);
@@ -1164,12 +1179,37 @@ const compartirOrden = async (orden, metodo) => {
   };
   const actualizarInventario = (id, campo, valor) => setInventario(inventario.map((i) => i.id === id ? { ...i, [campo]: ["cantidad", "costo", "stockMinimo"].includes(campo) ? Number(valor) : valor } : i));
 
-  const agregarHerramienta = () => {
+  const agregarHerramienta = async () => {
+    console.log("CREAR HERRAMIENTA", JSON.stringify(herramientaForm, null, 2));
     if (!herramientaForm.nombre || !herramientaForm.tecnicoId) return;
-    setHerramientas([...herramientas, { id: Date.now(), ...herramientaForm, cantidad: Number(herramientaForm.cantidad || 1) }]);
-    setHerramientaForm({ nombre: "", tecnicoId: "", cantidad: "", estado: "Disponible", notas: "" });
+
+    try {
+      const nuevaHerramienta = await crearHerramientaSupabase({
+        ...herramientaForm,
+        cantidad: Number(herramientaForm.cantidad || 1),
+      });
+
+      setHerramientas([...herramientas, nuevaHerramienta]);
+      setHerramientaForm({ nombre: "", tecnicoId: "", cantidad: "", estado: "Disponible", notas: "" });
+    } catch (error) {
+      console.error("Error guardando herramienta en Supabase:", error);
+      alert(JSON.stringify(error, null, 2));
+      setMensaje("No se pudo guardar la herramienta en Supabase.");
+    }
   };
-  const actualizarHerramienta = (id, campo, valor) => setHerramientas(herramientas.map((h) => h.id === id ? { ...h, [campo]: campo === "cantidad" ? Number(valor) : valor } : h));
+
+  const actualizarHerramienta = async (id, campo, valor) => {
+    const finalValue = campo === "cantidad" ? Number(valor) : valor;
+
+    setHerramientas(herramientas.map((h) => h.id === id ? { ...h, [campo]: finalValue } : h));
+
+    try {
+      await actualizarHerramientaSupabase(id, { [campo]: finalValue });
+    } catch (error) {
+      console.error("Error actualizando herramienta en Supabase:", error);
+      setMensaje("No se pudo actualizar la herramienta en Supabase.");
+    }
+  };
 
   const guardarTecnico = async () => {
     const nombre = prompt("Nombre del técnico:");
