@@ -395,53 +395,100 @@ export default function ReportesDashboardPage({ clientes, ordenes, inventario, h
         </div>
       </div>
 
-      <div className="space-y-4">
-        <section className="rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-md shadow-slate-300/50">
-          <h3 className="mb-4 flex items-center gap-2 text-base font-black text-slate-950">
-            <CalendarDays size={20} />
-            Historial mensual
-          </h3>
-
-          <div className="space-y-3">
-            {data.mensual.slice(0, 8).map((m) => (
-              <div key={m.mes} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                <div className="mb-2 flex items-center justify-between">
-                  <p className="font-black text-slate-950">{formatMonth(m.mes)}</p>
-                  <p className="text-sm font-black text-blue-700">{m.total} órdenes</p>
-                </div>
-                <div className="grid grid-cols-3 gap-2 text-center text-xs font-black">
-                  <div className="rounded-xl bg-emerald-50 p-2 text-emerald-700">Completadas {m.completadas}</div>
-                  <div className="rounded-xl bg-rose-50 p-2 text-rose-700">Canceladas {m.canceladas}</div>
-                  <div className="rounded-xl bg-blue-50 p-2 text-blue-700">Activas {m.activas}</div>
-                </div>
+      <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
+        <section className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/95 shadow-xl shadow-slate-300/50 backdrop-blur">
+          <div className="bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-800 p-5 text-white">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-200">Tendencia mensual</p>
+                <h3 className="mt-1 flex items-center gap-2 text-xl font-black">
+                  <CalendarDays size={22} />
+                  Historial operativo
+                </h3>
               </div>
-            ))}
+              <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black ring-1 ring-white/20">
+                {data.mensual.slice(0, 8).length} meses
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-4 p-5">
+            {data.mensual.slice(0, 8).map((m) => {
+              const percent = Math.max(6, Math.round((m.total / Math.max(...data.mensual.map((x) => x.total), 1)) * 100));
+              const completadasPercent = m.total ? Math.round((m.completadas / m.total) * 100) : 0;
+
+              return (
+                <div key={m.mes} className="rounded-[1.5rem] border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 shadow-md shadow-slate-200/70">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-black text-slate-950">{formatMonth(m.mes)}</p>
+                      <p className="text-xs font-semibold text-slate-500">{m.total} órdenes · {completadasPercent}% completadas</p>
+                    </div>
+                    <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">{m.total}</span>
+                  </div>
+
+                  <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                    <div className="h-full rounded-full bg-gradient-to-r from-blue-800 via-cyan-500 to-emerald-400" style={{ width: `${percent}%` }} />
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs font-black">
+                    <div className="rounded-2xl bg-emerald-50 p-2 text-emerald-700">Completadas {m.completadas}</div>
+                    <div className="rounded-2xl bg-rose-50 p-2 text-rose-700">Canceladas {m.canceladas}</div>
+                    <div className="rounded-2xl bg-blue-50 p-2 text-blue-700">Activas {m.activas}</div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
 
+        <section className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/95 shadow-xl shadow-slate-300/50 backdrop-blur">
+          <div className="bg-gradient-to-br from-cyan-700 via-blue-800 to-slate-950 p-5 text-white">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-100">Consumo</p>
+                <h3 className="mt-1 flex items-center gap-2 text-xl font-black">
+                  <Package size={22} />
+                  Materiales usados
+                </h3>
+              </div>
+              <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black ring-1 ring-white/20">
+                Top 10
+              </span>
+            </div>
+          </div>
 
-        <section className="rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-md shadow-slate-300/50 xl:col-span-2">
-          <h3 className="mb-4 flex items-center gap-2 text-base font-black text-slate-950">
-            <Package size={20} />
-            Consumo de materiales
-          </h3>
-
-          <div className="grid gap-2.5 md:grid-cols-2">
+          <div className="space-y-3 p-5">
             {data.consumoMateriales.length === 0 && (
-              <div className="rounded-2xl bg-slate-50 p-6 text-center text-sm font-semibold text-slate-500 md:col-span-2">
+              <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm font-semibold text-slate-500">
                 No hay materiales consumidos en las órdenes filtradas.
               </div>
             )}
 
-            {data.consumoMateriales.slice(0, 10).map((mat) => (
-              <div key={mat.nombre} className="rounded-2xl border border-slate-200 bg-white p-3">
-                <div className="mb-2 flex items-center justify-between gap-2.5">
-                  <p className="truncate font-black text-slate-950">{mat.nombre}</p>
-                  <span className="text-sm font-black text-emerald-700">{money(mat.costo)}</span>
+            {data.consumoMateriales.slice(0, 10).map((mat, index) => {
+              const percent = Math.max(5, Math.round((Number(mat.costo || 0) / Math.max(maxMaterial, 1)) * 100));
+
+              return (
+                <div key={mat.nombre} className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-md shadow-slate-200/70">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-xs font-black text-white">
+                        {index + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate font-black text-slate-950">{mat.nombre}</p>
+                        <p className="text-xs font-semibold text-slate-500">{mat.cantidad} unidades usadas</p>
+                      </div>
+                    </div>
+                    <span className="shrink-0 text-sm font-black text-emerald-700">{money(mat.costo)}</span>
+                  </div>
+
+                  <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                    <div className="h-full rounded-full bg-gradient-to-r from-cyan-600 via-blue-700 to-slate-950" style={{ width: `${percent}%` }} />
+                  </div>
                 </div>
-                <SimpleBar label={`${mat.cantidad} unidades usadas`} value={mat.costo} max={maxMaterial} />
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       </div>
