@@ -939,7 +939,7 @@ export default function App() {
     }
   };
 
-  const marcarNecesitaSeguimiento = (id) => {
+  const marcarNecesitaSeguimiento = async (id) => {
     const orden = ordenes.find((o) => o.id === id);
     if (!orden) return;
 
@@ -957,19 +957,25 @@ export default function App() {
 
     const fechaSugerida = prompt("Fecha sugerida para regresar (opcional, formato YYYY-MM-DD):", "");
 
+    const cambios = {
+      estado: "Necesita seguimiento",
+      seguimientoMotivo: motivo.trim(),
+      seguimientoFechaSugerida: fechaSugerida || "",
+      seguimientoFechaRegistro: new Date().toISOString(),
+    };
+
     setOrdenes(ordenes.map((o) => (
-      o.id === id
-        ? {
-            ...o,
-            estado: "Necesita seguimiento",
-            seguimientoMotivo: motivo.trim(),
-            seguimientoFechaSugerida: fechaSugerida || "",
-            seguimientoFechaRegistro: new Date().toISOString(),
-          }
-        : o
+      o.id === id ? { ...o, ...cambios } : o
     )));
 
-    setMensaje("Orden marcada como Necesita seguimiento. Seguirá apareciendo en órdenes activas.");
+    try {
+      await actualizarOrdenSupabase(id, cambios);
+      setMensaje("Orden marcada como Necesita seguimiento. Seguirá apareciendo en órdenes activas.");
+    } catch (error) {
+      console.error("Error guardando seguimiento en Supabase:", error);
+      alert(JSON.stringify(error, null, 2));
+      setMensaje("No se pudo guardar el seguimiento en Supabase.");
+    }
   };
   const guardarFirmaCliente = async (ordenId, firmaDataUrl) => {
     if (!firmaDataUrl) {
