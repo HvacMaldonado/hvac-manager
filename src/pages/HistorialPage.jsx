@@ -241,27 +241,37 @@ export default function HistorialPage({ t, ordenes, obtenerCliente, ordenProps }
                 <div className="absolute -right-16 -top-20 h-44 w-44 rounded-full bg-cyan-200/30 blur-3xl transition group-hover:bg-cyan-300/40" />
                 <div className="grid gap-5 p-5 pl-7 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
                   <div className="min-w-0">
-                    <div className="flex items-start gap-3">
-                      <div className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-3xl bg-gradient-to-br from-slate-950 via-blue-900 to-cyan-700 text-white shadow-lg shadow-blue-200/60">
-                        <UserRoundCheck size={22} />
-                      </div>
-
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="truncate text-lg font-black text-slate-950">{cliente?.nombre || "Cliente eliminado"}</p>
-                          <span className={`rounded-full border px-2.5 py-1 text-[11px] font-black ${statusClass(orden.estado)}`}>
-                            {orden.estado}
-                          </span>
-                          <span className={`rounded-full border px-2.5 py-1 text-[11px] font-black ${priorityClass(orden.prioridad)}`}>
-                            {orden.prioridad || "Media"}
-                          </span>
+                    <div className="relative overflow-hidden rounded-[1.8rem] border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-blue-50/70 p-4 shadow-sm ring-1 ring-white">
+                      <div className="absolute -right-10 -top-12 h-32 w-32 rounded-full bg-blue-200/30 blur-3xl" />
+                      <div className="relative flex items-start gap-4">
+                        <div className="inline-flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.4rem] bg-gradient-to-br from-slate-950 via-blue-900 to-cyan-700 text-white shadow-lg shadow-blue-200/70">
+                          <UserRoundCheck size={25} />
                         </div>
 
-                        <p className="mt-1 truncate text-sm font-semibold text-slate-500">{formatPhoneDisplay(cliente?.telefono || "")}</p>
-                        <p className="mt-1 line-clamp-1 text-sm font-semibold text-slate-500">
-                          <MapPin size={13} className="mr-1 inline text-blue-700" />
-                          {cliente?.direccion || "Sin dirección"}
-                        </p>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="max-w-full truncate text-2xl font-black leading-tight text-slate-950">
+                              {cliente?.nombre || "Cliente eliminado"}
+                            </p>
+                            <span className={`rounded-full border px-3 py-1 text-xs font-black ${statusClass(orden.estado)}`}>
+                              {orden.estado}
+                            </span>
+                            <span className={`rounded-full border px-3 py-1 text-xs font-black ${priorityClass(orden.prioridad)}`}>
+                              {orden.prioridad || "Media"}
+                            </span>
+                          </div>
+
+                          <div className="mt-3 grid gap-2 text-sm font-black text-slate-600 md:grid-cols-[180px_minmax(0,1fr)]">
+                            <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/80 px-3 py-2 shadow-sm">
+                              <Phone size={15} className="shrink-0 text-emerald-600" />
+                              <span className="truncate">{formatPhoneDisplay(cliente?.telefono || "") || "Sin teléfono"}</span>
+                            </div>
+                            <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/80 px-3 py-2 shadow-sm">
+                              <MapPin size={15} className="shrink-0 text-blue-700" />
+                              <span className="line-clamp-1">{cliente?.direccion || "Sin dirección"}</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
