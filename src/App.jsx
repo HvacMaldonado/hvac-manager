@@ -2,10 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { crearClienteSupabase, obtenerClientesSupabase } from "./services/clientesService";
 import { obtenerTecnicosSupabase, crearTecnicoSupabase, actualizarTecnicoSupabase } from "./services/tecnicosService";
 import { obtenerCitasSupabase, crearCitaSupabase } from "./services/citasService";
-import { obtenerOrdenesSupabase, crearOrdenSupabase } from "./services/ordenesService";
+import { obtenerOrdenesSupabase, crearOrdenSupabase, actualizarOrdenSupabase } from "./services/ordenesService";
 import { obtenerHerramientasSupabase, crearHerramientaSupabase, actualizarHerramientaSupabase } from "./services/herramientasService";
 import { obtenerInventarioSupabase, crearInventarioSupabase, actualizarInventarioSupabase } from "./services/inventarioService";
 import { crearOrdenMaterialSupabase, actualizarOrdenMaterialSupabase, eliminarOrdenMaterialSupabase } from "./services/ordenMaterialesService";
+import { obtenerFirmasOrdenesSupabase, guardarFirmaOrdenSupabase } from "./services/ordenFirmasService";
+import { obtenerFotosOrdenesSupabase, guardarFotoOrdenSupabase } from "./services/ordenFotosService";
 import {
   AlertCircle,
   AlertTriangle,
@@ -464,6 +466,67 @@ export default function App() {
 
 
   useEffect(() => {
+    async function cargarFirmasSupabase() {
+      try {
+        const firmasSupabase = await obtenerFirmasOrdenesSupabase();
+
+        if (!firmasSupabase.length) return;
+
+        setOrdenes((actual) =>
+          actual.map((orden) => {
+            const firma = firmasSupabase.find((f) => String(f.ordenId) === String(orden.id));
+            return firma
+              ? {
+                  ...orden,
+                  firmaCliente: firma.firmaCliente,
+                  fechaFirmaCliente: firma.fechaFirmaCliente,
+                  calificacionCliente: firma.calificacion,
+                  comentarioCliente: firma.comentario,
+                }
+              : orden;
+          })
+        );
+      } catch (error) {
+        console.error("Error cargando firmas desde Supabase:", error);
+      }
+    }
+
+    cargarFirmasSupabase();
+  }, []);
+
+
+  useEffect(() => {
+    async function cargarFotosSupabase() {
+      try {
+        const fotosSupabase = await obtenerFotosOrdenesSupabase();
+
+        if (!fotosSupabase.length) return;
+
+        setOrdenes((actual) =>
+          actual.map((orden) => {
+            const fotosOrden = fotosSupabase.filter((f) => String(f.ordenId) === String(orden.id));
+
+            if (!fotosOrden.length) return orden;
+
+            const fotos = { ...(orden.fotos || {}) };
+
+            fotosOrden.forEach((foto) => {
+              if (foto.tipo) fotos[foto.tipo] = foto.url;
+            });
+
+            return { ...orden, fotos };
+          })
+        );
+      } catch (error) {
+        console.error("Error cargando fotos desde Supabase:", error);
+      }
+    }
+
+    cargarFotosSupabase();
+  }, []);
+
+
+  useEffect(() => {
     async function cargarHerramientasSupabase() {
       try {
         const herramientasSupabase = await obtenerHerramientasSupabase();
@@ -874,24 +937,42 @@ export default function App() {
 
     setMensaje("Orden marcada como Necesita seguimiento. Seguirá apareciendo en órdenes activas.");
   };
-  const guardarFirmaCliente = (ordenId, firmaDataUrl) => {
+  const guardarFirmaCliente = async (ordenId, firmaDataUrl) => {
     if (!firmaDataUrl) {
       alert("No hay firma para guardar.");
       return;
     }
 
-    setOrdenes(ordenes.map((o) => (
-      o.id === ordenId
-        ? {
-            ...o,
-            firmaCliente: firmaDataUrl,
-            fechaFirmaCliente: new Date().toISOString(),
-          }
-        : o
-    )));
+    const cliente = firmaOrdenModal ? obtenerCliente(firmaOrdenModal.clienteId) : null;
 
-    setFirmaOrdenModal(null);
-    setMensaje("Firma del cliente guardada correctamente.");
+    try {
+      const firmaGuardada = await guardarFirmaOrdenSupabase({
+        ordenId,
+        firmaCliente: firmaDataUrl,
+        nombreCliente: cliente?.nombre || "",
+        calificacion: 0,
+        comentario: "",
+      });
+
+      setOrdenes(ordenes.map((o) => (
+        o.id === ordenId
+          ? {
+              ...o,
+              firmaCliente: firmaGuardada.firmaCliente,
+              fechaFirmaCliente: firmaGuardada.fechaFirmaCliente,
+              calificacionCliente: firmaGuardada.calificacion,
+              comentarioCliente: firmaGuardada.comentario,
+            }
+          : o
+      )));
+
+      setFirmaOrdenModal(null);
+      setMensaje("Firma del cliente guardada correctamente.");
+    } catch (error) {
+      console.error("Error guardando firma en Supabase:", error);
+      alert(JSON.stringify(error, null, 2));
+      setMensaje("No se pudo guardar la firma en Supabase.");
+    }
   };
 
   const cancelarOrden = (id, cancelData = {}) => {
@@ -1021,7 +1102,7 @@ export default function App() {
     return true;
   };
 
-  const completarOrden = (id) => {
+  const completarOrden = async (id) => {
     const orden = ordenes.find((o) => o.id === id);
     if (!orden) return;
     if (!orden.inventarioDescontado && !descontarInventario(orden)) return;
@@ -1033,7 +1114,26 @@ export default function App() {
         : ""
     );
 
-    setOrdenes(ordenes.map((o) => o.id === id ? { ...o, estado: "Completado", horaInicio: inicio, horaCierre: cierre, duracionHoras: calcularHoras(inicio, cierre), duracionTraslado, fechaCompletada: cierre, costoMateriales: calcularCostoOrden(o), inventarioDescontado: true } : o));
+    const cambiosOrdenCompletada = {
+      estado: "Completado",
+      horaInicio: inicio,
+      horaCierre: cierre,
+      duracionHoras: calcularHoras(inicio, cierre),
+      duracionTraslado,
+      fechaCompletada: cierre,
+      costoMateriales: calcularCostoOrden(orden),
+      inventarioDescontado: true,
+    };
+
+    setOrdenes(ordenes.map((o) => o.id === id ? { ...o, ...cambiosOrdenCompletada } : o));
+
+    try {
+      await actualizarOrdenSupabase(id, cambiosOrdenCompletada);
+    } catch (error) {
+      console.error("Error completando orden en Supabase:", error);
+      alert(JSON.stringify(error, null, 2));
+      setMensaje("La orden se completó localmente, pero no se pudo actualizar en Supabase.");
+    }
 
     const capturarConfirmacion = window.confirm("Orden completada. ¿Deseas capturar firma y calificación del cliente?");
     if (capturarConfirmacion) {
@@ -1049,10 +1149,32 @@ export default function App() {
     }
   };
 
-  const subirFoto = (id, tipo, archivo) => {
+  const subirFoto = async (id, tipo, archivo) => {
     if (!archivo) return;
+
     const reader = new FileReader();
-    reader.onloadend = () => setOrdenes((actual) => actual.map((o) => o.id === id ? { ...o, fotos: { ...o.fotos, [tipo]: reader.result } } : o));
+
+    reader.onloadend = async () => {
+      const fotoDataUrl = reader.result;
+
+      setOrdenes((actual) =>
+        actual.map((o) =>
+          o.id === id ? { ...o, fotos: { ...o.fotos, [tipo]: fotoDataUrl } } : o
+        )
+      );
+
+      try {
+        await guardarFotoOrdenSupabase({
+          ordenId: id,
+          tipo,
+          url: fotoDataUrl,
+        });
+      } catch (error) {
+        console.error("Error guardando foto en Supabase:", error);
+        alert(JSON.stringify(error, null, 2));
+      }
+    };
+
     reader.readAsDataURL(archivo);
   };
   const guardarNotaTecnico = (id, nota) => setOrdenes(ordenes.map((o) => o.id === id ? { ...o, notasTecnico: nota } : o));
@@ -1116,6 +1238,14 @@ export default function App() {
       `).join("")
       : `<div class="empty">No se agregaron imágenes a esta orden.</div>`;
 
+    const firmaHTML = orden.firmaCliente
+      ? `<div class="signature-box">
+          <img src="${orden.firmaCliente}" alt="Firma del cliente" />
+          <p>Firma del cliente</p>
+          <small>${escapeHtml(formatReportDate(orden.fechaFirmaCliente || ""))}</small>
+        </div>`
+      : `<div class="empty">No se capturó firma del cliente.</div>`;
+
     return `<!doctype html>
 <html>
 <head>
@@ -1154,6 +1284,10 @@ export default function App() {
     .photo-frame img{max-width:100%;max-height:100%;object-fit:contain}
     figcaption{padding:8px 10px;font-weight:900;font-size:12px;color:#1d4ed8}
     .empty{border:2px dashed #93c5fd;border-radius:18px;padding:16px;text-align:center;color:#64748b;font-weight:800}
+    .signature-box{border:2px solid #dbeafe;border-radius:18px;padding:14px;background:white;text-align:center}
+    .signature-box img{max-width:360px;max-height:120px;width:100%;object-fit:contain;border-bottom:1px solid #cbd5e1;padding-bottom:8px}
+    .signature-box p{margin:8px 0 2px;font-weight:900;color:#0f172a}
+    .signature-box small{color:#64748b;font-weight:800}
     .footer{margin-top:12px;border-top:3px solid #1d4ed8;padding-top:8px;display:flex;justify-content:space-between;color:#64748b;font-size:11px;font-weight:800}
     @media print{
       @page{size:Letter;margin:8mm}
@@ -1231,6 +1365,11 @@ input.login-glass-input:-webkit-autofill:active{
     <section class="section">
       <div class="section-title"><h2>Evidencia fotográfica</h2><span class="badge">${fotos.length}/3 fotos</span></div>
       <div class="photos">${fotoHTML}</div>
+    </section>
+
+    <section class="section">
+      <div class="section-title"><h2>Firma del cliente</h2></div>
+      ${firmaHTML}
     </section>
 
     <footer class="footer">
