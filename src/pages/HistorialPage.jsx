@@ -216,7 +216,7 @@ export default function HistorialPage({ t, ordenes, obtenerCliente, ordenProps }
           </div>
         </div>
 
-        <div className="space-y-5 bg-gradient-to-br from-slate-100 via-blue-50 to-cyan-50 p-5">
+        <div className="space-y-6 bg-[radial-gradient(circle_at_top_right,_#22d3ee26,_transparent_28%),linear-gradient(135deg,_#f8fafc_0%,_#eef6ff_45%,_#f8fafc_100%)] p-5">
           {historialFiltrado.length === 0 && (
             <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm font-semibold text-slate-500">
               No hay órdenes en historial con esos filtros.
@@ -231,12 +231,19 @@ export default function HistorialPage({ t, ordenes, obtenerCliente, ordenProps }
             const fecha = formatReportDate(orden.fechaCompletada || orden.fechaCreacion || orden.fecha);
 
             return (
-              <article key={orden.id} className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl shadow-slate-300/50 ring-1 ring-white transition hover:-translate-y-1 hover:border-blue-300 hover:shadow-2xl">
-                <div className="grid gap-4 p-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
+              <article key={orden.id} className="group relative overflow-hidden rounded-[2.25rem] border border-white/70 bg-white shadow-xl shadow-slate-300/60 ring-1 ring-slate-100 transition duration-300 hover:-translate-y-1 hover:shadow-2xl">
+                <div className={`absolute left-0 top-0 h-full w-2 ${
+                  orden.estado === "Completado" ? "bg-emerald-500" :
+                  orden.estado === "Cancelada" ? "bg-rose-500" :
+                  orden.estado === "Necesita seguimiento" ? "bg-amber-500" :
+                  "bg-blue-500"
+                }`} />
+                <div className="absolute -right-16 -top-20 h-44 w-44 rounded-full bg-cyan-200/30 blur-3xl transition group-hover:bg-cyan-300/40" />
+                <div className="grid gap-5 p-5 pl-7 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
                   <div className="min-w-0">
                     <div className="flex items-start gap-3">
-                      <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
-                        <UserRoundCheck size={20} />
+                      <div className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-3xl bg-gradient-to-br from-slate-950 via-blue-900 to-cyan-700 text-white shadow-lg shadow-blue-200/60">
+                        <UserRoundCheck size={22} />
                       </div>
 
                       <div className="min-w-0">
@@ -258,8 +265,8 @@ export default function HistorialPage({ t, ordenes, obtenerCliente, ordenProps }
                       </div>
                     </div>
 
-                    <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                    <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                      <div className="rounded-[1.35rem] border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-3 shadow-sm">
                         <p className="text-[10px] font-black uppercase tracking-wide text-slate-500">Técnico</p>
                         <p className="mt-1 flex items-center gap-1 truncate text-sm font-black text-slate-900">
                           <BadgeCheck size={13} className="text-blue-700" />
@@ -267,7 +274,7 @@ export default function HistorialPage({ t, ordenes, obtenerCliente, ordenProps }
                         </p>
                       </div>
 
-                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                      <div className="rounded-[1.35rem] border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-3 shadow-sm">
                         <p className="text-[10px] font-black uppercase tracking-wide text-slate-500">Fecha</p>
                         <p className="mt-1 flex items-center gap-1 truncate text-sm font-black text-slate-900">
                           <CalendarDays size={13} className="text-slate-500" />
@@ -275,7 +282,7 @@ export default function HistorialPage({ t, ordenes, obtenerCliente, ordenProps }
                         </p>
                       </div>
 
-                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                      <div className="rounded-[1.35rem] border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-3 shadow-sm">
                         <p className="text-[10px] font-black uppercase tracking-wide text-slate-500">Materiales</p>
                         <p className="mt-1 line-clamp-1 text-sm font-black text-slate-900">
                           {materiales || "Sin materiales"}
@@ -284,7 +291,7 @@ export default function HistorialPage({ t, ordenes, obtenerCliente, ordenProps }
 
                       <button
                         onClick={() => setEvidenciaOrden(orden)}
-                        className="rounded-2xl border border-blue-200 bg-blue-50 p-3 text-left text-blue-700 transition hover:bg-blue-100"
+                        className="rounded-[1.35rem] border border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 p-3 text-left text-blue-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-100 hover:shadow-md"
                       >
                         <p className="text-[10px] font-black uppercase tracking-wide">Fotos</p>
                         <p className="mt-1 flex items-center gap-1 text-sm font-black">
@@ -295,27 +302,28 @@ export default function HistorialPage({ t, ordenes, obtenerCliente, ordenProps }
                     </div>
                   </div>
 
-                  <div className="rounded-3xl border border-blue-100 bg-gradient-to-br from-white via-blue-50 to-slate-50 p-4 shadow-inner">
-                    <p className="mb-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">Acciones</p>
+                  <div className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-900 p-4 text-white shadow-xl shadow-slate-300/50">
+                    <div className="absolute -right-10 -top-12 h-32 w-32 rounded-full bg-cyan-300/20 blur-3xl" />
+                    <p className="relative mb-3 text-[10px] font-black uppercase tracking-[0.28em] text-cyan-100">Acciones rápidas</p>
 
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         onClick={() => setDetalleOrden(orden)}
-                        className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-700 to-slate-800 px-3 text-sm font-black text-white shadow-sm"
+                        className="relative inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-white/12 px-3 text-sm font-black text-white shadow-sm ring-1 ring-white/15 backdrop-blur transition hover:bg-white/18"
                       >
                         <Eye size={15} />
                         Ver orden
                       </button>
 
                       {cliente?.telefono && (
-                        <a href={`tel:${cliente.telefono}`} className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-emerald-700 px-3 text-sm font-black text-white shadow-sm">
+                        <a href={`tel:${cliente.telefono}`} className="relative inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-emerald-400/20 px-3 text-sm font-black text-emerald-100 shadow-sm ring-1 ring-emerald-200/20 backdrop-blur transition hover:bg-emerald-400/30">
                           <PhoneCall size={15} />
                           Llamar
                         </a>
                       )}
 
                       {cliente?.direccion && (
-                        <a href={urlAppleMaps?.(cliente.direccion)} target="_blank" rel="noreferrer" className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-slate-950 px-3 text-sm font-black text-white shadow-sm">
+                        <a href={urlAppleMaps?.(cliente.direccion)} target="_blank" rel="noreferrer" className="relative inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-white/12 px-3 text-sm font-black text-white shadow-sm ring-1 ring-white/15 backdrop-blur transition hover:bg-white/18">
                           <MapPinned size={15} />
                           Mapa
                         </a>
@@ -323,7 +331,7 @@ export default function HistorialPage({ t, ordenes, obtenerCliente, ordenProps }
 
                       <button
                         onClick={() => compartirOrden?.(orden, "imprimir")}
-                        className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-blue-50 px-3 text-sm font-black text-blue-700 shadow-sm hover:bg-blue-100"
+                        className="relative inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-cyan-300 px-3 text-sm font-black text-slate-950 shadow-sm transition hover:bg-cyan-200"
                       >
                         <Printer size={15} />
                         Imprimir
@@ -332,24 +340,24 @@ export default function HistorialPage({ t, ordenes, obtenerCliente, ordenProps }
 
                     <button
                       onClick={() => compartirOrden?.(orden, "mensaje")}
-                      className="mt-2 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 text-sm font-black text-slate-700 shadow-sm hover:bg-slate-50"
+                      className="relative mt-2 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-3 text-sm font-black text-white shadow-sm backdrop-blur transition hover:bg-white/15"
                     >
                       <Share2 size={15} />
                       Enviar reporte
                     </button>
 
                     {session?.role === "admin" && ["Completado", "Cancelada", "Necesita seguimiento"].includes(orden.estado) && (
-                      <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+                      <div className="relative mt-3 rounded-2xl border border-cyan-200/20 bg-white/10 p-2 shadow-sm ring-1 ring-white/10 backdrop-blur">
                         <button
                           onClick={() => corregirOrdenAdmin?.(orden.id)}
-                          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-slate-900 via-blue-900 to-cyan-700 px-3 text-sm font-black text-white shadow-md hover:from-slate-950 hover:via-blue-950 hover:to-cyan-800"
+                          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-300 to-blue-400 px-3 text-sm font-black text-slate-950 shadow-lg shadow-cyan-500/20 transition hover:from-cyan-200 hover:to-blue-300"
                         >
                           <Pencil size={15} />
                           Corrección administrativa
                         </button>
 
                         {(orden.historialAdmin || []).length > 0 && (
-                          <p className="mt-2 text-center text-[11px] font-black text-slate-600">
+                          <p className="mt-2 text-center text-[11px] font-black text-cyan-100">
                             {(orden.historialAdmin || []).length} corrección(es) internas registradas
                           </p>
                         )}
