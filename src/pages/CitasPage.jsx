@@ -95,7 +95,7 @@ function FormSection({ icon: Icon, title, subtitle, children, tone = "blue" }) {
   );
 }
 
-export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, crearCita, clientes, tecnicos, obtenerCliente, obtenerTecnico }) {
+export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, crearCita, convertirCitaEnOrden, clientes, tecnicos, obtenerCliente, obtenerTecnico }) {
   const [busqueda, setBusqueda] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("todas");
   const [ordenVista, setOrdenVista] = useState("fecha");
@@ -408,6 +408,16 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
                           <Phone size={12} />
                           Llamar
                         </a>
+                      )}
+
+                      {estado !== "Convertida en orden" && (
+                        <button
+                          onClick={() => convertirCitaEnOrden(cita)}
+                          className="inline-flex min-w-[96px] items-center justify-center gap-1 rounded-xl bg-blue-700 px-2 py-1.5 text-[11px] font-black text-white"
+                        >
+                          <ClipboardList size={12} />
+                          Crear orden
+                        </button>
                       )}
 
                       <button

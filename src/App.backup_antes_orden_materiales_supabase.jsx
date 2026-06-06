@@ -4,8 +4,6 @@ import { obtenerTecnicosSupabase, crearTecnicoSupabase, actualizarTecnicoSupabas
 import { obtenerCitasSupabase, crearCitaSupabase } from "./services/citasService";
 import { obtenerOrdenesSupabase, crearOrdenSupabase } from "./services/ordenesService";
 import { obtenerHerramientasSupabase, crearHerramientaSupabase, actualizarHerramientaSupabase } from "./services/herramientasService";
-import { obtenerInventarioSupabase, crearInventarioSupabase, actualizarInventarioSupabase } from "./services/inventarioService";
-import { crearOrdenMaterialSupabase, actualizarOrdenMaterialSupabase, eliminarOrdenMaterialSupabase } from "./services/ordenMaterialesService";
 import {
   AlertCircle,
   AlertTriangle,
@@ -476,19 +474,6 @@ export default function App() {
     cargarHerramientasSupabase();
   }, []);
 
-  useEffect(() => {
-    async function cargarInventarioSupabase() {
-      try {
-        const inventarioSupabase = await obtenerInventarioSupabase();
-        setInventario(inventarioSupabase);
-      } catch (error) {
-        console.error("Error cargando inventario desde Supabase:", error);
-      }
-    }
-
-    cargarInventarioSupabase();
-  }, []);
-
   useEffect(() => localStorage.setItem("clientes", JSON.stringify(clientes)), [clientes]);
   useEffect(() => localStorage.setItem("ordenes", JSON.stringify(ordenes)), [ordenes]);
   useEffect(() => localStorage.setItem("inventarioHVAC", JSON.stringify(inventario)), [inventario]);
@@ -707,7 +692,7 @@ export default function App() {
     }
   };
 
-  const convertirCitaEnOrden = async (cita) => {
+  const convertirCitaEnOrden = (cita) => {
     if (!cita) return;
 
     const clienteId = String(cita.clienteId || "");
@@ -727,10 +712,10 @@ export default function App() {
 
     const fecha = new Date();
 
-    const nuevaOrdenBase = {
+    const nuevaOrden = {
+      id: Date.now(),
       clienteId,
       tecnicoId,
-      origenCitaId: cita.id,
       problema: cita.motivo || "Trabajo creado desde cita programada",
       prioridad: "Media",
       estado: "Asignada",
@@ -748,30 +733,23 @@ export default function App() {
       notasTecnico: cita.notas ? `Creada desde cita. Nota cita: ${cita.notas}` : "Creada desde cita programada.",
       inventarioDescontado: false,
       cancelReason: "",
+      origenCitaId: cita.id,
     };
 
-    try {
-      const nuevaOrden = await crearOrdenSupabase(nuevaOrdenBase);
+    setOrdenes([...ordenes, nuevaOrden]);
 
-      setOrdenes([...ordenes, nuevaOrden]);
+    setCitas(citas.map((item) => (
+      String(item.id) === String(cita.id)
+        ? {
+            ...item,
+            estado: "Convertida en orden",
+            ordenId: nuevaOrden.id,
+            fechaConversion: fecha.toISOString(),
+          }
+        : item
+    )));
 
-      setCitas(citas.map((item) => (
-        String(item.id) === String(cita.id)
-          ? {
-              ...item,
-              estado: "Convertida en orden",
-              ordenId: nuevaOrden.id,
-              fechaConversion: fecha.toISOString(),
-            }
-          : item
-      )));
-
-      setMensaje("Cita convertida en orden correctamente.");
-    } catch (error) {
-      console.error("Error convirtiendo cita en orden:", error);
-      alert(JSON.stringify(error, null, 2));
-      setMensaje("No se pudo convertir la cita en orden.");
-    }
+    setMensaje("Cita convertida en orden correctamente.");
   };
 
   const reprogramarCita = (citaId, data) => {
@@ -922,91 +900,9 @@ export default function App() {
     setCancelModalOrden(null);
   };
   const calcularHoras = (inicio, cierre) => (!inicio || !cierre ? "" : Math.max(0, (new Date(cierre) - new Date(inicio)) / 3600000).toFixed(2));
-  const esUUID = (v) =>
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(v || ""));
-
-  const agregarMaterialAOrden = async (ordenId) => {
-    if (!esUUID(ordenId)) {
-      alert("Esta orden fue creada antes de Supabase. Crea una orden nueva para guardar materiales persistentes.");
-      return;
-    }
-
-    try {
-      const nuevoMaterial = await crearOrdenMaterialSupabase({
-        ordenId,
-        inventarioId: "",
-        cantidad: 0,
-        costoUnitario: 0,
-      });
-
-      setOrdenes(ordenes.map((o) => (
-        o.id === ordenId
-          ? { ...o, materialesUsados: [...(o.materialesUsados || []), nuevoMaterial] }
-          : o
-      )));
-    } catch (error) {
-      console.error("Error agregando material a orden:", error);
-      alert(JSON.stringify(error, null, 2));
-    }
-  };
-
-  const actualizarMaterialOrden = async (ordenId, materialId, campo, valor) => {
-    const materialActual = ordenes
-      .find((o) => o.id === ordenId)
-      ?.materialesUsados
-      ?.find((m) => m.id === materialId);
-
-    const cambios = { [campo]: valor };
-
-    if (campo === "inventarioId") {
-      const item = obtenerMaterial(valor);
-      cambios.costoUnitario = Number(item?.costo || 0);
-    }
-
-    setOrdenes(ordenes.map((o) => (
-      o.id === ordenId
-        ? {
-            ...o,
-            materialesUsados: (o.materialesUsados || []).map((m) =>
-              m.id === materialId ? { ...m, ...cambios } : m
-            ),
-          }
-        : o
-    )));
-
-    if (!esUUID(materialId)) {
-      return;
-    }
-
-    try {
-      await actualizarOrdenMaterialSupabase(materialId, {
-        ...cambios,
-        cantidad: campo === "cantidad" ? Number(valor || 0) : materialActual?.cantidad,
-      });
-    } catch (error) {
-      console.error("Error actualizando material de orden:", error);
-      alert(JSON.stringify(error, null, 2));
-    }
-  };
-
-  const eliminarMaterialOrden = async (ordenId, materialId) => {
-    setOrdenes(ordenes.map((o) => (
-      o.id === ordenId
-        ? { ...o, materialesUsados: (o.materialesUsados || []).filter((m) => m.id !== materialId) }
-        : o
-    )));
-
-    if (!esUUID(materialId)) {
-      return;
-    }
-
-    try {
-      await eliminarOrdenMaterialSupabase(materialId);
-    } catch (error) {
-      console.error("Error eliminando material de orden:", error);
-      alert(JSON.stringify(error, null, 2));
-    }
-  };
+  const agregarMaterialAOrden = (ordenId) => setOrdenes(ordenes.map((o) => o.id === ordenId ? { ...o, materialesUsados: [...(o.materialesUsados || []), { id: Date.now(), inventarioId: "", cantidad: "" }] } : o));
+  const actualizarMaterialOrden = (ordenId, materialId, campo, valor) => setOrdenes(ordenes.map((o) => o.id === ordenId ? { ...o, materialesUsados: (o.materialesUsados || []).map((m) => m.id === materialId ? { ...m, [campo]: valor } : m) } : o));
+  const eliminarMaterialOrden = (ordenId, materialId) => setOrdenes(ordenes.map((o) => o.id === ordenId ? { ...o, materialesUsados: (o.materialesUsados || []).filter((m) => m.id !== materialId) } : o));
   const calcularCostoOrden = (orden) => (orden.materialesUsados || []).reduce((total, m) => total + Number(m.cantidad || 0) * Number(obtenerMaterial(m.inventarioId)?.costo || 0), 0);
 
   const descontarInventario = (orden) => {
@@ -1276,39 +1172,12 @@ const compartirOrden = async (orden, metodo) => {
     }
   };
 
-  const agregarInventario = async () => {
+  const agregarInventario = () => {
     if (!inventarioForm.nombre || !inventarioForm.cantidad) return;
-
-    try {
-      const nuevoItem = await crearInventarioSupabase({
-        ...inventarioForm,
-        tipo: inventarioForm.tipo || "Material consumible",
-        cantidad: Number(inventarioForm.cantidad),
-        costo: Number(inventarioForm.costo || 0),
-        stockMinimo: Number(inventarioForm.stockMinimo || 0),
-      });
-
-      setInventario([...inventario, nuevoItem]);
-      setInventarioForm({ nombre: "", categoria: "Unidades de aire acondicionado", tipo: "Material consumible", cantidad: "", unidad: "pieza", costo: "", stockMinimo: "1" });
-    } catch (error) {
-      console.error("Error guardando inventario en Supabase:", error);
-      alert(JSON.stringify(error, null, 2));
-      setMensaje("No se pudo guardar el inventario en Supabase.");
-    }
+    setInventario([...inventario, { id: Date.now(), ...inventarioForm, tipo: inventarioForm.tipo || "Material consumible", cantidad: Number(inventarioForm.cantidad), costo: Number(inventarioForm.costo || 0), stockMinimo: Number(inventarioForm.stockMinimo || 0) }]);
+    setInventarioForm({ nombre: "", categoria: "Unidades de aire acondicionado", tipo: "Material consumible", cantidad: "", unidad: "pieza", costo: "", stockMinimo: "1" });
   };
-
-  const actualizarInventario = async (id, campo, valor) => {
-    const finalValue = ["cantidad", "costo", "stockMinimo"].includes(campo) ? Number(valor) : valor;
-
-    setInventario(inventario.map((i) => i.id === id ? { ...i, [campo]: finalValue } : i));
-
-    try {
-      await actualizarInventarioSupabase(id, { [campo]: finalValue });
-    } catch (error) {
-      console.error("Error actualizando inventario en Supabase:", error);
-      setMensaje("No se pudo actualizar el inventario en Supabase.");
-    }
-  };
+  const actualizarInventario = (id, campo, valor) => setInventario(inventario.map((i) => i.id === id ? { ...i, [campo]: ["cantidad", "costo", "stockMinimo"].includes(campo) ? Number(valor) : valor } : i));
 
   const agregarHerramienta = async () => {
     console.log("CREAR HERRAMIENTA", JSON.stringify(herramientaForm, null, 2));
@@ -1532,7 +1401,7 @@ const compartirOrden = async (orden, metodo) => {
 
             {adminPage === "clientes" && <ClientesPage t={t} clientes={clientes} setClientes={setClientes} ordenes={ordenes} citas={citas} clienteForm={clienteForm} setClienteForm={setClienteForm} agregarCliente={agregarCliente} abrirCrearOrdenConCliente={abrirCrearOrdenConCliente} abrirProgramarCitaConCliente={abrirProgramarCitaConCliente} urlGoogleMaps={urlGoogleMaps} urlAppleMaps={urlAppleMaps} urlTelefono={urlTelefono} />}
             {adminPage === "tecnicos" && <TecnicosPage t={t} tecnicos={tecnicos} actualizarTecnico={actualizarTecnico} guardarTecnico={guardarTecnico} darDeBajaTecnico={darDeBajaTecnico} setTecnicos={setTecnicos} />}
-            {adminPage === "citas" && <CitasPage t={t} citas={citas} setCitas={setCitas} citaForm={citaForm} setCitaForm={setCitaForm} crearCita={crearCita} convertirCitaEnOrden={convertirCitaEnOrden} clientes={clientes} tecnicos={tecnicosActivos} obtenerCliente={obtenerCliente} obtenerTecnico={obtenerTecnico} />}
+            {adminPage === "citas" && <CitasPage t={t} citas={citas} setCitas={setCitas} citaForm={citaForm} setCitaForm={setCitaForm} crearCita={crearCita} clientes={clientes} tecnicos={tecnicosActivos} obtenerCliente={obtenerCliente} obtenerTecnico={obtenerTecnico} />}
             {adminPage === "calendario" && <CalendarioPage citas={citas} ordenes={ordenes} clientes={clientes} tecnicos={tecnicosActivos} obtenerCliente={obtenerCliente} obtenerTecnico={obtenerTecnico} urlAppleMaps={urlAppleMaps} urlTelefono={urlTelefono} />}
             {adminPage === "ordenes" && <OrdenesPage t={t} ordenes={ordenesActivasAdmin} obtenerCliente={obtenerCliente} ordenProps={ordenProps} crearOrden={crearOrden} ordenForm={ordenForm} setOrdenForm={setOrdenForm} busquedaClienteOrden={busquedaClienteOrden} setBusquedaClienteOrden={setBusquedaClienteOrden} clientesFiltradosOrden={clientesFiltradosOrden} tecnicos={tecnicosActivos} />}
             {adminPage === "historial" && <HistorialPage t={t} ordenes={historialAdmin} obtenerCliente={obtenerCliente} ordenProps={ordenProps} />}
@@ -3182,16 +3051,6 @@ function Info({ titulo, valor, extra = "bg-white", icon: Icon = FileText }) {
 }
 
 function Materiales({ orden, inventario, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden }) {
-  const ordenTieneUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(orden?.id || ""));
-
-  if (!ordenTieneUUID) {
-    return (
-      <div className="mb-2 rounded-[1.75rem] border border-amber-200 bg-amber-50 p-5 text-sm font-bold text-amber-800">
-        Esta orden fue creada antes de conectar Supabase. Para guardar materiales persistentes, crea una orden nueva desde Admin.
-      </div>
-    );
-  }
-
   return (
     <div className="mb-2 rounded-[1.75rem] border border-cyan-200 bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-50 p-5 shadow-lg shadow-purple-100/60">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

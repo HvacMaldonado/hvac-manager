@@ -4,7 +4,6 @@ import { obtenerTecnicosSupabase, crearTecnicoSupabase, actualizarTecnicoSupabas
 import { obtenerCitasSupabase, crearCitaSupabase } from "./services/citasService";
 import { obtenerOrdenesSupabase, crearOrdenSupabase } from "./services/ordenesService";
 import { obtenerHerramientasSupabase, crearHerramientaSupabase, actualizarHerramientaSupabase } from "./services/herramientasService";
-import { obtenerInventarioSupabase, crearInventarioSupabase, actualizarInventarioSupabase } from "./services/inventarioService";
 import { crearOrdenMaterialSupabase, actualizarOrdenMaterialSupabase, eliminarOrdenMaterialSupabase } from "./services/ordenMaterialesService";
 import {
   AlertCircle,
@@ -474,19 +473,6 @@ export default function App() {
     }
 
     cargarHerramientasSupabase();
-  }, []);
-
-  useEffect(() => {
-    async function cargarInventarioSupabase() {
-      try {
-        const inventarioSupabase = await obtenerInventarioSupabase();
-        setInventario(inventarioSupabase);
-      } catch (error) {
-        console.error("Error cargando inventario desde Supabase:", error);
-      }
-    }
-
-    cargarInventarioSupabase();
   }, []);
 
   useEffect(() => localStorage.setItem("clientes", JSON.stringify(clientes)), [clientes]);
@@ -1276,39 +1262,12 @@ const compartirOrden = async (orden, metodo) => {
     }
   };
 
-  const agregarInventario = async () => {
+  const agregarInventario = () => {
     if (!inventarioForm.nombre || !inventarioForm.cantidad) return;
-
-    try {
-      const nuevoItem = await crearInventarioSupabase({
-        ...inventarioForm,
-        tipo: inventarioForm.tipo || "Material consumible",
-        cantidad: Number(inventarioForm.cantidad),
-        costo: Number(inventarioForm.costo || 0),
-        stockMinimo: Number(inventarioForm.stockMinimo || 0),
-      });
-
-      setInventario([...inventario, nuevoItem]);
-      setInventarioForm({ nombre: "", categoria: "Unidades de aire acondicionado", tipo: "Material consumible", cantidad: "", unidad: "pieza", costo: "", stockMinimo: "1" });
-    } catch (error) {
-      console.error("Error guardando inventario en Supabase:", error);
-      alert(JSON.stringify(error, null, 2));
-      setMensaje("No se pudo guardar el inventario en Supabase.");
-    }
+    setInventario([...inventario, { id: Date.now(), ...inventarioForm, tipo: inventarioForm.tipo || "Material consumible", cantidad: Number(inventarioForm.cantidad), costo: Number(inventarioForm.costo || 0), stockMinimo: Number(inventarioForm.stockMinimo || 0) }]);
+    setInventarioForm({ nombre: "", categoria: "Unidades de aire acondicionado", tipo: "Material consumible", cantidad: "", unidad: "pieza", costo: "", stockMinimo: "1" });
   };
-
-  const actualizarInventario = async (id, campo, valor) => {
-    const finalValue = ["cantidad", "costo", "stockMinimo"].includes(campo) ? Number(valor) : valor;
-
-    setInventario(inventario.map((i) => i.id === id ? { ...i, [campo]: finalValue } : i));
-
-    try {
-      await actualizarInventarioSupabase(id, { [campo]: finalValue });
-    } catch (error) {
-      console.error("Error actualizando inventario en Supabase:", error);
-      setMensaje("No se pudo actualizar el inventario en Supabase.");
-    }
-  };
+  const actualizarInventario = (id, campo, valor) => setInventario(inventario.map((i) => i.id === id ? { ...i, [campo]: ["cantidad", "costo", "stockMinimo"].includes(campo) ? Number(valor) : valor } : i));
 
   const agregarHerramienta = async () => {
     console.log("CREAR HERRAMIENTA", JSON.stringify(herramientaForm, null, 2));
