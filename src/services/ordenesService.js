@@ -30,6 +30,7 @@ function mapOrden(row) {
     fechaCompletada: row.fecha_completada || "",
     materialesUsados: [],
     fotos: { antes: "", durante: "", despues: "" },
+    historialAdmin: row.historial_admin || [],
   };
 }
 
@@ -107,6 +108,7 @@ export async function actualizarOrdenSupabase(id, cambios) {
   if ("costoTotal" in cambios) payload.costo_total = Number(cambios.costoTotal || 0);
   if ("inventarioDescontado" in cambios) payload.inventario_descontado = cambios.inventarioDescontado || false;
   if ("fechaCompletada" in cambios) payload.fecha_completada = cambios.fechaCompletada || null;
+  if ("historialAdmin" in cambios) payload.historial_admin = cambios.historialAdmin || [];
 
   const { data, error } = await supabase
     .from("ordenes")

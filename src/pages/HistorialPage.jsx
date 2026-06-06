@@ -28,7 +28,9 @@ import {
   MapPinned,
   PhoneCall,
   ReceiptText,
-  Eye,} from "lucide-react";
+  Eye,
+  Pencil,
+} from "lucide-react";
 
 function formatPhoneDisplay(value) {
   const digits = String(value || "").replace(/\D/g, "").slice(0, 10);
@@ -101,6 +103,8 @@ export default function HistorialPage({ t, ordenes, obtenerCliente, ordenProps }
     compartirOrden,
     calcularCostoOrden,
     materialesTexto,
+    corregirOrdenAdmin,
+    session,
   } = ordenProps;
 
   const historialFiltrado = useMemo(() => {
@@ -212,7 +216,7 @@ export default function HistorialPage({ t, ordenes, obtenerCliente, ordenProps }
           </div>
         </div>
 
-        <div className="space-y-3 bg-slate-50 p-3">
+        <div className="space-y-5 bg-gradient-to-br from-slate-100 via-blue-50 to-cyan-50 p-5">
           {historialFiltrado.length === 0 && (
             <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm font-semibold text-slate-500">
               No hay órdenes en historial con esos filtros.
@@ -227,7 +231,7 @@ export default function HistorialPage({ t, ordenes, obtenerCliente, ordenProps }
             const fecha = formatReportDate(orden.fechaCompletada || orden.fechaCreacion || orden.fecha);
 
             return (
-              <article key={orden.id} className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-cyan-200 hover:shadow-md">
+              <article key={orden.id} className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl shadow-slate-300/50 ring-1 ring-white transition hover:-translate-y-1 hover:border-blue-300 hover:shadow-2xl">
                 <div className="grid gap-4 p-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
                   <div className="min-w-0">
                     <div className="flex items-start gap-3">
@@ -291,7 +295,7 @@ export default function HistorialPage({ t, ordenes, obtenerCliente, ordenProps }
                     </div>
                   </div>
 
-                  <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-3">
+                  <div className="rounded-3xl border border-blue-100 bg-gradient-to-br from-white via-blue-50 to-slate-50 p-4 shadow-inner">
                     <p className="mb-2 text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">Acciones</p>
 
                     <div className="grid grid-cols-2 gap-2">
@@ -333,6 +337,24 @@ export default function HistorialPage({ t, ordenes, obtenerCliente, ordenProps }
                       <Share2 size={15} />
                       Enviar reporte
                     </button>
+
+                    {session?.role === "admin" && ["Completado", "Cancelada", "Necesita seguimiento"].includes(orden.estado) && (
+                      <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+                        <button
+                          onClick={() => corregirOrdenAdmin?.(orden.id)}
+                          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-slate-900 via-blue-900 to-cyan-700 px-3 text-sm font-black text-white shadow-md hover:from-slate-950 hover:via-blue-950 hover:to-cyan-800"
+                        >
+                          <Pencil size={15} />
+                          Corrección administrativa
+                        </button>
+
+                        {(orden.historialAdmin || []).length > 0 && (
+                          <p className="mt-2 text-center text-[11px] font-black text-slate-600">
+                            {(orden.historialAdmin || []).length} corrección(es) internas registradas
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </article>

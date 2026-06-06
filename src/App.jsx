@@ -1228,6 +1228,91 @@ export default function App() {
     }
   };
 
+  const corregirOrdenAdmin = async (id) => {
+    const orden = ordenes.find((o) => String(o.id) === String(id));
+    if (!orden) return;
+
+    const motivo = prompt("Motivo obligatorio de la corrección:");
+    if (!motivo || !motivo.trim()) {
+      return setMensaje("Debes escribir un motivo para corregir la orden.");
+    }
+
+    const nuevoInicio = prompt("Hora inicio corregida en formato ISO o vacío para no cambiar:", orden.horaInicio || "");
+    const nuevoCierre = prompt("Hora cierre corregida en formato ISO o vacío para no cambiar:", orden.horaCierre || "");
+    const nuevaDuracionTraslado = prompt("Tiempo de traslado corregido o vacío para no cambiar:", orden.duracionTraslado || "");
+    const nuevaNota = prompt("Nota técnica corregida o vacío para no cambiar:", orden.notasTecnico || "");
+    const nuevoEstado = prompt("Estado corregido: Completado o Necesita seguimiento. Vacío para no cambiar:", orden.estado || "");
+
+    const cambios = {};
+    const historialNuevo = [...(orden.historialAdmin || [])];
+
+    const registrarCambio = (campo, anterior, nuevo) => {
+      if (String(anterior || "") === String(nuevo || "")) return;
+
+      cambios[campo] = nuevo;
+      historialNuevo.push({
+        fecha: new Date().toISOString(),
+        usuario: session?.nombre || session?.usuario || "Admin",
+        rol: session?.role || "admin",
+        campo,
+        anterior: anterior || "",
+        nuevo: nuevo || "",
+        motivo: motivo.trim(),
+      });
+    };
+
+    if (nuevoInicio !== null && nuevoInicio !== "") {
+      registrarCambio("horaInicio", orden.horaInicio || "", nuevoInicio);
+    }
+
+    if (nuevoCierre !== null && nuevoCierre !== "") {
+      registrarCambio("horaCierre", orden.horaCierre || "", nuevoCierre);
+    }
+
+    if (nuevaDuracionTraslado !== null && nuevaDuracionTraslado !== "") {
+      registrarCambio("duracionTraslado", orden.duracionTraslado || "", nuevaDuracionTraslado);
+    }
+
+    if (nuevaNota !== null && nuevaNota !== "") {
+      registrarCambio("notasTecnico", orden.notasTecnico || "", nuevaNota);
+    }
+
+    if (nuevoEstado !== null && nuevoEstado !== "") {
+      if (!["Completado", "Necesita seguimiento"].includes(nuevoEstado)) {
+        return setMensaje("Estado inválido. Solo puedes usar Completado o Necesita seguimiento.");
+      }
+
+      registrarCambio("estado", orden.estado || "", nuevoEstado);
+    }
+
+    const inicioFinal = cambios.horaInicio || orden.horaInicio;
+    const cierreFinal = cambios.horaCierre || orden.horaCierre;
+
+    if (inicioFinal && cierreFinal) {
+      const nuevaDuracion = calcularHoras(inicioFinal, cierreFinal);
+      registrarCambio("duracionHoras", orden.duracionHoras || "", nuevaDuracion);
+    }
+
+    if (historialNuevo.length === (orden.historialAdmin || []).length) {
+      return setMensaje("No se realizó ningún cambio.");
+    }
+
+    cambios.historialAdmin = historialNuevo;
+
+    setOrdenes(ordenes.map((o) => (
+      String(o.id) === String(id) ? { ...o, ...cambios } : o
+    )));
+
+    try {
+      await actualizarOrdenSupabase(id, cambios);
+      setMensaje("Orden corregida por admin. Cambio registrado en auditoría interna.");
+    } catch (error) {
+      console.error("Error corrigiendo orden como admin:", error);
+      alert(JSON.stringify(error, null, 2));
+      setMensaje("No se pudo guardar la corrección en Supabase.");
+    }
+  };
+
   const materialesTexto = (orden) => (orden.materialesUsados || []).filter((m) => m.inventarioId && Number(m.cantidad) > 0).map((m) => `${obtenerMaterial(m.inventarioId)?.nombre || "Material"} (${m.cantidad} ${obtenerMaterial(m.inventarioId)?.unidad || ""})`).join("; ");
 
   const crearTextoOrden = (orden) => {
@@ -1624,7 +1709,7 @@ const compartirOrden = async (orden, metodo) => {
   const colorEstado = (estado) => estado === "Completado" ? "bg-emerald-100 text-emerald-700 border-emerald-200" : estado === "Cancelada" ? "bg-rose-100 text-rose-700 border-rose-200" : estado === "Necesita seguimiento" ? "bg-amber-100 text-amber-800 border-amber-200" : estado === "En proceso" ? "bg-sky-100 text-sky-700 border-sky-200" : estado === "En ruta" ? "bg-cyan-100 text-cyan-700 border-cyan-200" : estado === "Asignada" ? "bg-blue-100 text-blue-700 border-blue-200" : "bg-slate-100 text-slate-700 border-slate-200";
   const colorPrioridad = (p) => PRIORIDADES.find((x) => x.value === p)?.cls || "bg-slate-100 text-slate-700 border-slate-200";
 
-  const ordenProps = { inventario, obtenerMaterial, obtenerTecnico, colorEstado, colorPrioridad, marcarEnRuta, marcarLlegada, iniciarTrabajo, marcarNecesitaSeguimiento, setFirmaOrdenModal, completarOrden, cancelarOrden, subirFoto, guardarNotaTecnico, urlGoogleMaps, urlAppleMaps, urlTelefono, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, calcularCostoOrden, materialesTexto, compartirOrden, convertirCitaEnOrden, reprogramarCita, setReprogramarCitaModal, cancelarOrden: (ordenOrId) => {
+  const ordenProps = { inventario, obtenerMaterial, obtenerTecnico, colorEstado, colorPrioridad, marcarEnRuta, marcarLlegada, iniciarTrabajo, marcarNecesitaSeguimiento, setFirmaOrdenModal, completarOrden, cancelarOrden, subirFoto, guardarNotaTecnico, corregirOrdenAdmin, session, urlGoogleMaps, urlAppleMaps, urlTelefono, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, calcularCostoOrden, materialesTexto, compartirOrden, convertirCitaEnOrden, reprogramarCita, setReprogramarCitaModal, cancelarOrden: (ordenOrId) => {
     const orden = typeof ordenOrId === "object" ? ordenOrId : ordenes.find((o) => o.id === ordenOrId);
     setCancelModalOrden(orden || null);
   }, t };
@@ -1690,7 +1775,7 @@ const compartirOrden = async (orden, metodo) => {
 
         {session.role === "admin" && (
           <>
-            <nav className="sticky top-[66px] 2xl:top-[92px] z-10 mb-3 grid w-full grid-cols-9 gap-1.5 rounded-2xl border border-slate-200 bg-white/95 p-1.5 shadow-lg shadow-slate-300/40 backdrop-blur">
+            <nav className="sticky top-[66px] 2xl:top-[92px] z-10 mb-4 grid w-full grid-cols-9 gap-2 rounded-[1.6rem] border border-white/70 bg-gradient-to-r from-white/95 via-blue-50/90 to-cyan-50/90 p-2 shadow-xl shadow-slate-300/50 backdrop-blur-xl">
               {adminNav.map(([id, label, Icon]) => (
                 <button
                   key={id}
@@ -1700,16 +1785,16 @@ const compartirOrden = async (orden, metodo) => {
                     w-full
                     items-center justify-center
                     gap-1.5
-                    rounded-xl
-                    px-2
-                    py-2
-                    text-[11px]
+                    rounded-[1.25rem]
+                    px-3
+                    py-3
+                    text-[12px]
                     font-black
                     transition
                     ${
                       adminPage === id
-                        ? "bg-slate-950 text-white shadow-lg shadow-slate-300/40"
-                        : "bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-950 border border-slate-200"
+                        ? "bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-900 text-white shadow-xl shadow-blue-900/30 ring-1 ring-cyan-300/30"
+                        : "border border-slate-200 bg-white/85 text-slate-700 shadow-md shadow-slate-200/60 hover:-translate-y-0.5 hover:border-blue-200 hover:bg-white hover:text-slate-950 hover:shadow-xl"
                     }
                   `}
                 >
