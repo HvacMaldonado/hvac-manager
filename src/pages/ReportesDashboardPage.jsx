@@ -33,13 +33,42 @@ function money(value) {
   return `$${Number(value || 0).toFixed(2)}`;
 }
 
-function Metric({ icon: Icon, label, value, tone }) {
+function SoftMetric({ icon: Icon, label, value, alert = false, positive = false }) {
+  const boxClass = alert
+    ? "border-rose-200 bg-rose-50 text-rose-800"
+    : positive
+      ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+      : "border-slate-200 bg-slate-50 text-slate-700";
+
+  const iconClass = alert ? "text-rose-600" : positive ? "text-emerald-700" : "text-slate-500";
+
   return (
-    <div className={`flex min-w-[135px] items-center gap-2.5 rounded-2xl bg-gradient-to-br ${tone} px-3 py-2 text-white shadow-sm`}>
-      <Icon size={18} />
-      <div>
-        <p className="text-sm font-black leading-none">{value}</p>
-        <p className="mt-1 text-[10px] font-black uppercase tracking-wide text-white/75">{label}</p>
+    <div className={`rounded-2xl border p-3 ${boxClass}`}>
+      <div className="flex items-center gap-2">
+        <Icon size={16} className={iconClass} />
+        <p className="text-[10px] font-black uppercase tracking-wide">{label}</p>
+      </div>
+      <p className="mt-1 text-xl font-black">{value}</p>
+    </div>
+  );
+}
+
+function Metric({ icon: Icon, label, value, tone, hint }) {
+  return (
+    <div className={`group relative min-h-[130px] overflow-hidden rounded-[2rem] bg-gradient-to-br ${tone} p-5 text-white shadow-xl shadow-slate-300/60 ring-1 ring-white/20 transition hover:-translate-y-1 hover:shadow-2xl`}>
+      <div className="absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white/15 blur-2xl transition group-hover:bg-white/25" />
+      <div className="absolute -bottom-10 left-8 h-24 w-24 rounded-full bg-cyan-300/20 blur-2xl" />
+
+      <div className="relative flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.26em] text-white/70">{label}</p>
+          <p className="mt-3 text-4xl font-black tracking-tight">{value}</p>
+          {hint && <p className="mt-2 text-xs font-bold text-white/75">{hint}</p>}
+        </div>
+
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 shadow-lg ring-1 ring-white/20">
+          <Icon size={23} />
+        </div>
       </div>
     </div>
   );
@@ -60,6 +89,70 @@ function SimpleBar({ label, value, max }) {
     </div>
   );
 }
+
+function DonutFigure({ label, value, total, tone = "blue" }) {
+  const safeTotal = Math.max(Number(total || 0), 1);
+  const percent = Math.min(100, Math.max(0, Math.round((Number(value || 0) / safeTotal) * 100)));
+  const stroke = 31.4;
+  const dash = (percent / 100) * stroke;
+
+  const color = tone === "green" ? "text-emerald-600" : tone === "rose" ? "text-rose-600" : tone === "amber" ? "text-amber-600" : "text-blue-700";
+
+  return (
+    <div className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-lg shadow-slate-200/70">
+      <div className="flex items-center gap-4">
+        <div className="relative h-20 w-20 shrink-0">
+          <svg viewBox="0 0 36 36" className="h-20 w-20 rotate-[-90deg]">
+            <circle cx="18" cy="18" r="15.8" fill="none" stroke="currentColor" strokeWidth="3.5" className="text-slate-100" />
+            <circle cx="18" cy="18" r="15.8" fill="none" stroke="currentColor" strokeWidth="3.5" strokeDasharray={`${dash} ${stroke}`} strokeLinecap="round" className={color} />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center text-sm font-black text-slate-950">{percent}%</div>
+        </div>
+
+        <div className="min-w-0">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">{label}</p>
+          <p className="mt-1 text-2xl font-black text-slate-950">{value}</p>
+          <p className="text-xs font-semibold text-slate-500">de {total} registros</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InsightPanel({ completadas, canceladas, total, stockBajo, herramientasAlerta, valorInventario, money }) {
+  return (
+    <section className="rounded-[2rem] border border-white/70 bg-white/90 p-5 shadow-xl shadow-slate-300/60 backdrop-blur">
+      <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.28em] text-blue-700">Salud operativa</p>
+          <h3 className="text-xl font-black text-slate-950">Indicadores visuales</h3>
+        </div>
+        <p className="text-xs font-bold text-slate-500">Resumen interno del periodo seleccionado</p>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-3">
+        <DonutFigure label="Órdenes completadas" value={completadas} total={total} tone="green" />
+        <DonutFigure label="Cancelaciones" value={canceladas} total={total} tone={canceladas > 0 ? "rose" : "blue"} />
+
+        <div className="rounded-[1.75rem] border border-slate-200 bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-800 p-4 text-white shadow-lg shadow-slate-300/60">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200">Inventario</p>
+          <p className="mt-2 text-3xl font-black">{money(valorInventario)}</p>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/15">
+              <p className="text-[10px] font-black uppercase text-white/60">Stock bajo</p>
+              <p className="text-2xl font-black">{stockBajo}</p>
+            </div>
+            <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/15">
+              <p className="text-[10px] font-black uppercase text-white/60">Herramientas</p>
+              <p className="text-2xl font-black">{herramientasAlerta}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 
 export default function ReportesDashboardPage({ clientes, ordenes, inventario, herramientas, tecnicos, obtenerTecnico, exportarCSV }) {
   const [busqueda, setBusqueda] = useState("");
@@ -261,18 +354,45 @@ export default function ReportesDashboardPage({ clientes, ordenes, inventario, h
         </div>
       </div>
 
-      <div className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-4">
-        <Metric icon={ClipboardList} label="Órdenes" value={data.ordenesFiltradas.length} tone="from-slate-950 to-blue-900" />
-        <Metric icon={TrendingUp} label="Completadas" value={completadas} tone="from-emerald-800 to-teal-600" />
-        <Metric icon={AlertTriangle} label="Canceladas" value={canceladas} tone="from-rose-800 to-red-700" />
-        <Metric icon={AlertTriangle} label="Por cliente" value={canceladasCliente} tone="from-orange-800 to-amber-600" />
-        <Metric icon={AlertTriangle} label="Por empresa" value={canceladasEmpresa} tone="from-slate-800 to-slate-950" />
-        <Metric icon={AlertTriangle} label="Por técnico" value={canceladasTecnico} tone="from-red-800 to-rose-700" />
-        <Metric icon={Package} label="Materiales usados" value={money(materialesUsados)} tone="from-cyan-800 to-blue-700" />
-        <Metric icon={Users} label="Clientes" value={clientes.length} tone="from-slate-800 to-slate-950" />
-        <Metric icon={Wrench} label="Herramientas alerta" value={data.herramientasAlerta} tone="from-amber-700 to-orange-600" />
-        <Metric icon={Package} label="Stock bajo" value={data.stockBajo} tone="from-amber-700 to-red-600" />
-        <Metric icon={Download} label="Valor inventario" value={money(data.valorInventario)} tone="from-emerald-800 to-teal-600" />
+      <div className="space-y-5">
+        <div>
+          <p className="mb-3 text-[10px] font-black uppercase tracking-[0.28em] text-slate-500">Resumen principal</p>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <Metric icon={ClipboardList} label="Órdenes" value={data.ordenesFiltradas.length} hint="Total filtrado" tone="from-slate-950 via-blue-950 to-cyan-800" />
+            <Metric icon={TrendingUp} label="Completadas" value={completadas} hint="Trabajos cerrados" tone="from-emerald-700 via-teal-700 to-cyan-700" />
+            <Metric icon={Users} label="Clientes" value={clientes.length} hint="Base actual" tone="from-blue-950 via-slate-950 to-indigo-900" />
+            <Metric icon={Package} label="Materiales usados" value={money(materialesUsados)} hint="Costo del periodo" tone="from-cyan-700 via-blue-800 to-slate-900" />
+          </div>
+        </div>
+
+        <InsightPanel
+          completadas={completadas}
+          canceladas={canceladas}
+          total={data.ordenesFiltradas.length}
+          stockBajo={data.stockBajo}
+          herramientasAlerta={data.herramientasAlerta}
+          valorInventario={data.valorInventario}
+          money={money}
+        />
+
+        <div className="rounded-[2rem] border border-slate-200 bg-white/90 p-4 shadow-lg shadow-slate-200/70">
+          <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Detalle de cancelaciones</p>
+              <p className="text-sm font-bold text-slate-500">Información interna para administración</p>
+            </div>
+            <span className={`w-fit rounded-full px-3 py-1 text-xs font-black ${canceladas > 0 ? "bg-rose-50 text-rose-700" : "bg-slate-100 text-slate-500"}`}>
+              {canceladas} total
+            </span>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-4">
+            <SoftMetric icon={AlertTriangle} label="Canceladas" value={canceladas} alert={canceladas > 0} />
+            <SoftMetric icon={AlertTriangle} label="Por cliente" value={canceladasCliente} alert={canceladasCliente > 0} />
+            <SoftMetric icon={AlertTriangle} label="Por empresa" value={canceladasEmpresa} alert={canceladasEmpresa > 0} />
+            <SoftMetric icon={AlertTriangle} label="Por técnico" value={canceladasTecnico} alert={canceladasTecnico > 0} />
+          </div>
+        </div>
       </div>
 
       <div className="space-y-4">

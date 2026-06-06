@@ -99,6 +99,7 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
   const [busqueda, setBusqueda] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("todas");
   const [ordenVista, setOrdenVista] = useState("fecha");
+  const [busquedaClienteCita, setBusquedaClienteCita] = useState("");
 
   const citasVisibles = useMemo(() => {
     const q = busqueda.toLowerCase().trim();
@@ -130,6 +131,37 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
   const cambiarEstadoCita = (id, estado) => {
     setCitas(citas.map((cita) => cita.id === id ? { ...cita, estado } : cita));
   };
+
+  const clientesFiltradosCita = useMemo(() => {
+    const q = busquedaClienteCita.toLowerCase().trim();
+    if (!q) return [];
+
+    const soloNumeros = q.replace(/\D/g, "");
+    const esBusquedaTelefono = soloNumeros.length > 0 && soloNumeros.length === q.replace(/\s/g, "").length;
+
+    return clientes
+      .filter((c) => {
+        const nombre = String(c.nombre || "").toLowerCase();
+        const telefono = String(c.telefono || "").replace(/\D/g, "");
+        const direccion = String(c.direccion || "").toLowerCase();
+        const email = String(c.email || "").toLowerCase();
+
+        if (esBusquedaTelefono) {
+          return telefono.includes(soloNumeros);
+        }
+
+        if (nombre.includes(q)) return true;
+
+        if (q.length >= 3) {
+          return direccion.includes(q) || email.includes(q);
+        }
+
+        return false;
+      })
+      .slice(0, 6);
+  }, [clientes, busquedaClienteCita]);
+
+  const clienteSeleccionadoCita = clientes.find((c) => String(c.id) === String(citaForm.clienteId));
 
   const inputClass = "w-full rounded-2xl border border-slate-300 bg-white p-3 pl-10 text-sm outline-none shadow-sm transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100";
 
@@ -232,16 +264,64 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
                 <div className="space-y-4">
                   <FormSection icon={Users} title="Cliente y técnico" subtitle="Selecciona quién recibe y quién atiende" tone="blue">
                     <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-                      <ModernField label="Cliente" icon={Users}>
-                        <select
-                          value={citaForm.clienteId}
-                          onChange={(e) => setCitaForm({ ...citaForm, clienteId: e.target.value })}
-                          className={inputClass}
-                        >
-                          <option value="">Seleccionar cliente</option>
-                          {clientes.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-                        </select>
-                      </ModernField>
+                      <div className="lg:col-span-1">
+                        <ModernField label="Cliente" icon={Search}>
+                          <input
+                            value={busquedaClienteCita}
+                            onChange={(e) => setBusquedaClienteCita(e.target.value)}
+                            placeholder="Buscar cliente, teléfono, email o dirección..."
+                            className={inputClass}
+                          />
+                        </ModernField>
+
+                        {clienteSeleccionadoCita && (
+                          <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-3">
+                            <div>
+                              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-700">Cliente seleccionado</p>
+                              <p className="mt-1 text-sm font-black text-slate-950">{clienteSeleccionadoCita.nombre}</p>
+                              <p className="text-xs font-semibold text-slate-600">
+                                {formatPhoneDisplay(clienteSeleccionadoCita.telefono || "")} · {clienteSeleccionadoCita.direccion || "Sin dirección"}
+                              </p>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCitaForm({ ...citaForm, clienteId: "" });
+                                setBusquedaClienteCita("");
+                              }}
+                              className="rounded-xl bg-white px-3 py-2 text-xs font-black text-blue-700 shadow-sm hover:bg-blue-100"
+                            >
+                              Cambiar
+                            </button>
+                          </div>
+                        )}
+
+                        {busquedaClienteCita.trim() && !clienteSeleccionadoCita && (
+                          <div className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                            {clientesFiltradosCita.length === 0 ? (
+                              <p className="p-3 text-sm font-bold text-slate-500">No se encontraron clientes.</p>
+                            ) : (
+                              clientesFiltradosCita.map((c) => (
+                                <button
+                                  key={c.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setCitaForm({ ...citaForm, clienteId: c.id });
+                                    setBusquedaClienteCita(c.nombre || "");
+                                  }}
+                                  className="block w-full border-b border-slate-100 px-4 py-3 text-left transition hover:bg-blue-50"
+                                >
+                                  <span className="block text-sm font-black text-slate-950">{c.nombre}</span>
+                                  <span className="block text-xs font-semibold text-slate-500">
+                                    {formatPhoneDisplay(c.telefono || "")} · {c.direccion || "Sin dirección"}
+                                  </span>
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        )}
+                      </div>
 
                       <ModernField label="Técnico" icon={UserCog}>
                         <select
