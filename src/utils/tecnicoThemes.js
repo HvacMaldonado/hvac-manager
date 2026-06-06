@@ -101,6 +101,17 @@ export function getTecnicoTheme(tecnico) {
 }
 
 export function getTecnicoThemeById(tecnicos = [], tecnicoId) {
-  const tecnico = tecnicos.find((tec) => String(tec.id) === String(tecnicoId));
-  return getTecnicoTheme(tecnico);
+  const tecnicoIndex = tecnicos.findIndex((tec) => String(tec.id) === String(tecnicoId));
+  const tecnico = tecnicoIndex >= 0 ? tecnicos[tecnicoIndex] : null;
+
+  if (!tecnico) return TECNICO_COLOR_THEMES.sinTecnico;
+
+  if (tecnico.colorTema && TECNICO_COLOR_THEMES[tecnico.colorTema]) {
+    return TECNICO_COLOR_THEMES[tecnico.colorTema];
+  }
+
+  const fallbackColors = ["azul", "verde", "morado", "naranja", "rosa", "gris"];
+  const fallbackColor = fallbackColors[tecnicoIndex % fallbackColors.length];
+
+  return TECNICO_COLOR_THEMES[fallbackColor] || TECNICO_COLOR_THEMES.azul;
 }

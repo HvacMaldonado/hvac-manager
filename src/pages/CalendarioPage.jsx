@@ -88,21 +88,23 @@ function MiniMetric({ label, value }) {
 
 function CalendarEvent({ event }) {
   return (
-    <article className={`rounded-2xl border p-2 text-xs shadow-sm ${event.theme?.event || eventTone(event.type, event.prioridad)}`}>
-      <div className="flex items-start justify-between gap-2">
-        <p className="line-clamp-1 flex items-center gap-1.5 font-black">
-          <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${event.theme?.dot || "bg-slate-400"}`} />
+    <article className={`group/event relative overflow-hidden rounded-[1.1rem] border py-2.5 pl-3.5 pr-2.5 text-xs shadow-sm ring-1 ring-white/60 transition duration-200 hover:-translate-y-0.5 hover:shadow-md ${event.theme?.event || eventTone(event.type, event.prioridad)}`}>
+      <div className={`absolute left-0 top-0 h-full w-1.5 ${event.theme?.dot || "bg-slate-400"}`} />
+      <div className="absolute -right-8 -top-8 h-16 w-16 rounded-full bg-white/40 blur-2xl" />
+      <div className="relative flex items-start justify-between gap-2">
+        <p className="line-clamp-2 flex items-start gap-1.5 font-black leading-tight">
+          <span className={`mt-0.5 h-3.5 w-3.5 shrink-0 rounded-full border-2 border-white shadow-md ${event.theme?.dot || "bg-slate-400"}`} />
           {event.title}
         </p>
-        <span className="shrink-0 rounded-full bg-white/70 px-1.5 py-0.5 text-[9px] font-black uppercase">
+        <span className="shrink-0 rounded-full bg-white/75 px-2 py-0.5 text-[8px] font-black uppercase shadow-sm">
           {event.type}
         </span>
       </div>
-      <p className="mt-1 flex items-center gap-1 font-bold opacity-80">
+      <p className="relative mt-1.5 flex items-center gap-1 font-black opacity-85">
         <Clock3 size={11} />
         {formatTime(event.time)}
       </p>
-      <p className="mt-1 line-clamp-1 opacity-80">{event.subtitle}</p>
+      <p className="relative mt-1 line-clamp-1 font-semibold opacity-75">{event.subtitle}</p>
     </article>
   );
 }
@@ -110,38 +112,43 @@ function CalendarEvent({ event }) {
 function DayCell({ date, events, isCurrentMonth, onSelectDay }) {
   const key = toDateKey(date);
   const isToday = key === todayKey();
+  const hasEvents = events.length > 0;
 
   return (
     <button
       onClick={() => onSelectDay(key)}
-      className={`min-h-[150px] rounded-3xl border p-2 text-left transition hover:-translate-y-0.5 hover:shadow-lg ${
+      className={`group/day relative min-h-[150px] overflow-hidden rounded-[1.7rem] border p-2.5 text-left transition duration-300 hover:-translate-y-1 hover:shadow-xl ${
         isToday
-          ? "border-cyan-300 bg-cyan-50 ring-4 ring-cyan-100"
-          : isCurrentMonth
-            ? "border-slate-200 bg-white"
-            : "border-slate-100 bg-slate-50/70 opacity-70"
+          ? "border-cyan-300 bg-gradient-to-br from-cyan-50 via-white to-blue-50 shadow-lg shadow-cyan-100/80 ring-4 ring-cyan-100"
+          : hasEvents && isCurrentMonth
+            ? "border-blue-100 bg-gradient-to-br from-white via-sky-50/70 to-cyan-50/60 shadow-md shadow-slate-200/70"
+            : isCurrentMonth
+              ? "border-slate-200 bg-gradient-to-br from-white to-slate-50 shadow-sm"
+              : "border-slate-100 bg-slate-50/60 opacity-60"
       }`}
     >
-      <div className="mb-2 flex items-center justify-between">
-        <span className={`inline-flex h-7 w-7 items-center justify-center rounded-xl text-xs font-black ${
-          isToday ? "bg-cyan-700 text-white" : "bg-slate-100 text-slate-700"
+      <div className="pointer-events-none absolute -right-12 -top-14 h-28 w-28 rounded-full bg-cyan-200/25 blur-3xl transition group-hover/day:bg-cyan-300/35" />
+
+      <div className="relative mb-2 flex items-center justify-between">
+        <span className={`inline-flex h-8 w-8 items-center justify-center rounded-2xl text-xs font-black shadow-sm ${
+          isToday ? "bg-cyan-700 text-white" : hasEvents ? "bg-slate-950 text-white" : "bg-slate-100 text-slate-700"
         }`}>
           {date.getDate()}
         </span>
         {events.length > 0 && (
-          <span className="rounded-full bg-slate-950 px-2 py-0.5 text-[10px] font-black text-white">
+          <span className="rounded-full bg-slate-950 px-2.5 py-1 text-[10px] font-black text-white shadow-md">
             {events.length}
           </span>
         )}
       </div>
 
-      <div className="space-y-1.5">
+      <div className="relative space-y-1.5">
         {events.slice(0, 3).map((event) => (
           <CalendarEvent key={event.id} event={event} />
         ))}
 
         {events.length > 3 && (
-          <p className="rounded-full bg-slate-100 px-2 py-1 text-center text-[10px] font-black text-slate-600">
+          <p className="rounded-full border border-slate-200 bg-white/80 px-2 py-1 text-center text-[10px] font-black text-slate-600 shadow-sm">
             +{events.length - 3} más
           </p>
         )}
