@@ -880,7 +880,24 @@ export default function App() {
     setMensaje("Cita reprogramada correctamente.");
   };
 
-  const marcarEnRuta = (id) => setOrdenes(ordenes.map((o) => o.id === id ? { ...o, estado: "En ruta", horaEnRuta: o.horaEnRuta || new Date().toISOString() } : o));
+  const marcarEnRuta = async (id) => {
+    const orden = ordenes.find((o) => o.id === id);
+    if (!orden) return;
+
+    const cambios = {
+      estado: "En ruta",
+      horaEnRuta: orden.horaEnRuta || new Date().toISOString(),
+    };
+
+    setOrdenes(ordenes.map((o) => o.id === id ? { ...o, ...cambios } : o));
+
+    try {
+      await actualizarOrdenSupabase(id, cambios);
+    } catch (error) {
+      console.error("Error actualizando En ruta en Supabase:", error);
+      setMensaje("No se pudo guardar el estado En ruta en Supabase.");
+    }
+  };
 
   const marcarLlegada = (id) => {
     const ahora = new Date().toISOString();
@@ -903,7 +920,24 @@ export default function App() {
 
     setMensaje("Llegada registrada correctamente. Tiempo de traslado calculado.");
   };
-  const iniciarTrabajo = (id) => setOrdenes(ordenes.map((o) => o.id === id ? { ...o, estado: "En proceso", horaInicio: o.horaInicio || new Date().toISOString() } : o));
+  const iniciarTrabajo = async (id) => {
+    const orden = ordenes.find((o) => o.id === id);
+    if (!orden) return;
+
+    const cambios = {
+      estado: "En proceso",
+      horaInicio: orden.horaInicio || new Date().toISOString(),
+    };
+
+    setOrdenes(ordenes.map((o) => o.id === id ? { ...o, ...cambios } : o));
+
+    try {
+      await actualizarOrdenSupabase(id, cambios);
+    } catch (error) {
+      console.error("Error iniciando trabajo en Supabase:", error);
+      setMensaje("No se pudo guardar el inicio de trabajo en Supabase.");
+    }
+  };
 
   const marcarNecesitaSeguimiento = (id) => {
     const orden = ordenes.find((o) => o.id === id);
@@ -1177,7 +1211,16 @@ export default function App() {
 
     reader.readAsDataURL(archivo);
   };
-  const guardarNotaTecnico = (id, nota) => setOrdenes(ordenes.map((o) => o.id === id ? { ...o, notasTecnico: nota } : o));
+  const guardarNotaTecnico = async (id, nota) => {
+    setOrdenes(ordenes.map((o) => o.id === id ? { ...o, notasTecnico: nota } : o));
+
+    try {
+      await actualizarOrdenSupabase(id, { notasTecnico: nota });
+    } catch (error) {
+      console.error("Error guardando nota técnica en Supabase:", error);
+      setMensaje("No se pudo guardar la nota técnica en Supabase.");
+    }
+  };
 
   const materialesTexto = (orden) => (orden.materialesUsados || []).filter((m) => m.inventarioId && Number(m.cantidad) > 0).map((m) => `${obtenerMaterial(m.inventarioId)?.nombre || "Material"} (${m.cantidad} ${obtenerMaterial(m.inventarioId)?.unidad || ""})`).join("; ");
 
