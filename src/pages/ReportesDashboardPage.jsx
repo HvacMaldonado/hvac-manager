@@ -250,7 +250,7 @@ export default function ReportesDashboardPage({ t = (key) => key, clientes, orde
     const materiales = {};
     ordenesFiltradas.forEach((o) => {
       (o.materiales || []).forEach((m) => {
-        const key = m.nombre || "Material sin nombre";
+        const key = m.nombre || tx(t, "noNamedMaterial", "Material sin nombre");
         if (!materiales[key]) materiales[key] = { nombre: key, cantidad: 0, costo: 0 };
         materiales[key].cantidad += Number(m.cantidad || 0);
         materiales[key].costo += Number(m.cantidad || 0) * Number(m.costo || 0);
@@ -392,7 +392,7 @@ export default function ReportesDashboardPage({ t = (key) => key, clientes, orde
           </div>
 
           <div className="grid gap-3 md:grid-cols-4">
-            <SoftMetric icon={AlertTriangle} label="Canceladas" value={canceladas} alert={canceladas > 0} />
+            <SoftMetric icon={AlertTriangle} label={tx(t, "cancellations", "Cancelaciones")} value={canceladas} alert={canceladas > 0} />
             <SoftMetric icon={AlertTriangle} label={tx(t, "byCustomer", "Por cliente")} value={canceladasCliente} alert={canceladasCliente > 0} />
             <SoftMetric icon={AlertTriangle} label={tx(t, "byCompany", "Por empresa")} value={canceladasEmpresa} alert={canceladasEmpresa > 0} />
             <SoftMetric icon={AlertTriangle} label={tx(t, "byTechnician", "Por técnico")} value={canceladasTecnico} alert={canceladasTecnico > 0} />
@@ -408,11 +408,11 @@ export default function ReportesDashboardPage({ t = (key) => key, clientes, orde
                 <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-200">{tx(t, "monthlyTrend", "Tendencia mensual")}</p>
                 <h3 className="mt-1 flex items-center gap-2 text-xl font-black">
                   <CalendarDays size={22} />
-                  Historial operativo
+                  {tx(t, "operationalHistory", "Historial operativo")}
                 </h3>
               </div>
               <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black ring-1 ring-white/20">
-                {data.mensual.slice(0, 8).length} meses
+                {data.mensual.slice(0, 8).length} {tx(t, "months", "meses")}
               </span>
             </div>
           </div>
@@ -427,7 +427,7 @@ export default function ReportesDashboardPage({ t = (key) => key, clientes, orde
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <div>
                       <p className="text-sm font-black text-slate-950">{formatMonth(m.mes)}</p>
-                      <p className="text-xs font-semibold text-slate-500">{m.total} órdenes · {completadasPercent}% completadas</p>
+                      <p className="text-xs font-semibold text-slate-500">{m.total} {tx(t, "ordersLabel", "órdenes")} · {completadasPercent}% {tx(t, "completedJobs", "completadas")}</p>
                     </div>
                     <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">{m.total}</span>
                   </div>
@@ -466,7 +466,7 @@ export default function ReportesDashboardPage({ t = (key) => key, clientes, orde
           <div className="space-y-3 p-5">
             {data.consumoMateriales.length === 0 && (
               <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm font-semibold text-slate-500">
-                No hay materiales consumidos en las órdenes filtradas.
+                {tx(t, "noMaterialsFiltered", "No hay materiales consumidos en las órdenes filtradas.")}
               </div>
             )}
 
