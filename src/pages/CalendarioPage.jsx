@@ -315,9 +315,9 @@ export default function CalendarioPage({
             </div>
 
             <div className="grid grid-cols-3 gap-2 text-center">
-              <MiniMetric label="Eventos" value={events.length} />
-              <MiniMetric label="Citas" value={citasCount} />
-              <MiniMetric label="Hoy" value={todayEvents.length} />
+              <MiniMetric label={t("events")} value={events.length} />
+              <MiniMetric label={t("appointments")} value={citasCount} />
+              <MiniMetric label={t("today")} value={todayEvents.length} />
             </div>
           </div>
         </div>
@@ -328,7 +328,7 @@ export default function CalendarioPage({
             <input
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              placeholder="Buscar cliente, técnico, dirección o trabajo..."
+              placeholder={t("searchCalendarPlaceholder")}
               className="w-full rounded-2xl border border-slate-300 bg-white py-3 pl-10 pr-3 text-sm outline-none shadow-sm transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100"
             />
           </div>
@@ -338,7 +338,7 @@ export default function CalendarioPage({
             onChange={(e) => setTecnicoFiltro(e.target.value)}
             className="rounded-2xl border border-slate-300 bg-white px-3 py-3 text-sm font-bold text-slate-700 outline-none shadow-sm focus:border-blue-700 focus:ring-4 focus:ring-blue-100"
           >
-            <option value="todos">Todos los técnicos</option>
+            <option value="todos">{t("allTechnicians")}</option>
             {tecnicos.map((tec) => <option key={tec.id} value={tec.id}>{tec.nombre}</option>)}
           </select>
 
@@ -379,8 +379,8 @@ export default function CalendarioPage({
               <UserCog size={18} />
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-700">Equipo activo</p>
-              <h3 className="text-base font-black text-slate-950">Colores por técnico</h3>
+              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-700">{t("activeTeam")}</p>
+              <h3 className="text-base font-black text-slate-950">{t("colorsByTechnician")}</h3>
             </div>
           </div>
           <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-black text-slate-600">
@@ -417,7 +417,7 @@ export default function CalendarioPage({
           })}
 
           {tecnicos.length === 0 && (
-            <span className="text-sm font-semibold text-slate-500">No hay técnicos activos.</span>
+            <span className="text-sm font-semibold text-slate-500">{t("noActiveTechnicians")}</span>
           )}
         </div>
       </div>
@@ -427,7 +427,7 @@ export default function CalendarioPage({
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-700">
-                {vista === "semana" ? "Vista semanal" : "Vista mensual"}
+                {vista === "semana" ? t("weeklyView") : t("monthlyView")}
               </p>
               <h3 className="text-xl font-black text-slate-950">
                 {currentDate.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
@@ -435,13 +435,13 @@ export default function CalendarioPage({
             </div>
 
             <div className="flex flex-wrap items-center gap-2 text-xs font-black">
-              <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-blue-700">Órdenes {ordenesCount}</span>
-              <span className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-cyan-700">Citas {citasCount}</span>
+              <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-blue-700">{t("orders")} {ordenesCount}</span>
+              <span className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-cyan-700">{t("appointments")} {citasCount}</span>
             </div>
           </div>
 
           <div className="mb-2 grid grid-cols-7 gap-2 text-center text-[10px] font-black uppercase tracking-wide text-slate-500">
-            {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map((day) => <span key={day}>{day}</span>)}
+            {[t("sundayShort"), t("mondayShort"), t("tuesdayShort"), t("wednesdayShort"), t("thursdayShort"), t("fridayShort"), t("saturdayShort")].map((day) => <span key={day}>{day}</span>)}
           </div>
 
           <div className="grid grid-cols-7 gap-2">
@@ -462,7 +462,7 @@ export default function CalendarioPage({
 
         <aside className="h-fit overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-xl shadow-slate-300/60">
           <div className="bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-900 p-4 text-white">
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-300">Detalle del día</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-300">{t("dayDetail")}</p>
             <h3 className="mt-1 flex items-center gap-2 text-xl font-black">
               <CalendarDays size={20} />
               {diaSeleccionado}
@@ -472,7 +472,7 @@ export default function CalendarioPage({
           <div className="space-y-3 p-3">
             {selectedEvents.length === 0 && (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-center text-sm font-semibold text-slate-500">
-                No hay eventos para este día.
+                {t("noEventsDay")}
               </div>
             )}
 
@@ -507,21 +507,21 @@ export default function CalendarioPage({
 
                 <div className="relative mt-4 grid grid-cols-2 gap-2">
                   <div className="rounded-2xl bg-white/80 p-3 shadow-sm">
-                    <p className="text-[9px] font-black uppercase opacity-70">Hora</p>
+                    <p className="text-[9px] font-black uppercase opacity-70">{t("time")}</p>
                     <p className="mt-1 flex items-center gap-1 text-sm font-black">
                       <Clock3 size={13} />
                       {formatTime(event.time)}
                     </p>
                   </div>
                   <div className="rounded-2xl bg-white/80 p-3 shadow-sm">
-                    <p className="text-[9px] font-black uppercase opacity-70">Técnico</p>
+                    <p className="text-[9px] font-black uppercase opacity-70">{t("technician")}</p>
                     <p className="mt-1 truncate text-sm font-black">{event.tecnico}</p>
                   </div>
                 </div>
 
                 <p className="relative mt-3 line-clamp-2 rounded-2xl bg-white/60 p-3 text-xs font-semibold opacity-85 shadow-sm">
                   <MapPin size={12} className="mr-1 inline" />
-                  {event.direccion || "Sin dirección"}
+                  {event.direccion || t("noAddress")}
                 </p>
 
                 <div className="relative mt-3 flex flex-wrap gap-2">
