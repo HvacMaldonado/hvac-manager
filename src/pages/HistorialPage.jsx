@@ -146,6 +146,25 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
   const canceladas = ordenes.filter((o) => o.estado === "Cancelada").length;
   const totalMateriales = ordenes.reduce((sum, orden) => sum + Number(calcularCostoOrden?.(orden) || orden.costoMateriales || 0), 0);
 
+  const statusLabel = (estado) => {
+    const map = {
+      Completado: t("completed"),
+      Cancelada: t("cancelled"),
+      "Necesita seguimiento": t("needsFollowUp"),
+    };
+    return map[estado] || estado;
+  };
+
+  const priorityLabel = (prioridad) => {
+    const map = {
+      Baja: t("low"),
+      Media: t("medium"),
+      Alta: t("high"),
+      Urgente: t("urgent"),
+    };
+    return map[prioridad] || prioridad;
+  };
+
   return (
     <section className="space-y-4">
       <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-md shadow-slate-300/60 backdrop-blur">
@@ -254,10 +273,10 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
                               {cliente?.nombre || t("deletedCustomer")}
                             </p>
                             <span className={`rounded-full border px-3 py-1 text-xs font-black ${statusClass(orden.estado)}`}>
-                              {orden.estado}
+                              {statusLabel(orden.estado)}
                             </span>
                             <span className={`rounded-full border px-3 py-1 text-xs font-black ${priorityClass(orden.prioridad)}`}>
-                              {orden.prioridad || "Media"}
+                              {priorityLabel(orden.prioridad || "Media")}
                             </span>
                           </div>
 
@@ -295,7 +314,7 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
                       <div className="rounded-[1.35rem] border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-3 shadow-sm">
                         <p className="text-[10px] font-black uppercase tracking-wide text-slate-500">{t("materials")}</p>
                         <p className="mt-1 line-clamp-1 text-sm font-black text-slate-900">
-                          {materiales || "Sin materiales"}
+                          {materiales || t("noMaterials")}
                         </p>
                       </div>
 
@@ -322,20 +341,20 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
                         className="relative inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-white/12 px-3 text-sm font-black text-white shadow-sm ring-1 ring-white/15 backdrop-blur transition hover:bg-white/18"
                       >
                         <Eye size={15} />
-                        Ver orden
+                        {t("viewOrder")}
                       </button>
 
                       {cliente?.telefono && (
                         <a href={`tel:${cliente.telefono}`} className="relative inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-emerald-400/20 px-3 text-sm font-black text-emerald-100 shadow-sm ring-1 ring-emerald-200/20 backdrop-blur transition hover:bg-emerald-400/30">
                           <PhoneCall size={15} />
-                          Llamar
+                          {t("call")}
                         </a>
                       )}
 
                       {cliente?.direccion && (
                         <a href={urlAppleMaps?.(cliente.direccion)} target="_blank" rel="noreferrer" className="relative inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-white/12 px-3 text-sm font-black text-white shadow-sm ring-1 ring-white/15 backdrop-blur transition hover:bg-white/18">
                           <MapPinned size={15} />
-                          Mapa
+                          {t("map")}
                         </a>
                       )}
 
@@ -344,7 +363,7 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
                         className="relative inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-cyan-300 px-3 text-sm font-black text-slate-950 shadow-sm transition hover:bg-cyan-200"
                       >
                         <Printer size={15} />
-                        Imprimir
+                        {t("print")}
                       </button>
                     </div>
 
@@ -353,7 +372,7 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
                       className="relative mt-2 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-3 text-sm font-black text-white shadow-sm backdrop-blur transition hover:bg-white/15"
                     >
                       <Share2 size={15} />
-                      Enviar reporte
+                      {t("sendReport")}
                     </button>
 
                     {session?.role === "admin" && ["Completado", "Cancelada", "Necesita seguimiento"].includes(orden.estado) && (
@@ -363,7 +382,7 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
                           className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-300 to-blue-400 px-3 text-sm font-black text-slate-950 shadow-lg shadow-cyan-500/20 transition hover:from-cyan-200 hover:to-blue-300"
                         >
                           <Pencil size={15} />
-                          Corrección administrativa
+                          {t("adminCorrection")}
                         </button>
 
                         {(orden.historialAdmin || []).length > 0 && (
