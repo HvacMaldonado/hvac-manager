@@ -171,7 +171,7 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
         <div className="bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-900 p-5 text-white">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">Agenda</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">{t("agenda")}</p>
               <h2 className="mt-1 flex items-center gap-2 text-2xl font-black">
                 <CalendarDays size={24} />
                 Citas
@@ -179,9 +179,9 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
             </div>
 
             <div className="grid grid-cols-3 gap-2 text-center">
-              <MiniAgendaStat label="Total" value={citas.length} />
-              <MiniAgendaStat label="Hoy" value={citas.filter((c) => isTodayValue(c.fecha)).length} />
-              <MiniAgendaStat label="Próximas" value={citas.filter((c) => isFutureValue(c.fecha)).length} />
+              <MiniAgendaStat label={t("total")} value={citas.length} />
+              <MiniAgendaStat label={t("today")} value={citas.filter((c) => isTodayValue(c.fecha)).length} />
+              <MiniAgendaStat label={t("upcoming")} value={citas.filter((c) => isFutureValue(c.fecha)).length} />
             </div>
           </div>
         </div>
@@ -203,39 +203,39 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
                 </div>
 
                 <p className="mt-5 text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">
-                  Agenda rápida
+                  {t("quickAgenda")}
                 </p>
 
                 <h3 className="mt-1 text-2xl font-black leading-tight">
-                  Crear cita
+                  {t("createAppointmentTitle")}
                 </h3>
 
                 <p className="mt-2 text-sm font-medium leading-relaxed text-slate-300">
-                  Selecciona cliente, técnico, fecha y motivo para dejar la visita programada.
+                  {t("appointmentCreateDescription")}
                 </p>
 
                 <div className="mt-5 space-y-2">
                   <div className="flex items-center gap-3 rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
                     <Users size={18} className="text-cyan-300" />
                     <div>
-                      <p className="text-xs font-black">Cliente</p>
-                      <p className="text-[10px] text-slate-300">Quién recibirá el servicio</p>
+                      <p className="text-xs font-black">{t("customer")}</p>
+                      <p className="text-[10px] text-slate-300">{t("whoReceivesService")}</p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3 rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
                     <UserCog size={18} className="text-cyan-300" />
                     <div>
-                      <p className="text-xs font-black">Técnico</p>
-                      <p className="text-[10px] text-slate-300">Quién atenderá la cita</p>
+                      <p className="text-xs font-black">{t("technician")}</p>
+                      <p className="text-[10px] text-slate-300">{t("whoHandlesAppointment")}</p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3 rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
                     <CalendarCheck2 size={18} className="text-cyan-300" />
                     <div>
-                      <p className="text-xs font-black">Fecha y hora</p>
-                      <p className="text-[10px] text-slate-300">Programación clara</p>
+                      <p className="text-xs font-black">{t("dateAndTime")}</p>
+                      <p className="text-[10px] text-slate-300">{t("clearScheduling")}</p>
                     </div>
                   </div>
                 </div>
@@ -245,10 +245,10 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
                 <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-700">
-                      Formulario moderno
+                      {t("modernForm")}
                     </p>
                     <h4 className="text-lg font-black text-slate-950">
-                      Datos de la cita
+                      {t("appointmentData")}
                     </h4>
                   </div>
 
@@ -257,19 +257,19 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
                     className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-slate-950 via-blue-900 to-cyan-700 px-5 py-3 text-sm font-black text-white shadow-lg shadow-slate-300 transition hover:-translate-y-0.5"
                   >
                     <CalendarCheck2 size={16} />
-                    Guardar cita
+                    {t("saveAppointment")}
                   </button>
                 </div>
 
                 <div className="space-y-4">
-                  <FormSection icon={Users} title="Cliente y técnico" subtitle="Selecciona quién recibe y quién atiende" tone="blue">
+                  <FormSection icon={Users} title={t("customerAndTechnician")} subtitle={t("selectCustomerAndTechnician")} tone="blue">
                     <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
                       <div className="lg:col-span-1">
-                        <ModernField label="Cliente" icon={Search}>
+                        <ModernField label={t("customer")} icon={Search}>
                           <input
                             value={busquedaClienteCita}
                             onChange={(e) => setBusquedaClienteCita(e.target.value)}
-                            placeholder="Buscar cliente, teléfono, email o dirección..."
+                            placeholder={t("searchCustomerAppointment")}
                             className={inputClass}
                           />
                         </ModernField>
@@ -277,10 +277,10 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
                         {clienteSeleccionadoCita && (
                           <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-3">
                             <div>
-                              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-700">Cliente seleccionado</p>
+                              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-700">{t("selectedCustomer")}</p>
                               <p className="mt-1 text-sm font-black text-slate-950">{clienteSeleccionadoCita.nombre}</p>
                               <p className="text-xs font-semibold text-slate-600">
-                                {formatPhoneDisplay(clienteSeleccionadoCita.telefono || "")} · {clienteSeleccionadoCita.direccion || "Sin dirección"}
+                                {formatPhoneDisplay(clienteSeleccionadoCita.telefono || "")} · {clienteSeleccionadoCita.direccion || t("noAddress")}
                               </p>
                             </div>
 
@@ -292,7 +292,7 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
                               }}
                               className="rounded-xl bg-white px-3 py-2 text-xs font-black text-blue-700 shadow-sm hover:bg-blue-100"
                             >
-                              Cambiar
+                              {t("change")}
                             </button>
                           </div>
                         )}
@@ -300,7 +300,7 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
                         {busquedaClienteCita.trim() && !clienteSeleccionadoCita && (
                           <div className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                             {clientesFiltradosCita.length === 0 ? (
-                              <p className="p-3 text-sm font-bold text-slate-500">No se encontraron clientes.</p>
+                              <p className="p-3 text-sm font-bold text-slate-500">{t("noCustomersFound")}</p>
                             ) : (
                               clientesFiltradosCita.map((c) => (
                                 <button
@@ -314,7 +314,7 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
                                 >
                                   <span className="block text-sm font-black text-slate-950">{c.nombre}</span>
                                   <span className="block text-xs font-semibold text-slate-500">
-                                    {formatPhoneDisplay(c.telefono || "")} · {c.direccion || "Sin dirección"}
+                                    {formatPhoneDisplay(c.telefono || "")} · {c.direccion || t("noAddress")}
                                   </span>
                                 </button>
                               ))
@@ -323,22 +323,22 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
                         )}
                       </div>
 
-                      <ModernField label="Técnico" icon={UserCog}>
+                      <ModernField label={t("technician")} icon={UserCog}>
                         <select
                           value={citaForm.tecnicoId}
                           onChange={(e) => setCitaForm({ ...citaForm, tecnicoId: e.target.value })}
                           className={inputClass}
                         >
-                          <option value="">Seleccionar técnico</option>
+                          <option value="">{t("selectTechnician")}</option>
                           {tecnicos.map((tec) => <option key={tec.id} value={tec.id}>{tec.nombre}</option>)}
                         </select>
                       </ModernField>
                     </div>
                   </FormSection>
 
-                  <FormSection icon={CalendarCheck2} title="Programación" subtitle="Fecha y hora de la visita" tone="cyan">
+                  <FormSection icon={CalendarCheck2} title={t("scheduling")} subtitle={t("visitDateAndTime")} tone="cyan">
                     <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-                      <ModernField label="Fecha" icon={CalendarDays}>
+                      <ModernField label={t("scheduledDate")} icon={CalendarDays}>
                         <input
                           type="date"
                           value={citaForm.fecha}
@@ -347,7 +347,7 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
                         />
                       </ModernField>
 
-                      <ModernField label="Hora" icon={Clock3}>
+                      <ModernField label={t("time")} icon={Clock3}>
                         <input
                           type="time"
                           value={citaForm.hora}
@@ -358,12 +358,12 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
                     </div>
                   </FormSection>
 
-                  <FormSection icon={ClipboardList} title="Detalle de la visita" subtitle="Describe el motivo de la cita" tone="slate">
-                    <ModernField label="Motivo" icon={ClipboardList}>
+                  <FormSection icon={ClipboardList} title={t("visitDetail")} subtitle={t("describeAppointmentReason")} tone="slate">
+                    <ModernField label={t("reason")} icon={ClipboardList}>
                       <input
                         value={citaForm.motivo}
                         onChange={(e) => setCitaForm({ ...citaForm, motivo: e.target.value })}
-                        placeholder="Ej. Revisión de aire acondicionado"
+                        placeholder={t("reasonPlaceholder")}
                         className={inputClass}
                       />
                     </ModernField>
@@ -379,10 +379,10 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
       <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-xl shadow-slate-300/60 backdrop-blur">
         <div className="flex flex-col gap-3 border-b border-slate-200 bg-white p-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-700">Tabla dinámica</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-700">{t("dynamicTable")}</p>
             <h3 className="flex items-center gap-2 text-xl font-black text-slate-950">
               <Clock3 size={20} />
-              Listado de citas
+              {t("appointmentsList")}
             </h3>
           </div>
 
@@ -392,7 +392,7 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
               <input
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
-                placeholder="Buscar cita..."
+                placeholder={t("searchAppointment")}
                 className="w-full rounded-xl border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none focus:ring-4 focus:ring-blue-100"
               />
             </div>
@@ -402,10 +402,10 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
               onChange={(e) => setFiltroEstado(e.target.value)}
               className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-blue-100"
             >
-              <option value="todas">Todas</option>
-              <option value="Programada">Programadas</option>
-              <option value="Cancelada">Canceladas</option>
-              <option value="Completada">Completadas</option>
+              <option value="todas">{t("allAppointments")}</option>
+              <option value="Programada">{t("scheduledPlural")}</option>
+              <option value="Cancelada">{t("cancelledPlural")}</option>
+              <option value="Completada">{t("completedPlural")}</option>
             </select>
 
             <select
@@ -413,9 +413,9 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
               onChange={(e) => setOrdenVista(e.target.value)}
               className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-blue-100"
             >
-              <option value="fecha">Fecha</option>
-              <option value="cliente">Cliente</option>
-              <option value="tecnico">Técnico</option>
+              <option value="fecha">{t("scheduledDate")}</option>
+              <option value="cliente">{t("customer")}</option>
+              <option value="tecnico">{t("technician")}</option>
             </select>
           </div>
         </div>
@@ -423,17 +423,17 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
         <div className="overflow-x-auto [-webkit-overflow-scrolling:touch]">
           <div className="min-w-[960px]">
             <div className="grid grid-cols-[1fr_1fr_1fr_1.3fr_1fr_180px] gap-3 bg-slate-950 px-4 py-3 text-[11px] font-black uppercase tracking-wide text-white">
-              <span>Fecha / Hora</span>
-              <span>Cliente</span>
-              <span>Técnico</span>
-              <span>Motivo</span>
-              <span>Estado</span>
-              <span className="text-right">Acciones</span>
+              <span>{t("dateTime")}</span>
+              <span>{t("customer")}</span>
+              <span>{t("technician")}</span>
+              <span>{t("reason")}</span>
+              <span>{t("status")}</span>
+              <span className="text-right">{t("actions")}</span>
             </div>
 
             <div className="divide-y divide-slate-200">
               {citasVisibles.length === 0 && (
-                <div className="p-6 text-center text-sm text-slate-500">No hay citas para mostrar.</div>
+                <div className="p-6 text-center text-sm text-slate-500">{t("noAppointments")}</div>
               )}
 
               {citasVisibles.map((cita) => {
@@ -446,27 +446,27 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
                     <div>
                       <p className="flex items-center gap-1.5 font-black text-slate-950">
                         <CalendarDays size={14} />
-                        {cita.fecha || "Sin fecha"}
+                        {cita.fecha || t("noDate")}
                       </p>
                       <p className="flex items-center gap-1.5 text-xs text-slate-500">
                         <Clock3 size={13} />
-                        {cita.hora || "Sin hora"}
+                        {cita.hora || t("time")}
                       </p>
                     </div>
 
                     <div>
-                      <p className="truncate font-black text-slate-800">{cliente?.nombre || "Cliente eliminado"}</p>
+                      <p className="truncate font-black text-slate-800">{cliente?.nombre || t("deletedCustomer")}</p>
                       <p className="truncate text-xs text-slate-500">{formatPhoneDisplay(cliente?.telefono || "")}</p>
                     </div>
 
                     <div>
                       <p className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2 py-1 text-xs font-black text-blue-700">
                         <UserCog size={13} />
-                        {tecnico?.nombre || "Sin técnico"}
+                        {tecnico?.nombre || t("noTechnician")}
                       </p>
                     </div>
 
-                    <p className="line-clamp-2 text-slate-600">{cita.motivo || "Sin motivo"}</p>
+                    <p className="line-clamp-2 text-slate-600">{cita.motivo || t("noReason")}</p>
 
                     <select
                       value={estado}
@@ -486,7 +486,7 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
                       {cliente?.telefono && (
                         <a href={`tel:${cliente.telefono}`} className="inline-flex min-w-[78px] items-center justify-center gap-1 rounded-xl bg-emerald-700 px-2 py-1.5 text-[11px] font-black text-white">
                           <Phone size={12} />
-                          Llamar
+                          {t("call")}
                         </a>
                       )}
 
@@ -496,20 +496,20 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
                           className="inline-flex min-w-[96px] items-center justify-center gap-1 rounded-xl bg-blue-700 px-2 py-1.5 text-[11px] font-black text-white"
                         >
                           <ClipboardList size={12} />
-                          Crear orden
+                          {t("createOrderAction")}
                         </button>
                       )}
 
                       <button
                         onClick={() => {
-                          if (window.confirm("¿Eliminar esta cita?")) {
+                          if (window.confirm(t("deleteAppointmentConfirm"))) {
                             setCitas(citas.filter((x) => x.id !== cita.id));
                           }
                         }}
                         className="inline-flex min-w-[78px] items-center justify-center gap-1 rounded-xl bg-red-50 px-2 py-1.5 text-[11px] font-black text-red-700"
                       >
                         <Trash2 size={12} />
-                        Eliminar
+                        {t("delete")}
                       </button>
                     </div>
                   </article>
