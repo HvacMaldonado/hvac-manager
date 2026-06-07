@@ -391,16 +391,25 @@ export default function CalendarioPage({
         <div className="relative grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {tecnicos.map((tec) => {
             const theme = getTecnicoThemeById(tecnicos, tec.id);
-            const asignados = events.filter((event) => String(event.tecnicoId) === String(tec.id)).length;
+            const eventosTecnico = events.filter((event) => String(event.tecnicoId) === String(tec.id));
+            const citasTecnico = eventosTecnico.filter((event) => event.type === "cita").length;
+            const ordenesTecnico = eventosTecnico.filter((event) => event.type === "orden").length;
 
             return (
               <div key={tec.id} className={`group relative overflow-hidden rounded-2xl border p-3 shadow-sm ring-1 ring-white/70 transition hover:-translate-y-0.5 hover:shadow-lg ${theme.event}`}>
                 <div className={`absolute left-0 top-0 h-full w-1.5 ${theme.dot}`} />
                 <div className="flex items-center gap-2 pl-1">
                   <span className={`h-4 w-4 shrink-0 rounded-full border-2 border-white shadow-md ${theme.dot}`} />
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-black">{tec.nombre}</p>
-                    <p className="text-[10px] font-black uppercase opacity-70">{asignados} eventos</p>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      <span className="rounded-full bg-white/70 px-2 py-0.5 text-[9px] font-black uppercase shadow-sm">
+                        {citasTecnico} citas
+                      </span>
+                      <span className="rounded-full bg-white/70 px-2 py-0.5 text-[9px] font-black uppercase shadow-sm">
+                        {ordenesTecnico} órdenes
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
