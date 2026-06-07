@@ -152,21 +152,21 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
         <div className="bg-slate-950 p-5 text-white">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-slate-300">Historial</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-slate-300">{t("history")}</p>
               <h2 className="mt-1 flex items-center gap-2 text-2xl font-black">
                 <FileText size={24} />
-                Historial de órdenes
+                {t("historyTitle")}
               </h2>
               <p className="mt-1 text-sm text-slate-300">
-                Consulta en un solo lugar las órdenes completadas y canceladas, con filtros y acciones rápidas.
+                {t("historyDescription")}
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2 xl:justify-end">
-              <MiniMetric icon={ClipboardList} label="Total" value={ordenes.length} />
-              <MiniMetric icon={CheckCircle2} label="Completadas" value={completadas} tone="from-emerald-800 to-teal-600" />
-              <MiniMetric icon={XCircle} label="Canceladas" value={canceladas} tone="from-rose-800 to-red-700" />
-              <MiniMetric icon={DollarSign} label="Materiales" value={`$${totalMateriales.toFixed(2)}`} tone="from-slate-800 to-slate-950" />
+              <MiniMetric icon={ClipboardList} label={t("total")} value={ordenes.length} />
+              <MiniMetric icon={CheckCircle2} label={t("completed")} value={completadas} tone="from-emerald-800 to-teal-600" />
+              <MiniMetric icon={XCircle} label={t("cancelled")} value={canceladas} tone="from-rose-800 to-red-700" />
+              <MiniMetric icon={DollarSign} label={t("materials")} value={`$${totalMateriales.toFixed(2)}`} tone="from-slate-800 to-slate-950" />
             </div>
           </div>
         </div>
@@ -177,7 +177,7 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
             <input
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              placeholder="Buscar por cliente, técnico, problema, dirección o estado..."
+              placeholder={t("searchHistoryPlaceholder")}
               className="w-full rounded-2xl border border-slate-300 bg-white py-3 pl-10 pr-3 text-sm outline-none shadow-sm transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100"
             />
           </div>
@@ -187,9 +187,9 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
             onChange={(e) => setEstadoFiltro(e.target.value)}
             className="rounded-2xl border border-slate-300 bg-white px-3 py-3 text-sm font-bold text-slate-700 outline-none shadow-sm focus:border-blue-700 focus:ring-4 focus:ring-blue-100"
           >
-            <option value="todos">Todos</option>
-            <option value="Completado">Completadas</option>
-            <option value="Cancelada">Canceladas</option>
+            <option value="todos">{t("all")}</option>
+            <option value="Completado">{t("completed")}</option>
+            <option value="Cancelada">{t("cancelled")}</option>
           </select>
 
           <select
@@ -197,8 +197,8 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
             onChange={(e) => setOrdenFecha(e.target.value)}
             className="rounded-2xl border border-slate-300 bg-white px-3 py-3 text-sm font-bold text-slate-700 outline-none shadow-sm focus:border-blue-700 focus:ring-4 focus:ring-blue-100"
           >
-            <option value="recientes">Más recientes</option>
-            <option value="antiguos">Más antiguos</option>
+            <option value="recientes">{t("mostRecent")}</option>
+            <option value="antiguos">{t("oldest")}</option>
           </select>
         </div>
       </div>
@@ -207,11 +207,11 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
         <div className="bg-slate-950 px-4 py-3 text-white">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[11px] font-black uppercase tracking-[0.25em] text-slate-300">Registros de órdenes</p>
-              <h3 className="text-lg font-black">Completadas y canceladas</h3>
+              <p className="text-[11px] font-black uppercase tracking-[0.25em] text-slate-300">{t("orderRecords")}</p>
+              <h3 className="text-lg font-black">{t("completedAndCancelled")}</h3>
             </div>
             <span className="w-fit rounded-full bg-white/10 px-3 py-1 text-xs font-black ring-1 ring-white/20">
-              {historialFiltrado.length} registros
+              {historialFiltrado.length} {t("records")}
             </span>
           </div>
         </div>
@@ -219,7 +219,7 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
         <div className="space-y-6 bg-[radial-gradient(circle_at_top_right,_#22d3ee26,_transparent_28%),linear-gradient(135deg,_#f8fafc_0%,_#eef6ff_45%,_#f8fafc_100%)] p-5">
           {historialFiltrado.length === 0 && (
             <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm font-semibold text-slate-500">
-              No hay órdenes en historial con esos filtros.
+              {t("noHistoryOrders")}
             </div>
           )}
 
@@ -251,7 +251,7 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2">
                             <p className="max-w-full truncate text-2xl font-black leading-tight text-slate-950">
-                              {cliente?.nombre || "Cliente eliminado"}
+                              {cliente?.nombre || t("deletedCustomer")}
                             </p>
                             <span className={`rounded-full border px-3 py-1 text-xs font-black ${statusClass(orden.estado)}`}>
                               {orden.estado}
@@ -264,11 +264,11 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
                           <div className="mt-3 grid gap-2 text-sm font-black text-slate-600 md:grid-cols-[180px_minmax(0,1fr)]">
                             <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/80 px-3 py-2 shadow-sm">
                               <Phone size={15} className="shrink-0 text-emerald-600" />
-                              <span className="truncate">{formatPhoneDisplay(cliente?.telefono || "") || "Sin teléfono"}</span>
+                              <span className="truncate">{formatPhoneDisplay(cliente?.telefono || "") || t("noPhone")}</span>
                             </div>
                             <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/80 px-3 py-2 shadow-sm">
                               <MapPin size={15} className="shrink-0 text-blue-700" />
-                              <span className="line-clamp-1">{cliente?.direccion || "Sin dirección"}</span>
+                              <span className="line-clamp-1">{cliente?.direccion || t("noAddress")}</span>
                             </div>
                           </div>
                         </div>
@@ -277,7 +277,7 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
 
                     <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                       <div className="rounded-[1.35rem] border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-3 shadow-sm">
-                        <p className="text-[10px] font-black uppercase tracking-wide text-slate-500">Técnico</p>
+                        <p className="text-[10px] font-black uppercase tracking-wide text-slate-500">{t("technician")}</p>
                         <p className="mt-1 flex items-center gap-1 truncate text-sm font-black text-slate-900">
                           <BadgeCheck size={13} className="text-blue-700" />
                           {tecnico?.nombre || "Sin técnico"}
@@ -285,7 +285,7 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
                       </div>
 
                       <div className="rounded-[1.35rem] border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-3 shadow-sm">
-                        <p className="text-[10px] font-black uppercase tracking-wide text-slate-500">Fecha</p>
+                        <p className="text-[10px] font-black uppercase tracking-wide text-slate-500">{t("scheduledDate")}</p>
                         <p className="mt-1 flex items-center gap-1 truncate text-sm font-black text-slate-900">
                           <CalendarDays size={13} className="text-slate-500" />
                           {fecha}
@@ -293,7 +293,7 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
                       </div>
 
                       <div className="rounded-[1.35rem] border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-3 shadow-sm">
-                        <p className="text-[10px] font-black uppercase tracking-wide text-slate-500">Materiales</p>
+                        <p className="text-[10px] font-black uppercase tracking-wide text-slate-500">{t("materials")}</p>
                         <p className="mt-1 line-clamp-1 text-sm font-black text-slate-900">
                           {materiales || "Sin materiales"}
                         </p>
@@ -303,7 +303,7 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
                         onClick={() => setEvidenciaOrden(orden)}
                         className="rounded-[1.35rem] border border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 p-3 text-left text-blue-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-100 hover:shadow-md"
                       >
-                        <p className="text-[10px] font-black uppercase tracking-wide">Fotos</p>
+                        <p className="text-[10px] font-black uppercase tracking-wide">{t("photos")}</p>
                         <p className="mt-1 flex items-center gap-1 text-sm font-black">
                           <Camera size={13} />
                           Ver {fotosCount}/3
@@ -314,7 +314,7 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
 
                   <div className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-900 p-4 text-white shadow-xl shadow-slate-300/50">
                     <div className="absolute -right-10 -top-12 h-32 w-32 rounded-full bg-cyan-300/20 blur-3xl" />
-                    <p className="relative mb-3 text-[10px] font-black uppercase tracking-[0.28em] text-cyan-100">Acciones rápidas</p>
+                    <p className="relative mb-3 text-[10px] font-black uppercase tracking-[0.28em] text-cyan-100">{t("quickActions")}</p>
 
                     <div className="grid grid-cols-2 gap-2">
                       <button
