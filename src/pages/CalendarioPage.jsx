@@ -86,7 +86,23 @@ function MiniMetric({ label, value }) {
   );
 }
 
-function CalendarEvent({ event }) {
+function CalendarEvent({ event, t = (key) => key }) {
+  const eventTypeLabel = (type) => {
+    if (type === "cita") return t("appointment").toUpperCase();
+    if (type === "orden") return t("workOrder").toUpperCase();
+    return String(type || "").toUpperCase();
+  };
+
+  const priorityLabel = (priority) => {
+    const map = {
+      Baja: t("low"),
+      Media: t("medium"),
+      Alta: t("high"),
+      Urgente: t("urgent"),
+    };
+    return (map[priority] || priority || "").toUpperCase();
+  };
+
   return (
     <article className={`group/event relative overflow-hidden rounded-[1.25rem] border py-3 pl-4 pr-3 text-xs shadow-md ring-1 ring-white/70 transition duration-200 hover:-translate-y-0.5 hover:shadow-lg ${event.theme?.event || eventTone(event.type, event.prioridad)}`}>
       <div className={`absolute left-0 top-0 h-full w-2 ${event.theme?.dot || "bg-slate-400"}`} />
@@ -104,7 +120,7 @@ function CalendarEvent({ event }) {
         </div>
 
         <span className="shrink-0 rounded-full bg-white/80 px-2 py-1 text-[8px] font-black uppercase shadow-sm">
-          {event.type}
+          {eventTypeLabel(event.type)}
         </span>
       </div>
 
@@ -116,7 +132,7 @@ function CalendarEvent({ event }) {
 
         {event.prioridad && (
           <span className="rounded-full bg-white/70 px-2 py-1 text-[8px] font-black uppercase shadow-sm">
-            {event.prioridad}
+            {priorityLabel(event.prioridad)}
           </span>
         )}
       </div>
@@ -128,7 +144,7 @@ function CalendarEvent({ event }) {
   );
 }
 
-function DayCell({ date, events, isCurrentMonth, onSelectDay }) {
+function DayCell({ date, events, isCurrentMonth, onSelectDay, t = (key) => key }) {
   const key = toDateKey(date);
   const isToday = key === todayKey();
   const hasEvents = events.length > 0;
@@ -163,7 +179,7 @@ function DayCell({ date, events, isCurrentMonth, onSelectDay }) {
 
       <div className="relative space-y-1.5">
         {events.slice(0, 3).map((event) => (
-          <CalendarEvent key={event.id} event={event} />
+          <CalendarEvent key={event.id} event={event} t={t} />
         ))}
 
         {events.length > 3 && (
@@ -298,6 +314,22 @@ export default function CalendarioPage({
   const ordenesCount = events.filter((e) => e.type === "orden").length;
   const todayEvents = eventsByDay[todayKey()] || [];
 
+  const eventTypeLabel = (type) => {
+    if (type === "cita") return t("appointment").toUpperCase();
+    if (type === "orden") return t("workOrder").toUpperCase();
+    return String(type || "").toUpperCase();
+  };
+
+  const priorityLabel = (priority) => {
+    const map = {
+      Baja: t("low"),
+      Media: t("medium"),
+      Alta: t("high"),
+      Urgente: t("urgent"),
+    };
+    return (map[priority] || priority || "").toUpperCase();
+  };
+
   return (
     <section className="space-y-4">
       <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-xl shadow-slate-300/60 backdrop-blur">
@@ -347,13 +379,13 @@ export default function CalendarioPage({
               onClick={() => setVista("mes")}
               className={`flex-1 rounded-xl px-3 py-2 text-xs font-black transition ${vista === "mes" ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-white"}`}
             >
-              Mes
+              {t("month")}
             </button>
             <button
               onClick={() => setVista("semana")}
               className={`flex-1 rounded-xl px-3 py-2 text-xs font-black transition ${vista === "semana" ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-white"}`}
             >
-              Semana
+              {t("week")}
             </button>
           </div>
 
@@ -362,7 +394,7 @@ export default function CalendarioPage({
               <ChevronLeft size={18} />
             </button>
             <button onClick={goToday} className="rounded-2xl bg-slate-950 px-4 text-sm font-black text-white shadow-sm">
-              Hoy
+              {t("today")}
             </button>
             <button onClick={goNext} className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm">
               <ChevronRight size={18} />
@@ -404,10 +436,10 @@ export default function CalendarioPage({
                     <p className="truncate text-sm font-black">{tec.nombre}</p>
                     <div className="mt-1 flex flex-wrap gap-1">
                       <span className="rounded-full bg-white/70 px-2 py-0.5 text-[9px] font-black uppercase shadow-sm">
-                        {citasTecnico} citas
+                        {citasTecnico} {t("appointments").toLowerCase()}
                       </span>
                       <span className="rounded-full bg-white/70 px-2 py-0.5 text-[9px] font-black uppercase shadow-sm">
-                        {ordenesTecnico} órdenes
+                        {ordenesTecnico} {t("orders").toLowerCase()}
                       </span>
                     </div>
                   </div>
@@ -430,7 +462,7 @@ export default function CalendarioPage({
                 {vista === "semana" ? t("weeklyView") : t("monthlyView")}
               </p>
               <h3 className="text-xl font-black text-slate-950">
-                {currentDate.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
+                {currentDate.toLocaleDateString(lang === "en" ? "en-US" : "es-US", { month: "long", year: "numeric" })}
               </h3>
             </div>
 
@@ -454,6 +486,7 @@ export default function CalendarioPage({
                   events={eventsByDay[key] || []}
                   isCurrentMonth={date.getMonth() === currentDate.getMonth() || vista === "semana"}
                   onSelectDay={setDiaSeleccionado}
+                  t={t}
                 />
               );
             })}
@@ -495,11 +528,11 @@ export default function CalendarioPage({
 
                   <div className="flex shrink-0 flex-col items-end gap-1">
                     <span className="rounded-full bg-white/80 px-2.5 py-1 text-[10px] font-black uppercase shadow-sm">
-                      {event.type}
+                      {eventTypeLabel(event.type)}
                     </span>
                     {event.prioridad && (
                       <span className="rounded-full bg-white/80 px-2.5 py-1 text-[10px] font-black uppercase shadow-sm">
-                        {event.prioridad}
+                        {priorityLabel(event.prioridad)}
                       </span>
                     )}
                   </div>
