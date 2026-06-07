@@ -119,31 +119,31 @@ function DonutFigure({ label, value, total, tone = "blue" }) {
   );
 }
 
-function InsightPanel({ completadas, canceladas, total, stockBajo, herramientasAlerta, valorInventario, money }) {
+function InsightPanel({ t = (key) => key, completadas, canceladas, total, stockBajo, herramientasAlerta, valorInventario, money }) {
   return (
     <section className="rounded-[2rem] border border-white/70 bg-white/90 p-5 shadow-xl shadow-slate-300/60 backdrop-blur">
       <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.28em] text-blue-700">Salud operativa</p>
-          <h3 className="text-xl font-black text-slate-950">Indicadores visuales</h3>
+          <p className="text-[10px] font-black uppercase tracking-[0.28em] text-blue-700">{t("operationalHealth")}</p>
+          <h3 className="text-xl font-black text-slate-950">{t("visualIndicators")}</h3>
         </div>
-        <p className="text-xs font-bold text-slate-500">Resumen interno del periodo seleccionado</p>
+        <p className="text-xs font-bold text-slate-500">{t("selectedPeriodSummary")}</p>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <DonutFigure label="Órdenes completadas" value={completadas} total={total} tone="green" />
-        <DonutFigure label="Cancelaciones" value={canceladas} total={total} tone={canceladas > 0 ? "rose" : "blue"} />
+        <DonutFigure label={t("completedOrders")} value={completadas} total={total} tone="green" />
+        <DonutFigure label={t("cancellations")} value={canceladas} total={total} tone={canceladas > 0 ? "rose" : "blue"} />
 
         <div className="rounded-[1.75rem] border border-slate-200 bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-800 p-4 text-white shadow-lg shadow-slate-300/60">
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200">Inventario</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200">{t("inventory")}</p>
           <p className="mt-2 text-3xl font-black">{money(valorInventario)}</p>
           <div className="mt-4 grid grid-cols-2 gap-2">
             <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/15">
-              <p className="text-[10px] font-black uppercase text-white/60">Stock bajo</p>
+              <p className="text-[10px] font-black uppercase text-white/60">{t("lowStock")}</p>
               <p className="text-2xl font-black">{stockBajo}</p>
             </div>
             <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/15">
-              <p className="text-[10px] font-black uppercase text-white/60">Herramientas</p>
+              <p className="text-[10px] font-black uppercase text-white/60">{t("toolAlerts")}</p>
               <p className="text-2xl font-black">{herramientasAlerta}</p>
             </div>
           </div>
@@ -154,7 +154,7 @@ function InsightPanel({ completadas, canceladas, total, stockBajo, herramientasA
 }
 
 
-export default function ReportesDashboardPage({ clientes, ordenes, inventario, herramientas, tecnicos, obtenerTecnico, exportarCSV }) {
+export default function ReportesDashboardPage({ t = (key) => key, clientes, ordenes, inventario, herramientas, tecnicos, obtenerTecnico, exportarCSV }) {
   const [busqueda, setBusqueda] = useState("");
   const [periodo, setPeriodo] = useState("todos");
 
