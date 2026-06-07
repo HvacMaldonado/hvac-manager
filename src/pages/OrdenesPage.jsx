@@ -262,7 +262,7 @@ export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, cr
                           <span className="truncate font-black">{tec.nombre}</span>
                         </span>
                         <span className="mt-1 block text-[10px] font-black uppercase tracking-wide opacity-70">
-                          {t("themeLabel")} {theme.name}
+                          {t("themeLabel")} {themeNameLabel(theme.name, t)}
                         </span>
                       </button>
                     );
@@ -448,6 +448,20 @@ function getTecnicoThemeById(tecnicos = [], tecnicoId) {
   return getTecnicoTheme(tecnicoId ? String(tecnicoId) : "sin-tecnico", index >= 0 ? index : 0);
 }
 
+function themeNameLabel(name, t = (key) => key) {
+  const map = {
+    Azul: t("blue"),
+    Verde: t("green"),
+    Morado: t("purple"),
+    Naranja: t("orange"),
+    Rosa: t("pink"),
+    Gris: t("gray"),
+    "Sin técnico": t("noTechnician"),
+  };
+
+  return map[name] || name;
+}
+
 function AdminOrdenesRegistro({ ordenes, obtenerCliente, ordenProps, periodo, t = (key) => key }) {
   const grupos = useMemo(() => {
     const porTecnico = {};
@@ -528,7 +542,7 @@ function AdminOrdenesRegistro({ ordenes, obtenerCliente, ordenProps, periodo, t 
                 <UserCog size={20} />
                 {grupoTecnico.tecnicoNombre}
                 <span className={`rounded-full px-2 py-1 text-[10px] font-black ring-1 ${theme.chip}`}>
-                  {theme.name}
+                  {themeNameLabel(theme.name, t)}
                 </span>
               </h3>
             </div>
