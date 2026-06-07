@@ -371,21 +371,39 @@ export default function CalendarioPage({
         </div>
       </div>
 
-      <div className="rounded-3xl border border-slate-200 bg-white/95 p-4 shadow-xl shadow-slate-300/50">
-        <div className="mb-3 flex items-center gap-2">
-          <UserCog size={18} className="text-blue-700" />
-          <h3 className="text-sm font-black uppercase tracking-wide text-slate-700">Colores por técnico</h3>
+      <div className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white/95 p-4 shadow-xl shadow-slate-300/50">
+        <div className="absolute -right-16 -top-20 h-44 w-44 rounded-full bg-cyan-200/25 blur-3xl" />
+        <div className="relative mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2">
+            <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-lg shadow-slate-300/70">
+              <UserCog size={18} />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-700">Equipo activo</p>
+              <h3 className="text-base font-black text-slate-950">Colores por técnico</h3>
+            </div>
+          </div>
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-black text-slate-600">
+            {tecnicos.length} técnicos
+          </span>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="relative grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {tecnicos.map((tec) => {
             const theme = getTecnicoThemeById(tecnicos, tec.id);
+            const asignados = events.filter((event) => String(event.tecnicoId) === String(tec.id)).length;
 
             return (
-              <span key={tec.id} className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-black ${theme.event}`}>
-                <span className={`h-3 w-3 rounded-full ${theme.dot}`} />
-                {tec.nombre}
-              </span>
+              <div key={tec.id} className={`group relative overflow-hidden rounded-2xl border p-3 shadow-sm ring-1 ring-white/70 transition hover:-translate-y-0.5 hover:shadow-lg ${theme.event}`}>
+                <div className={`absolute left-0 top-0 h-full w-1.5 ${theme.dot}`} />
+                <div className="flex items-center gap-2 pl-1">
+                  <span className={`h-4 w-4 shrink-0 rounded-full border-2 border-white shadow-md ${theme.dot}`} />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-black">{tec.nombre}</p>
+                    <p className="text-[10px] font-black uppercase opacity-70">{asignados} eventos</p>
+                  </div>
+                </div>
+              </div>
             );
           })}
 
