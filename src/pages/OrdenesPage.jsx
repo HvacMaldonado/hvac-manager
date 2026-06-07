@@ -157,13 +157,13 @@ export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, cr
         <div className="bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-900 p-5 text-white">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">Orden rápida</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">{t("quickOrder")}</p>
               <h2 className="mt-1 flex items-center gap-2 text-2xl font-black">
                 <ClipboardList size={24} />
-                Crear orden
+                {t("createOrderTitle")}
               </h2>
               <p className="mt-1 text-sm text-slate-300">
-                Crea, programa y asigna el trabajo al técnico correcto.
+                {t("createOrderDescription")}
               </p>
             </div>
 
@@ -179,7 +179,7 @@ export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, cr
             <div className="absolute -bottom-16 left-8 h-44 w-44 rounded-full bg-blue-500/25 blur-3xl" />
 
             <div className="relative space-y-4">
-              <FormSection icon={Search} title="Cliente" subtitle="Busca y selecciona el cliente para esta orden" tone="blue">
+              <FormSection icon={Search} title={t("customer")} subtitle={t("selectCustomerForOrder")} tone="blue">
                 <div className="relative">
                   <input
                     value={busquedaClienteOrden}
@@ -188,7 +188,7 @@ export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, cr
                       setBusquedaClienteOrden(e.target.value);
                       setMostrarClientes(Boolean(e.target.value.trim()));
                     }}
-                    placeholder="Nombre, teléfono, email o dirección"
+                    placeholder={t("customerSearchPlaceholder")}
                     className="w-full rounded-2xl border border-slate-300 bg-white p-3 pr-10 text-sm outline-none shadow-sm transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100"
                   />
                   <Search size={17} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -210,9 +210,9 @@ export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, cr
                 </div>
               </FormSection>
 
-              <FormSection icon={CalendarCheck2} title="Programación" subtitle="Define fecha y hora para la visita" tone="cyan">
+              <FormSection icon={CalendarCheck2} title={t("scheduling")} subtitle={t("schedulingDescription")} tone="cyan">
                 <div className="grid grid-cols-2 gap-2">
-                  <ModernField label="Fecha" icon={CalendarDays}>
+                  <ModernField label={t("scheduledDate")} icon={CalendarDays}>
                     <input
                       type="date"
                       value={ordenForm.fechaProgramada || ""}
@@ -221,7 +221,7 @@ export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, cr
                     />
                   </ModernField>
 
-                  <ModernField label="Hora" icon={Clock3}>
+                  <ModernField label={t("scheduledTime")} icon={Clock3}>
                     <input
                       type="time"
                       value={ordenForm.horaProgramada || ""}
@@ -232,7 +232,7 @@ export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, cr
                 </div>
               </FormSection>
 
-              <FormSection icon={ClipboardList} title="Problema reportado" subtitle="Describe lo que necesita revisar el técnico" tone="slate">
+              <FormSection icon={ClipboardList} title={t("reportedProblem")} subtitle={t("reportedProblemDescription")} tone="slate">
                 <textarea
                   value={ordenForm.problema}
                   onChange={(e) => setOrdenForm({ ...ordenForm, problema: e.target.value })}
@@ -241,7 +241,7 @@ export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, cr
                 />
               </FormSection>
 
-              <FormSection icon={UserCog} title="Técnico asignado" subtitle="El administrador asigna, el técnico completa" tone="blue">
+              <FormSection icon={UserCog} title={t("assignedTechnician")} subtitle={t("assignedTechnicianDescription")} tone="blue">
                 <div className="grid grid-cols-2 gap-2">
                   {tecnicos.map((tec, tecIndex) => {
                     const theme = getTecnicoTheme(String(tec.id), tecIndex);
@@ -262,7 +262,7 @@ export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, cr
                           <span className="truncate font-black">{tec.nombre}</span>
                         </span>
                         <span className="mt-1 block text-[10px] font-black uppercase tracking-wide opacity-70">
-                          Tema {theme.name}
+                          {t("themeLabel")} {theme.name}
                         </span>
                       </button>
                     );
@@ -270,7 +270,7 @@ export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, cr
                 </div>
               </FormSection>
 
-              <FormSection icon={AlertTriangle} title="Prioridad" subtitle="Define qué tan urgente es el servicio" tone="rose">
+              <FormSection icon={AlertTriangle} title={t("priority")} subtitle={t("priorityDescription")} tone="rose">
                 <PriorityChips value={ordenForm.prioridad} onChange={(p) => setOrdenForm({ ...ordenForm, prioridad: p })} />
               </FormSection>
 
@@ -289,21 +289,21 @@ export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, cr
       <section className="relative z-10 min-w-0 rounded-3xl border border-white/70 bg-white/95 p-3 2xl:p-5 shadow-xl shadow-blue-100/70 backdrop-blur">
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-700">Seguimiento administrativo</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-700">{t("administrativeTracking")}</p>
             <h2 className="flex items-center gap-2 text-xl 2xl:text-2xl font-black">
               <ShieldCheck {...iconProps} />
-              Lista de órdenes generadas
+              {t("generatedOrdersList")}
             </h2>
             <p className="mt-1 text-sm text-slate-500">
-              Aquí solo se revisan las órdenes. La ejecución queda en el perfil del técnico asignado.
+              {t("generatedOrdersDescription")}
             </p>
           </div>
 
           <div className="flex rounded-2xl border border-slate-200 bg-slate-100 p-1">
             {[
-              ["semana", "Semana"],
-              ["mes", "Mes"],
-              ["ano", "Año"],
+              ["semana", t("week")],
+              ["mes", t("month")],
+              ["ano", t("year")],
             ].map(([id, label]) => (
               <button
                 key={id}
@@ -325,6 +325,7 @@ export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, cr
           obtenerCliente={obtenerCliente}
           ordenProps={ordenProps}
           periodo={periodoOrdenes}
+          t={t}
         />
       </section>
     </section>
@@ -447,7 +448,7 @@ function getTecnicoThemeById(tecnicos = [], tecnicoId) {
   return getTecnicoTheme(tecnicoId ? String(tecnicoId) : "sin-tecnico", index >= 0 ? index : 0);
 }
 
-function AdminOrdenesRegistro({ ordenes, obtenerCliente, ordenProps, periodo }) {
+function AdminOrdenesRegistro({ ordenes, obtenerCliente, ordenProps, periodo, t = (key) => key }) {
   const grupos = useMemo(() => {
     const porTecnico = {};
 
@@ -519,7 +520,7 @@ function AdminOrdenesRegistro({ ordenes, obtenerCliente, ordenProps, periodo }) 
           <div className={`flex flex-col gap-3 px-4 py-4 text-white lg:flex-row lg:items-center lg:justify-between ${theme.header}`}>
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-200">
-                Técnico asignado
+                {t("assignedTechnicianLabel")}
               </p>
 
               <h3 className="mt-1 flex items-center gap-2 text-xl font-black">
@@ -534,15 +535,15 @@ function AdminOrdenesRegistro({ ordenes, obtenerCliente, ordenProps, periodo }) 
 
             <div className="flex flex-wrap items-center gap-2">
               <span className={`rounded-2xl px-3 py-2 text-xs font-black ring-1 ${theme.chip}`}>
-                {grupoTecnico.total} órdenes
+                {grupoTecnico.total} {t("ordersLabel")}
               </span>
 
               <span className={`rounded-2xl px-3 py-2 text-xs font-black ring-1 ${theme.chip}`}>
-                Urgentes {grupoTecnico.urgentes}
+                {t("urgentPlural")} {grupoTecnico.urgentes}
               </span>
 
               <span className={`rounded-2xl px-3 py-2 text-xs font-black ring-1 ${theme.chip}`}>
-                Atrasadas {grupoTecnico.atrasadas}
+                {t("overduePlural")} {grupoTecnico.atrasadas}
               </span>
             </div>
           </div>
@@ -553,7 +554,7 @@ function AdminOrdenesRegistro({ ordenes, obtenerCliente, ordenProps, periodo }) 
                 <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-700">
-                      Periodo
+                      {t("period")}
                     </p>
                     <h4 className="text-sm font-black capitalize text-slate-950">
                       {grupoPeriodo.key}
@@ -572,6 +573,7 @@ function AdminOrdenesRegistro({ ordenes, obtenerCliente, ordenProps, periodo }) 
                       orden={orden}
                       cliente={obtenerCliente(orden.clienteId)}
                       ordenProps={ordenProps}
+                      t={t}
                     />
                   ))}
                 </div>
@@ -584,7 +586,7 @@ function AdminOrdenesRegistro({ ordenes, obtenerCliente, ordenProps, periodo }) 
   );
 }
 
-function AdminOrdenRow({ orden, cliente, ordenProps }) {
+function AdminOrdenRow({ orden, cliente, ordenProps, t = (key) => key }) {
   const [shareOpen, setShareOpen] = useState(false);
 
   const tecnico = ordenProps.obtenerTecnico(orden.tecnicoId);
@@ -601,15 +603,15 @@ function AdminOrdenRow({ orden, cliente, ordenProps }) {
       <div className="grid grid-cols-1 gap-3 px-4 py-3 xl:grid-cols-[minmax(260px,1fr)_132px_132px_150px_150px_260px] xl:items-center">
         <div className="min-w-0">
           <p className="truncate text-base font-black text-slate-950">
-            {cliente?.nombre || "Cliente eliminado"}
+            {cliente?.nombre || t("deletedCustomer")}
           </p>
 
           <p className="mt-1 line-clamp-1 text-sm font-semibold text-slate-600">
-            {orden.problema || "Sin problema reportado"}
+            {orden.problema || t("noReportedProblem")}
           </p>
 
           <p className="mt-1 text-xs font-semibold text-slate-400">
-            Orden #{orden.id}
+            {t("orderId")} #{orden.id}
           </p>
         </div>
 
@@ -619,7 +621,7 @@ function AdminOrdenRow({ orden, cliente, ordenProps }) {
           </div>
 
           <div className="min-w-0">
-            <p className="text-[9px] font-black uppercase tracking-wide text-slate-500">Estado</p>
+            <p className="text-[9px] font-black uppercase tracking-wide text-slate-500">{t("status")}</p>
             <p className={`truncate rounded-full border px-2 py-0.5 text-[10px] font-black ${ordenProps.colorEstado(orden.estado)}`}>
               {orden.estado}
             </p>
@@ -632,7 +634,7 @@ function AdminOrdenRow({ orden, cliente, ordenProps }) {
           </div>
 
           <div className="min-w-0">
-            <p className="text-[9px] font-black uppercase tracking-wide text-slate-500">Prioridad</p>
+            <p className="text-[9px] font-black uppercase tracking-wide text-slate-500">{t("priority")}</p>
             <p className={`truncate rounded-full border px-2 py-0.5 text-[10px] font-black ${ordenProps.colorPrioridad(orden.prioridad)}`}>
               {orden.prioridad}
             </p>
@@ -645,8 +647,8 @@ function AdminOrdenRow({ orden, cliente, ordenProps }) {
           </div>
 
           <div className="min-w-0">
-            <p className="text-[9px] font-black uppercase tracking-wide text-slate-500">Técnico</p>
-            <p className="truncate text-xs font-black text-slate-900">{tecnico?.nombre || "Sin asignar"}</p>
+            <p className="text-[9px] font-black uppercase tracking-wide text-slate-500">{t("technician")}</p>
+            <p className="truncate text-xs font-black text-slate-900">{tecnico?.nombre || t("unassigned")}</p>
           </div>
         </div>
 
@@ -656,9 +658,9 @@ function AdminOrdenRow({ orden, cliente, ordenProps }) {
           </div>
 
           <div className="min-w-0">
-            <p className="text-[9px] font-black uppercase tracking-wide text-slate-500">Programado</p>
-            <p className="truncate text-xs font-black text-slate-800">{orden.fechaProgramada || orden.fecha || "Sin fecha"}</p>
-            <p className="truncate text-[10px] font-semibold text-slate-500">{orden.horaProgramada || "Sin hora"}</p>
+            <p className="text-[9px] font-black uppercase tracking-wide text-slate-500">{t("scheduledLabel")}</p>
+            <p className="truncate text-xs font-black text-slate-800">{orden.fechaProgramada || orden.fecha || t("noDate")}</p>
+            <p className="truncate text-[10px] font-semibold text-slate-500">{orden.horaProgramada || t("time")}</p>
           </div>
         </div>
 
@@ -666,31 +668,31 @@ function AdminOrdenRow({ orden, cliente, ordenProps }) {
           {telefono && (
             <a href={ordenProps.urlTelefono(telefono)} className="inline-flex h-10 w-[120px] items-center justify-center gap-1 rounded-xl bg-emerald-700 px-2.5 text-xs font-black text-white shadow-sm">
               <Phone size={13} />
-              Llamar
+              {t("call")}
             </a>
           )}
 
           {direccion && (
             <a href={ordenProps.urlAppleMaps(direccion)} target="_blank" rel="noreferrer" className="inline-flex h-10 w-[120px] items-center justify-center gap-1 rounded-xl bg-slate-950 px-2.5 text-xs font-black text-white shadow-sm">
               <Navigation size={13} />
-              Mapa
+              {t("map")}
             </a>
           )}
 
           <button onClick={() => compartir("imprimir")} className="inline-flex h-10 w-[120px] items-center justify-center gap-1 rounded-xl bg-blue-700 px-2.5 text-xs font-black text-white shadow-sm">
             <Printer size={13} />
-            Imprimir
+            {t("print")}
           </button>
 
           <div className="relative">
             <button onClick={() => setShareOpen((v) => !v)} className="inline-flex h-10 w-[120px] items-center justify-center gap-1 rounded-xl bg-cyan-700 px-2.5 text-xs font-black text-white shadow-sm">
               <Share2 size={13} />
-              Compartir
+              {t("share")}
             </button>
 
             {shareOpen && (
               <>
-                <button type="button" aria-label="Cerrar menú de compartir" className="fixed inset-0 z-[998]" onClick={() => setShareOpen(false)} />
+                <button type="button" aria-label={t("closeShareMenu")} className="fixed inset-0 z-[998]" onClick={() => setShareOpen(false)} />
 
                 <div className="absolute right-0 top-11 z-[999] w-52 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-400/40">
                   <button onClick={() => compartir("whatsapp")} className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs font-black text-slate-700 hover:bg-emerald-50 hover:text-emerald-700">
@@ -705,7 +707,7 @@ function AdminOrdenRow({ orden, cliente, ordenProps }) {
 
                   <button onClick={() => compartir("mensaje")} className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs font-black text-slate-700 hover:bg-blue-50 hover:text-blue-700">
                     <Share2 size={14} />
-                    Compartir sistema
+                    {t("share")} sistema
                   </button>
 
                   <button onClick={() => compartir("email")} className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs font-black text-slate-700 hover:bg-slate-50">
