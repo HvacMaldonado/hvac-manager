@@ -188,7 +188,7 @@ function NewTechnicianForm({ t = (key) => key, setTecnicos, tecnicos }) {
               className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-slate-950 via-blue-900 to-cyan-700 px-5 py-3 text-sm font-black text-white shadow-lg shadow-slate-300 transition hover:-translate-y-0.5"
             >
               <Plus size={16} />
-              Agregar técnico
+              {t("addTechnician")}
             </button>
           </div>
         </div>
@@ -261,10 +261,10 @@ function TechniciansTable({ t = (key) => key, title, subtitle, icon: Icon, rows,
         <div className="min-w-[1180px]">
           <div className="grid grid-cols-[64px_1.25fr_0.9fr_1.25fr_0.85fr_0.85fr_340px] gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3 text-[11px] font-black uppercase tracking-wide text-slate-500">
             <span>ID</span>
-            <span>Nombre</span>
-            <span>Usuario</span>
-            <span>Contacto</span>
-            <span>Color</span>
+            <span>{t("name")}</span>
+            <span>{t("user")}</span>
+            <span>{t("contact")}</span>
+            <span>{t("color")}</span>
             <span>{t("entry")}</span>
             <span>{t("exit")}</span>
             <span className="text-right">{t("actions")}</span>
@@ -323,7 +323,7 @@ function TechniciansTable({ t = (key) => key, title, subtitle, icon: Icon, rows,
                   {activeList ? (
                     <button onClick={() => onBaja(tec.id)} className="inline-flex min-w-[82px] items-center justify-center gap-1 rounded-xl bg-slate-950 px-3 py-2 text-xs font-black text-white">
                       <LogOut size={13} />
-                      {t("inactive")}
+                      {t("deactivate")}
                     </button>
                   ) : (
                     <button onClick={() => onReactivar(tec.id)} className="inline-flex min-w-[92px] items-center justify-center gap-1 rounded-xl bg-emerald-700 px-3 py-2 text-xs font-black text-white">
@@ -356,7 +356,7 @@ function StatusBadge({ t = (key) => key, active }) {
   ) : (
     <span className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-slate-100 px-2 py-1 text-[11px] font-black text-slate-700">
       <LogOut size={12} />
-      {t("inactive")}
+      {t("deactivate")}
     </span>
   );
 }
