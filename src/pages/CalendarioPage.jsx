@@ -88,23 +88,42 @@ function MiniMetric({ label, value }) {
 
 function CalendarEvent({ event }) {
   return (
-    <article className={`group/event relative overflow-hidden rounded-[1.1rem] border py-2.5 pl-3.5 pr-2.5 text-xs shadow-sm ring-1 ring-white/60 transition duration-200 hover:-translate-y-0.5 hover:shadow-md ${event.theme?.event || eventTone(event.type, event.prioridad)}`}>
-      <div className={`absolute left-0 top-0 h-full w-1.5 ${event.theme?.dot || "bg-slate-400"}`} />
-      <div className="absolute -right-8 -top-8 h-16 w-16 rounded-full bg-white/40 blur-2xl" />
+    <article className={`group/event relative overflow-hidden rounded-[1.25rem] border py-3 pl-4 pr-3 text-xs shadow-md ring-1 ring-white/70 transition duration-200 hover:-translate-y-0.5 hover:shadow-lg ${event.theme?.event || eventTone(event.type, event.prioridad)}`}>
+      <div className={`absolute left-0 top-0 h-full w-2 ${event.theme?.dot || "bg-slate-400"}`} />
+      <div className="absolute -right-8 -top-8 h-20 w-20 rounded-full bg-white/45 blur-2xl" />
+
       <div className="relative flex items-start justify-between gap-2">
-        <p className="line-clamp-2 flex items-start gap-1.5 font-black leading-tight">
-          <span className={`mt-0.5 h-3.5 w-3.5 shrink-0 rounded-full border-2 border-white shadow-md ${event.theme?.dot || "bg-slate-400"}`} />
-          {event.title}
-        </p>
-        <span className="shrink-0 rounded-full bg-white/75 px-2 py-0.5 text-[8px] font-black uppercase shadow-sm">
+        <div className="min-w-0">
+          <p className="line-clamp-2 flex items-start gap-2 text-[13px] font-black leading-tight">
+            <span className={`mt-0.5 h-4 w-4 shrink-0 rounded-full border-2 border-white shadow-md ${event.theme?.dot || "bg-slate-400"}`} />
+            {event.title}
+          </p>
+          <p className="mt-1 line-clamp-1 pl-6 text-[10px] font-black uppercase tracking-wide opacity-70">
+            {event.tecnico}
+          </p>
+        </div>
+
+        <span className="shrink-0 rounded-full bg-white/80 px-2 py-1 text-[8px] font-black uppercase shadow-sm">
           {event.type}
         </span>
       </div>
-      <p className="relative mt-1.5 flex items-center gap-1 font-black opacity-85">
-        <Clock3 size={11} />
-        {formatTime(event.time)}
+
+      <div className="relative mt-2 flex items-center justify-between gap-2">
+        <p className="flex items-center gap-1 rounded-full bg-white/65 px-2 py-1 text-[11px] font-black shadow-sm">
+          <Clock3 size={12} />
+          {formatTime(event.time)}
+        </p>
+
+        {event.prioridad && (
+          <span className="rounded-full bg-white/70 px-2 py-1 text-[8px] font-black uppercase shadow-sm">
+            {event.prioridad}
+          </span>
+        )}
+      </div>
+
+      <p className="relative mt-2 line-clamp-2 text-[11px] font-semibold leading-snug opacity-80">
+        {event.subtitle}
       </p>
-      <p className="relative mt-1 line-clamp-1 font-semibold opacity-75">{event.subtitle}</p>
     </article>
   );
 }
