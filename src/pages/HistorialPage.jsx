@@ -89,7 +89,7 @@ function ActionButton({ icon: Icon, label, onClick, href, className = "" }) {
   );
 }
 
-export default function HistorialPage({ t, ordenes, obtenerCliente, ordenProps }) {
+export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, obtenerCliente, ordenProps }) {
   const [busqueda, setBusqueda] = useState("");
   const [evidenciaOrden, setEvidenciaOrden] = useState(null);
   const [detalleOrden, setDetalleOrden] = useState(null);

@@ -158,6 +158,8 @@ function DayCell({ date, events, isCurrentMonth, onSelectDay }) {
 }
 
 export default function CalendarioPage({
+  t = (key) => key,
+  lang = "es",
   citas = [],
   ordenes = [],
   clientes = [],
@@ -283,13 +285,13 @@ export default function CalendarioPage({
         <div className="bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-900 p-5 text-white">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">Agenda visual</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">{t("visualAgenda")}</p>
               <h2 className="mt-1 flex items-center gap-2 text-2xl font-black">
                 <CalendarCheck2 size={24} />
-                Calendario
+                {t("calendar")}
               </h2>
               <p className="mt-1 text-sm text-slate-300">
-                Visualiza citas y órdenes programadas por día, semana, técnico y prioridad.
+                {t("calendarDescription")}
               </p>
             </div>
 

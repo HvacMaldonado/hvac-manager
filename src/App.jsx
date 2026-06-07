@@ -193,6 +193,43 @@ const TEXT = {
     reusableTool: "Herramienta / equipo",
     returnTool: "Devolver herramienta",
     translate: "Traducir",
+    calendar: "Calendario",
+    visualAgenda: "Agenda visual",
+    calendarDescription: "Visualiza citas y órdenes programadas por día, semana, técnico y prioridad.",
+    events: "Eventos",
+    today: "Hoy",
+    allTechnicians: "Todos los técnicos",
+    month: "Mes",
+    week: "Semana",
+    monthlyView: "Vista mensual",
+    weeklyView: "Vista semanal",
+    colorsByTechnician: "Colores por técnico",
+    dayDetail: "Detalle del día",
+    noEventsDay: "No hay eventos para este día.",
+    noActiveTechnicians: "No hay técnicos activos.",
+    history: "Historial",
+    dashboard: "Dashboard",
+    searchCalendarPlaceholder: "Buscar cliente, técnico, dirección o trabajo...",
+    technician: "Técnico",
+    customer: "Cliente",
+    address: "Dirección",
+    phone: "Teléfono",
+    status: "Estado",
+    completed: "Completado",
+    cancelled: "Cancelada",
+    needsFollowUp: "Necesita seguimiento",
+    time: "Hora",
+    map: "Mapa",
+    noAddress: "Sin dirección",
+    appointment: "Cita",
+    workOrder: "Orden",
+    sundayShort: "Dom",
+    mondayShort: "Lun",
+    tuesdayShort: "Mar",
+    wednesdayShort: "Mié",
+    thursdayShort: "Jue",
+    fridayShort: "Vie",
+    saturdayShort: "Sáb",
   },
   en: {
     app: "HVAC Manager",
@@ -255,6 +292,43 @@ const TEXT = {
     reusableTool: "Tool / equipment",
     returnTool: "Return tool",
     translate: "Translate",
+    calendar: "Calendar",
+    visualAgenda: "Visual agenda",
+    calendarDescription: "View appointments and scheduled work orders by day, week, technician, and priority.",
+    events: "Events",
+    today: "Today",
+    allTechnicians: "All technicians",
+    month: "Month",
+    week: "Week",
+    monthlyView: "Monthly view",
+    weeklyView: "Weekly view",
+    colorsByTechnician: "Technician colors",
+    dayDetail: "Day details",
+    noEventsDay: "No events for this day.",
+    noActiveTechnicians: "No active technicians.",
+    history: "History",
+    dashboard: "Dashboard",
+    searchCalendarPlaceholder: "Search customer, technician, address, or work...",
+    technician: "Technician",
+    customer: "Customer",
+    address: "Address",
+    phone: "Phone",
+    status: "Status",
+    completed: "Completed",
+    cancelled: "Cancelled",
+    needsFollowUp: "Follow-up needed",
+    time: "Time",
+    map: "Map",
+    noAddress: "No address",
+    appointment: "Appointment",
+    workOrder: "Work order",
+    sundayShort: "Sun",
+    mondayShort: "Mon",
+    tuesdayShort: "Tue",
+    wednesdayShort: "Wed",
+    thursdayShort: "Thu",
+    fridayShort: "Fri",
+    saturdayShort: "Sat",
   },
 };
 
@@ -1720,12 +1794,12 @@ const compartirOrden = async (orden, metodo) => {
     ["clientes", t("customers"), Users],
     ["tecnicos", t("technicians"), UserCog],
     ["citas", t("appointments"), CalendarDays],
-    ["calendario", "Calendario", CalendarCheck2],
+    ["calendario", t("calendar"), CalendarCheck2],
     ["ordenes", t("orders"), ClipboardList],
-    ["historial", "Historial", History],
+    ["historial", t("history"), History],
     ["inventario", t("inventory"), Package],
     ["herramientas", t("tools"), Wrench],
-    ["dashboardReportes", "Dashboard", TrendingUp],
+    ["dashboardReportes", t("dashboard"), TrendingUp],
   ];
 
   return (
@@ -1734,10 +1808,10 @@ const compartirOrden = async (orden, metodo) => {
         <div className="w-full px-3 2xl:px-8 py-2.5 2xl:py-4 flex flex-col 2xl:flex-row 2xl:items-center justify-center 2xl:justify-between gap-2.5 2xl:gap-4">
           <div><p className="text-[10px] 2xl:text-xs uppercase tracking-[0.24em] 2xl:tracking-[0.3em] text-slate-300 font-black">{t("app")}</p><h1 className="text-lg 2xl:text-lg font-black tracking-tight text-white">{session.role === "admin" ? t("adminPanel") : `${t("techPanel")}: ${session.nombre}`}</h1></div>
           <div className="flex flex-col sm:flex-row sm:items-center justify-center gap-2 2xl:gap-3 xl:ml-auto">
-            <button onClick={() => setLang(lang === "es" ? "en" : "es")} className="flex items-center justify-center justify-center gap-1.5 2xl:gap-2 rounded-xl 2xl:rounded-2xl bg-white px-3 2xl:px-5 py-2 2xl:py-3 text-xs 2xl:text-base text-slate-700 font-black border shadow-sm"><Languages {...iconProps} />{t("translate")}</button>
-            {session.role === "admin" && <button onClick={() => setAdminPage("configuracion")} className="flex items-center justify-center justify-center gap-1.5 2xl:gap-2 rounded-xl 2xl:rounded-2xl bg-slate-950 px-3 2xl:px-5 py-2 2xl:py-3 text-xs 2xl:text-base text-white font-black shadow-lg shadow-slate-300/40 transition hover:-translate-y-0.5"><ShieldCheck {...iconProps} />{t("changePassword")}</button>}
+            <button onClick={() => setLang(lang === "es" ? "en" : "es")} className="flex items-center justify-center justify-center gap-1.5 2xl:gap-2 rounded-xl 2xl:rounded-2xl min-w-[140px] 2xl:min-w-[170px] bg-white px-3 2xl:px-5 py-2 2xl:py-3 text-xs 2xl:text-base text-slate-700 font-black border shadow-sm"><Languages {...iconProps} />{t("translate")}</button>
+            {session.role === "admin" && <button onClick={() => setAdminPage("configuracion")} className="flex items-center justify-center justify-center gap-1.5 2xl:gap-2 rounded-xl 2xl:rounded-2xl min-w-[150px] 2xl:min-w-[190px] bg-slate-950 px-3 2xl:px-5 py-2 2xl:py-3 text-xs 2xl:text-base text-white font-black shadow-lg shadow-slate-300/40 transition hover:-translate-y-0.5"><ShieldCheck {...iconProps} />{t("changePassword")}</button>}
             <TopInfo now={now} />
-            <button onClick={cerrarSesion} className="flex items-center justify-center justify-center gap-1.5 2xl:gap-2 rounded-xl 2xl:rounded-2xl bg-slate-950 px-3 2xl:px-5 py-2 2xl:py-3 text-xs 2xl:text-base text-white font-black shadow-lg shadow-slate-300/40 transition hover:-translate-y-0.5"><LogOut {...iconProps} />{t("logout")}</button>
+            <button onClick={cerrarSesion} className="flex items-center justify-center justify-center gap-1.5 2xl:gap-2 rounded-xl 2xl:rounded-2xl min-w-[150px] 2xl:min-w-[190px] bg-slate-950 px-3 2xl:px-5 py-2 2xl:py-3 text-xs 2xl:text-base text-white font-black shadow-lg shadow-slate-300/40 transition hover:-translate-y-0.5"><LogOut {...iconProps} />{t("logout")}</button>
           </div>
         </div>
       </header>
@@ -1783,6 +1857,8 @@ const compartirOrden = async (orden, metodo) => {
                   className={`
                     flex
                     w-full
+                    min-w-[150px]
+                    2xl:min-w-[170px]
                     items-center justify-center
                     gap-1.5
                     rounded-[1.25rem]
@@ -1799,16 +1875,16 @@ const compartirOrden = async (orden, metodo) => {
                   `}
                 >
                   <Icon size={16} strokeWidth={2.2} />
-                  {label}
+                  <span className="truncate">{label}</span>
                 </button>
               ))}</nav>
 
             {adminPage === "clientes" && <ClientesPage t={t} clientes={clientes} setClientes={setClientes} ordenes={ordenes} citas={citas} clienteForm={clienteForm} setClienteForm={setClienteForm} agregarCliente={agregarCliente} abrirCrearOrdenConCliente={abrirCrearOrdenConCliente} abrirProgramarCitaConCliente={abrirProgramarCitaConCliente} urlGoogleMaps={urlGoogleMaps} urlAppleMaps={urlAppleMaps} urlTelefono={urlTelefono} />}
             {adminPage === "tecnicos" && <TecnicosPage t={t} tecnicos={tecnicos} actualizarTecnico={actualizarTecnico} guardarTecnico={guardarTecnico} darDeBajaTecnico={darDeBajaTecnico} setTecnicos={setTecnicos} />}
             {adminPage === "citas" && <CitasPage t={t} citas={citas} setCitas={setCitas} citaForm={citaForm} setCitaForm={setCitaForm} crearCita={crearCita} convertirCitaEnOrden={convertirCitaEnOrden} clientes={clientes} tecnicos={tecnicosActivos} obtenerCliente={obtenerCliente} obtenerTecnico={obtenerTecnico} />}
-            {adminPage === "calendario" && <CalendarioPage citas={citas} ordenes={ordenes} clientes={clientes} tecnicos={tecnicosActivos} obtenerCliente={obtenerCliente} obtenerTecnico={obtenerTecnico} urlAppleMaps={urlAppleMaps} urlTelefono={urlTelefono} />}
+            {adminPage === "calendario" && <CalendarioPage t={t} lang={lang} citas={citas} ordenes={ordenes} clientes={clientes} tecnicos={tecnicosActivos} obtenerCliente={obtenerCliente} obtenerTecnico={obtenerTecnico} urlAppleMaps={urlAppleMaps} urlTelefono={urlTelefono} />}
             {adminPage === "ordenes" && <OrdenesPage t={t} ordenes={ordenesActivasAdmin} obtenerCliente={obtenerCliente} ordenProps={ordenProps} crearOrden={crearOrden} ordenForm={ordenForm} setOrdenForm={setOrdenForm} busquedaClienteOrden={busquedaClienteOrden} setBusquedaClienteOrden={setBusquedaClienteOrden} clientesFiltradosOrden={clientesFiltradosOrden} tecnicos={tecnicosActivos} />}
-            {adminPage === "historial" && <HistorialPage t={t} ordenes={historialAdmin} obtenerCliente={obtenerCliente} ordenProps={ordenProps} />}
+            {adminPage === "historial" && <HistorialPage t={t} lang={lang} ordenes={historialAdmin} obtenerCliente={obtenerCliente} ordenProps={ordenProps} />}
             {adminPage === "inventario" && <InventarioGeneralPage t={t} inventario={inventario} inventarioForm={inventarioForm} setInventarioForm={setInventarioForm} agregarInventario={agregarInventario} actualizarInventario={actualizarInventario} setInventario={setInventario} />}
             {adminPage === "herramientas" && <HerramientasPage t={t} herramientas={herramientas} herramientaForm={herramientaForm} setHerramientaForm={setHerramientaForm} agregarHerramienta={agregarHerramienta} actualizarHerramienta={actualizarHerramienta} setHerramientas={setHerramientas} tecnicos={tecnicosActivos} obtenerTecnico={obtenerTecnico} tecnicoHerramientasSeleccionado={tecnicoHerramientasSeleccionado} setTecnicoHerramientasSeleccionado={setTecnicoHerramientasSeleccionado} />}
             {adminPage === "dashboardReportes" && (
