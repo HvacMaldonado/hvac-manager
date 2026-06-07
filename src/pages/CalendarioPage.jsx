@@ -70,7 +70,7 @@ function formatTime(value) {
 function eventTone(type, status) {
   if (type === "orden") {
     if (status === "Urgente") return "border-rose-200 bg-rose-50 text-rose-800";
-    if (status === "Alta") return "border-orange-200 bg-orange-50 text-orange-800";
+    if (status === "Alta") return "border-violet-200 bg-violet-50 text-violet-900";
     return "border-blue-200 bg-blue-50 text-blue-800";
   }
 
@@ -450,44 +450,63 @@ export default function CalendarioPage({
             )}
 
             {selectedEvents.map((event) => (
-              <article key={event.id} className={`rounded-3xl border p-3 ${event.theme?.event || eventTone(event.type, event.prioridad)}`}>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="flex items-center gap-2 text-base font-black">
-                      <span className={`h-3 w-3 shrink-0 rounded-full ${event.theme?.dot || "bg-slate-400"}`} />
-                      {event.title}
+              <article key={event.id} className={`relative overflow-hidden rounded-[1.8rem] border p-4 shadow-md ring-1 ring-white/70 transition hover:-translate-y-0.5 hover:shadow-xl ${event.theme?.event || eventTone(event.type, event.prioridad)}`}>
+                <div className={`absolute left-0 top-0 h-full w-2 ${event.theme?.dot || "bg-slate-400"}`} />
+                <div className="absolute -right-10 -top-12 h-28 w-28 rounded-full bg-white/40 blur-3xl" />
+
+                <div className="relative flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="flex items-start gap-2 text-lg font-black leading-tight">
+                      <span className={`mt-1 h-4 w-4 shrink-0 rounded-full border-2 border-white shadow-md ${event.theme?.dot || "bg-slate-400"}`} />
+                      <span className="line-clamp-2">{event.title}</span>
                     </p>
-                    <p className="mt-1 text-sm font-semibold opacity-80">{event.subtitle}</p>
+                    <p className="mt-1 line-clamp-2 text-sm font-semibold opacity-80">{event.subtitle}</p>
+                    <p className="mt-1 text-[11px] font-black uppercase tracking-wide opacity-70">
+                      {event.tecnico}
+                    </p>
                   </div>
-                  <span className="rounded-full bg-white/70 px-2 py-1 text-[10px] font-black uppercase">{event.type}</span>
+
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    <span className="rounded-full bg-white/80 px-2.5 py-1 text-[10px] font-black uppercase shadow-sm">
+                      {event.type}
+                    </span>
+                    {event.prioridad && (
+                      <span className="rounded-full bg-white/80 px-2.5 py-1 text-[10px] font-black uppercase shadow-sm">
+                        {event.prioridad}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  <div className="rounded-2xl bg-white/60 p-2">
+                <div className="relative mt-4 grid grid-cols-2 gap-2">
+                  <div className="rounded-2xl bg-white/80 p-3 shadow-sm">
                     <p className="text-[9px] font-black uppercase opacity-70">Hora</p>
-                    <p className="text-xs font-black">{formatTime(event.time)}</p>
+                    <p className="mt-1 flex items-center gap-1 text-sm font-black">
+                      <Clock3 size={13} />
+                      {formatTime(event.time)}
+                    </p>
                   </div>
-                  <div className="rounded-2xl bg-white/60 p-2">
+                  <div className="rounded-2xl bg-white/80 p-3 shadow-sm">
                     <p className="text-[9px] font-black uppercase opacity-70">Técnico</p>
-                    <p className="truncate text-xs font-black">{event.tecnico}</p>
+                    <p className="mt-1 truncate text-sm font-black">{event.tecnico}</p>
                   </div>
                 </div>
 
-                <p className="mt-3 line-clamp-2 text-xs font-semibold opacity-80">
+                <p className="relative mt-3 line-clamp-2 rounded-2xl bg-white/60 p-3 text-xs font-semibold opacity-85 shadow-sm">
                   <MapPin size={12} className="mr-1 inline" />
                   {event.direccion || "Sin dirección"}
                 </p>
 
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="relative mt-3 flex flex-wrap gap-2">
                   {event.telefono && (
-                    <a href={urlTelefono?.(event.telefono) || `tel:${event.telefono}`} className="inline-flex h-9 items-center gap-1 rounded-xl bg-emerald-700 px-3 text-xs font-black text-white">
+                    <a href={urlTelefono?.(event.telefono) || `tel:${event.telefono}`} className="inline-flex h-10 items-center gap-1 rounded-2xl bg-emerald-700 px-3 text-xs font-black text-white shadow-md transition hover:-translate-y-0.5">
                       <Phone size={13} />
                       Llamar
                     </a>
                   )}
 
                   {event.direccion && (
-                    <a href={urlAppleMaps?.(event.direccion)} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-1 rounded-xl bg-slate-950 px-3 text-xs font-black text-white">
+                    <a href={urlAppleMaps?.(event.direccion)} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center gap-1 rounded-2xl bg-slate-950 px-3 text-xs font-black text-white shadow-md transition hover:-translate-y-0.5">
                       <Navigation size={13} />
                       Mapa
                     </a>
