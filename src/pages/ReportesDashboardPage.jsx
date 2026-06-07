@@ -16,6 +16,11 @@ import {
   Wrench,
 } from "lucide-react";
 
+
+function tx(t, key, fallback) {
+  const value = t?.(key);
+  return value && value !== key ? value : fallback;
+}
 function monthKey(value) {
   if (!value) return "Sin fecha";
   const d = new Date(value);
@@ -90,7 +95,7 @@ function SimpleBar({ label, value, max }) {
   );
 }
 
-function DonutFigure({ label, value, total, tone = "blue" }) {
+function DonutFigure({ t = (key) => key, label, value, total, tone = "blue" }) {
   const safeTotal = Math.max(Number(total || 0), 1);
   const percent = Math.min(100, Math.max(0, Math.round((Number(value || 0) / safeTotal) * 100)));
   const stroke = 31.4;
@@ -112,7 +117,7 @@ function DonutFigure({ label, value, total, tone = "blue" }) {
         <div className="min-w-0">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">{label}</p>
           <p className="mt-1 text-2xl font-black text-slate-950">{value}</p>
-          <p className="text-xs font-semibold text-slate-500">de {total} registros</p>
+          <p className="text-xs font-semibold text-slate-500">{tx(t, "of", "de")} {total} {tx(t, "recordsCount", "registros")}</p>
         </div>
       </div>
     </div>
@@ -124,26 +129,26 @@ function InsightPanel({ t = (key) => key, completadas, canceladas, total, stockB
     <section className="rounded-[2rem] border border-white/70 bg-white/90 p-5 shadow-xl shadow-slate-300/60 backdrop-blur">
       <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.28em] text-blue-700">{t("operationalHealth")}</p>
-          <h3 className="text-xl font-black text-slate-950">{t("visualIndicators")}</h3>
+          <p className="text-[10px] font-black uppercase tracking-[0.28em] text-blue-700">{tx(t, "operationalHealth", "Salud operativa")}</p>
+          <h3 className="text-xl font-black text-slate-950">{tx(t, "visualIndicators", "Indicadores visuales")}</h3>
         </div>
-        <p className="text-xs font-bold text-slate-500">{t("selectedPeriodSummary")}</p>
+        <p className="text-xs font-bold text-slate-500">{tx(t, "selectedPeriodSummary", "Resumen interno del periodo seleccionado")}</p>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <DonutFigure label={t("completedOrders")} value={completadas} total={total} tone="green" />
-        <DonutFigure label={t("cancellations")} value={canceladas} total={total} tone={canceladas > 0 ? "rose" : "blue"} />
+        <DonutFigure t={t} label={tx(t, "completedOrders", "Órdenes completadas")} value={completadas} total={total} tone="green" />
+        <DonutFigure t={t} label={tx(t, "cancellations", "Cancelaciones")} value={canceladas} total={total} tone={canceladas > 0 ? "rose" : "blue"} />
 
         <div className="rounded-[1.75rem] border border-slate-200 bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-800 p-4 text-white shadow-lg shadow-slate-300/60">
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200">{t("inventory")}</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200">{tx(t, "inventory", "Inventario")}</p>
           <p className="mt-2 text-3xl font-black">{money(valorInventario)}</p>
           <div className="mt-4 grid grid-cols-2 gap-2">
             <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/15">
-              <p className="text-[10px] font-black uppercase text-white/60">{t("lowStock")}</p>
+              <p className="text-[10px] font-black uppercase text-white/60">{tx(t, "lowStock", "Stock bajo")}</p>
               <p className="text-2xl font-black">{stockBajo}</p>
             </div>
             <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/15">
-              <p className="text-[10px] font-black uppercase text-white/60">{t("toolAlerts")}</p>
+              <p className="text-[10px] font-black uppercase text-white/60">{tx(t, "toolAlerts", "Herramientas")}</p>
               <p className="text-2xl font-black">{herramientasAlerta}</p>
             </div>
           </div>
@@ -313,10 +318,10 @@ export default function ReportesDashboardPage({ t = (key) => key, clientes, orde
         <div className="bg-slate-950 p-3 text-white">
           <div className="flex flex-col gap-2.5 xl:flex-row xl:items-center xl:justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-slate-300">Dashboard ejecutivo</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-slate-300">{tx(t, "dashboardExecutive", "Dashboard ejecutivo")}</p>
               <h2 className="mt-1 flex items-center gap-2 text-sm font-black">
                 <BarChart3 size={24} />
-                Dashboard reportes
+                {tx(t, "dashboardReports", "Dashboard reportes")}
               </h2>
               <p className="mt-1 text-sm text-slate-300">
                 Finanzas internas, historial mensual, consumo de materiales e inventario.
@@ -326,11 +331,11 @@ export default function ReportesDashboardPage({ t = (key) => key, clientes, orde
             <div className="flex flex-wrap items-center gap-2">
               <button onClick={exportDashboard} className="inline-flex items-center gap-2 rounded-2xl bg-white/10 px-3 py-2 text-sm font-black text-white ring-1 ring-white/20">
                 <FileSpreadsheet size={16} />
-                Exportar Excel
+                {tx(t, "exportExcel", "Exportar Excel")}
               </button>
               <button onClick={imprimirDashboard} className="inline-flex items-center gap-2 rounded-2xl bg-cyan-400 px-3 py-2 text-sm font-black text-slate-950">
                 <Printer size={16} />
-                Imprimir/PDF
+                {tx(t, "printPdf", "Imprimir/PDF")}
               </button>
             </div>
           </div>
@@ -342,13 +347,13 @@ export default function ReportesDashboardPage({ t = (key) => key, clientes, orde
             <input
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              placeholder="Buscar por técnico, estado, prioridad o problema..."
+              placeholder={tx(t, "searchDashboardPlaceholder", "Buscar por técnico, estado, prioridad o problema...")}
               className="w-full rounded-2xl border border-slate-300 bg-white py-3 pl-10 pr-3 text-sm outline-none shadow-sm transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100"
             />
           </div>
 
           <select value={periodo} onChange={(e) => setPeriodo(e.target.value)} className="rounded-2xl border border-slate-300 bg-white px-3 py-3 text-sm font-bold text-slate-700 outline-none shadow-sm focus:border-blue-700 focus:ring-4 focus:ring-blue-100">
-            <option value="todos">Todos los meses</option>
+            <option value="todos">{tx(t, "allMonths", "Todos los meses")}</option>
             {data.meses.map((m) => <option key={m} value={m}>{formatMonth(m)}</option>)}
           </select>
         </div>
@@ -356,12 +361,12 @@ export default function ReportesDashboardPage({ t = (key) => key, clientes, orde
 
       <div className="space-y-5">
         <div>
-          <p className="mb-3 text-[10px] font-black uppercase tracking-[0.28em] text-slate-500">Resumen principal</p>
+          <p className="mb-3 text-[10px] font-black uppercase tracking-[0.28em] text-slate-500">{tx(t, "mainSummary", "Resumen principal")}</p>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <Metric icon={ClipboardList} label="Órdenes" value={data.ordenesFiltradas.length} hint="Total filtrado" tone="from-slate-950 via-blue-950 to-cyan-800" />
-            <Metric icon={TrendingUp} label="Completadas" value={completadas} hint="Trabajos cerrados" tone="from-emerald-700 via-teal-700 to-cyan-700" />
-            <Metric icon={Users} label="Clientes" value={clientes.length} hint="Base actual" tone="from-blue-950 via-slate-950 to-indigo-900" />
-            <Metric icon={Package} label="Materiales usados" value={money(materialesUsados)} hint="Costo del periodo" tone="from-cyan-700 via-blue-800 to-slate-900" />
+            <Metric icon={ClipboardList} label={tx(t, "orders", "Órdenes")} value={data.ordenesFiltradas.length} hint={tx(t, "filteredTotal", "Total filtrado")} tone="from-slate-950 via-blue-950 to-cyan-800" />
+            <Metric icon={TrendingUp} label={tx(t, "completedJobs", "Completadas")} value={completadas} hint={tx(t, "closedJobs", "Trabajos cerrados")} tone="from-emerald-700 via-teal-700 to-cyan-700" />
+            <Metric icon={Users} label={tx(t, "customers", "Clientes")} value={clientes.length} hint={tx(t, "currentBase", "Base actual")} tone="from-blue-950 via-slate-950 to-indigo-900" />
+            <Metric icon={Package} label={tx(t, "usedMaterials", "Materiales usados")} value={money(materialesUsados)} hint={tx(t, "periodCost", "Costo del periodo")} tone="from-cyan-700 via-blue-800 to-slate-900" />
           </div>
         </div>
 
@@ -378,8 +383,8 @@ export default function ReportesDashboardPage({ t = (key) => key, clientes, orde
         <div className="rounded-[2rem] border border-slate-200 bg-white/90 p-4 shadow-lg shadow-slate-200/70">
           <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">Detalle de cancelaciones</p>
-              <p className="text-sm font-bold text-slate-500">Información interna para administración</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">{tx(t, "cancellationDetails", "Detalle de cancelaciones")}</p>
+              <p className="text-sm font-bold text-slate-500">{tx(t, "internalAdminInfo", "Información interna para administración")}</p>
             </div>
             <span className={`w-fit rounded-full px-3 py-1 text-xs font-black ${canceladas > 0 ? "bg-rose-50 text-rose-700" : "bg-slate-100 text-slate-500"}`}>
               {canceladas} total
@@ -388,9 +393,9 @@ export default function ReportesDashboardPage({ t = (key) => key, clientes, orde
 
           <div className="grid gap-3 md:grid-cols-4">
             <SoftMetric icon={AlertTriangle} label="Canceladas" value={canceladas} alert={canceladas > 0} />
-            <SoftMetric icon={AlertTriangle} label="Por cliente" value={canceladasCliente} alert={canceladasCliente > 0} />
-            <SoftMetric icon={AlertTriangle} label="Por empresa" value={canceladasEmpresa} alert={canceladasEmpresa > 0} />
-            <SoftMetric icon={AlertTriangle} label="Por técnico" value={canceladasTecnico} alert={canceladasTecnico > 0} />
+            <SoftMetric icon={AlertTriangle} label={tx(t, "byCustomer", "Por cliente")} value={canceladasCliente} alert={canceladasCliente > 0} />
+            <SoftMetric icon={AlertTriangle} label={tx(t, "byCompany", "Por empresa")} value={canceladasEmpresa} alert={canceladasEmpresa > 0} />
+            <SoftMetric icon={AlertTriangle} label={tx(t, "byTechnician", "Por técnico")} value={canceladasTecnico} alert={canceladasTecnico > 0} />
           </div>
         </div>
       </div>
@@ -400,7 +405,7 @@ export default function ReportesDashboardPage({ t = (key) => key, clientes, orde
           <div className="bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-800 p-5 text-white">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-200">Tendencia mensual</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-200">{tx(t, "monthlyTrend", "Tendencia mensual")}</p>
                 <h3 className="mt-1 flex items-center gap-2 text-xl font-black">
                   <CalendarDays size={22} />
                   Historial operativo
@@ -432,9 +437,9 @@ export default function ReportesDashboardPage({ t = (key) => key, clientes, orde
                   </div>
 
                   <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs font-black">
-                    <div className="rounded-2xl bg-emerald-50 p-2 text-emerald-700">Completadas {m.completadas}</div>
-                    <div className="rounded-2xl bg-rose-50 p-2 text-rose-700">Canceladas {m.canceladas}</div>
-                    <div className="rounded-2xl bg-blue-50 p-2 text-blue-700">Activas {m.activas}</div>
+                    <div className="rounded-2xl bg-emerald-50 p-2 text-emerald-700">{tx(t, "completedJobs", "Completadas")} {m.completadas}</div>
+                    <div className="rounded-2xl bg-rose-50 p-2 text-rose-700">{tx(t, "cancellations", "Cancelaciones")} {m.canceladas}</div>
+                    <div className="rounded-2xl bg-blue-50 p-2 text-blue-700">{tx(t, "activeOrders", "Activas")} {m.activas}</div>
                   </div>
                 </div>
               );
@@ -446,14 +451,14 @@ export default function ReportesDashboardPage({ t = (key) => key, clientes, orde
           <div className="bg-gradient-to-br from-cyan-700 via-blue-800 to-slate-950 p-5 text-white">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-100">Consumo</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-100">{tx(t, "consumption", "Consumo")}</p>
                 <h3 className="mt-1 flex items-center gap-2 text-xl font-black">
                   <Package size={22} />
-                  Materiales usados
+                  {tx(t, "usedMaterials", "Materiales usados")}
                 </h3>
               </div>
               <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black ring-1 ring-white/20">
-                Top 10
+                {tx(t, "topTen", "Top 10")}
               </span>
             </div>
           </div>
@@ -477,7 +482,7 @@ export default function ReportesDashboardPage({ t = (key) => key, clientes, orde
                       </span>
                       <div className="min-w-0">
                         <p className="truncate font-black text-slate-950">{mat.nombre}</p>
-                        <p className="text-xs font-semibold text-slate-500">{mat.cantidad} unidades usadas</p>
+                        <p className="text-xs font-semibold text-slate-500">{mat.cantidad} {tx(t, "unitsUsed", "unidades usadas")}</p>
                       </div>
                     </div>
                     <span className="shrink-0 text-sm font-black text-emerald-700">{money(mat.costo)}</span>
