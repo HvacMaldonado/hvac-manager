@@ -60,7 +60,7 @@ function CompactMetric({ icon: Icon, label, value, tone }) {
   );
 }
 
-function NewTechnicianForm({ setTecnicos, tecnicos }) {
+function NewTechnicianForm({ t = (key) => key, setTecnicos, tecnicos }) {
   const [form, setForm] = useState({
     nombre: "",
     usuario: "",
@@ -87,7 +87,7 @@ function NewTechnicianForm({ setTecnicos, tecnicos }) {
 
   const agregar = async () => {
     if (!form.nombre.trim()) {
-      alert("Ingresa el nombre del técnico.");
+      alert(t("enterTechnicianName"));
       return;
     }
 
@@ -116,7 +116,7 @@ function NewTechnicianForm({ setTecnicos, tecnicos }) {
       });
     } catch (error) {
       console.error("Error guardando técnico en Supabase:", error);
-      alert("No se pudo guardar el técnico en Supabase.");
+      alert(t("saveTechnicianError"));
     }
   };
 
@@ -128,20 +128,20 @@ function NewTechnicianForm({ setTecnicos, tecnicos }) {
             <UserCog size={24} />
           </div>
 
-          <p className="mt-5 text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">Nuevo técnico</p>
-          <h3 className="mt-1 text-2xl font-black leading-tight">Agregar técnico</h3>
+          <p className="mt-5 text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">{t("newTechnician")}</p>
+          <h3 className="mt-1 text-2xl font-black leading-tight">{t("addTechnician")}</h3>
           <p className="mt-2 text-sm font-medium leading-relaxed text-slate-300">
-            Crea usuarios técnicos para asignar órdenes, citas y herramientas sin depender de tarjetas grandes.
+            {t("technicianCreateDescription")}
           </p>
 
           <div className="mt-5 grid grid-cols-2 gap-2 text-center">
             <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
               <ShieldCheck size={18} className="mx-auto text-cyan-300" />
-              <p className="mt-1 text-[10px] font-black uppercase text-slate-200">Activo</p>
+              <p className="mt-1 text-[10px] font-black uppercase text-slate-200">{t("active")}</p>
             </div>
             <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
               <CalendarDays size={18} className="mx-auto text-cyan-300" />
-              <p className="mt-1 text-[10px] font-black uppercase text-slate-200">Ingreso</p>
+              <p className="mt-1 text-[10px] font-black uppercase text-slate-200">{t("entry")}</p>
             </div>
           </div>
         </aside>
@@ -149,38 +149,38 @@ function NewTechnicianForm({ setTecnicos, tecnicos }) {
         <div className="rounded-3xl border border-white/70 bg-white/85 p-4 shadow-xl shadow-slate-300/50 backdrop-blur">
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-700">Formulario rápido</p>
-              <h4 className="text-lg font-black text-slate-950">Datos del técnico</h4>
+              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-700">{t("quickForm")}</p>
+              <h4 className="text-lg font-black text-slate-950">{t("technicianData")}</h4>
             </div>
             <span className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-[10px] font-black uppercase text-cyan-800">
-              Usuario · Password · Contacto
+              {t("userPasswordContact")}
             </span>
           </div>
 
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
             <div className="lg:col-span-4">
-              <Field label="Nombre" value={form.nombre} onChange={(v) => update("nombre", v)} placeholder="Nombre del técnico" />
+              <Field label={t("name")} value={form.nombre} onChange={(v) => update("nombre", v)} placeholder={t("technicianName")} />
             </div>
             <div className="lg:col-span-4">
-              <Field label="Usuario" value={form.usuario} onChange={(v) => update("usuario", v)} placeholder="usuario" />
+              <Field label={t("user")} value={form.usuario} onChange={(v) => update("usuario", v)} placeholder="usuario" />
             </div>
             <div className="lg:col-span-4">
-              <Field label="Password" value={form.password} onChange={(v) => update("password", v)} placeholder="1234" />
+              <Field label={t("passwordLabel")} value={form.password} onChange={(v) => update("password", v)} placeholder="1234" />
             </div>
             <div className="lg:col-span-4">
-              <Field label="Teléfono" value={form.telefono} onChange={(v) => update("telefono", v)} placeholder="___-___-____" />
+              <Field label={t("phone")} value={form.telefono} onChange={(v) => update("telefono", v)} placeholder="___-___-____" />
             </div>
             <div className="lg:col-span-4">
-              <Field label="Fecha ingreso" type="date" value={form.fechaIngreso} onChange={(v) => update("fechaIngreso", v)} />
+              <Field label={t("entryDate")} type="date" value={form.fechaIngreso} onChange={(v) => update("fechaIngreso", v)} />
             </div>
             <div className="lg:col-span-4">
-              <Field label="Dirección" value={form.direccion} onChange={(v) => update("direccion", v)} placeholder="Dirección" />
+              <Field label={t("address")} value={form.direccion} onChange={(v) => update("direccion", v)} placeholder={t("address")} />
             </div>
           </div>
 
           <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs font-semibold text-slate-500">
-              El técnico quedará activo y podrá iniciar sesión con su usuario y contraseña.
+              {t("technicianActiveLogin")}
             </p>
 
             <button
@@ -197,14 +197,14 @@ function NewTechnicianForm({ setTecnicos, tecnicos }) {
   );
 }
 
-function TecnicoEditor({ tecnico, onClose, onSave }) {
+function TecnicoEditor({ t = (key) => key, tecnico, onClose, onSave }) {
   const [form, setForm] = useState({ ...tecnico });
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
       <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-white/20 bg-white shadow-2xl shadow-slate-950/40">
         <div className="bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-900 p-5 text-white">
-          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-300">Editar técnico</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-300">{t("editTechnician")}</p>
           <h3 className="mt-1 flex items-center gap-2 text-2xl font-black">
             <UserCog size={24} />
             {tecnico.nombre}
@@ -212,30 +212,30 @@ function TecnicoEditor({ tecnico, onClose, onSave }) {
         </div>
 
         <div className="grid gap-3 p-5 sm:grid-cols-2">
-          <Field label="Nombre" value={form.nombre} onChange={(v) => setForm({ ...form, nombre: v })} />
-          <Field label="Usuario" value={form.usuario} onChange={(v) => setForm({ ...form, usuario: v })} />
-          <Field label="Password" value={form.password} onChange={(v) => setForm({ ...form, password: v })} />
-          <Field label="Teléfono" value={form.telefono} onChange={(v) => setForm({ ...form, telefono: v })} placeholder="___-___-____" />
+          <Field label={t("name")} value={form.nombre} onChange={(v) => setForm({ ...form, nombre: v })} />
+          <Field label={t("user")} value={form.usuario} onChange={(v) => setForm({ ...form, usuario: v })} />
+          <Field label={t("passwordLabel")} value={form.password} onChange={(v) => setForm({ ...form, password: v })} />
+          <Field label={t("phone")} value={form.telefono} onChange={(v) => setForm({ ...form, telefono: v })} placeholder="___-___-____" />
           <div className="sm:col-span-2">
-            <Field label="Dirección" value={form.direccion} onChange={(v) => setForm({ ...form, direccion: v })} />
+            <Field label={t("address")} value={form.direccion} onChange={(v) => setForm({ ...form, direccion: v })} />
           </div>
-          <Field label="Fecha ingreso" type="date" value={form.fechaIngreso} onChange={(v) => setForm({ ...form, fechaIngreso: v })} />
+          <Field label={t("entryDate")} type="date" value={form.fechaIngreso} onChange={(v) => setForm({ ...form, fechaIngreso: v })} />
 
           <Field
-            label="Pago por hora ($)"
+            label={t("hourlyPay")}
             type="number"
             value={form.pagoHora || ""}
             onChange={(v) => setForm({ ...form, pagoHora: v })}
           />
 
-          <Field label="Fecha salida" type="date" value={form.fechaSalida} disabled={form.activo !== false} onChange={(v) => setForm({ ...form, fechaSalida: v })} />
+          <Field label={t("exitDate")} type="date" value={form.fechaSalida} disabled={form.activo !== false} onChange={(v) => setForm({ ...form, fechaSalida: v })} />
         </div>
 
         <div className="flex justify-end gap-2 border-t border-slate-200 bg-slate-50 p-4">
-          <button onClick={onClose} className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-black text-slate-700">Cancelar</button>
+          <button onClick={onClose} className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm font-black text-slate-700">{t("cancel")}</button>
           <button onClick={() => onSave(form)} className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-2 text-sm font-black text-white">
             <Save size={16} />
-            Guardar cambios
+            {t("saveChanges")}
           </button>
         </div>
       </div>
@@ -243,7 +243,7 @@ function TecnicoEditor({ tecnico, onClose, onSave }) {
   );
 }
 
-function TechniciansTable({ title, subtitle, icon: Icon, rows, activeList, onEdit, onBaja, onReactivar, onEliminar }) {
+function TechniciansTable({ t = (key) => key, title, subtitle, icon: Icon, rows, activeList, onEdit, onBaja, onReactivar, onEliminar }) {
   return (
     <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-xl shadow-slate-300/50 backdrop-blur">
       <div className={`flex items-center justify-between px-5 py-4 text-white ${activeList ? "bg-gradient-to-r from-emerald-900 via-teal-800 to-cyan-800" : "bg-gradient-to-r from-slate-950 via-slate-800 to-slate-700"}`}>
@@ -265,9 +265,9 @@ function TechniciansTable({ title, subtitle, icon: Icon, rows, activeList, onEdi
             <span>Usuario</span>
             <span>Contacto</span>
             <span>Color</span>
-            <span>Ingreso</span>
-            <span>Salida</span>
-            <span className="text-right">Acciones</span>
+            <span>{t("entry")}</span>
+            <span>{t("exit")}</span>
+            <span className="text-right">{t("actions")}</span>
           </div>
 
           <div className="divide-y divide-slate-200">
@@ -285,7 +285,7 @@ function TechniciansTable({ title, subtitle, icon: Icon, rows, activeList, onEdi
                   </div>
                   <div className="min-w-0">
                     <p className="truncate font-black text-slate-950">{tec.nombre}</p>
-                    <StatusBadge active={activeList} />
+                    <StatusBadge t={t} active={activeList} />
                   </div>
                 </div>
 
@@ -317,18 +317,18 @@ function TechniciansTable({ title, subtitle, icon: Icon, rows, activeList, onEdi
                 <div className="flex items-center justify-end gap-2 whitespace-nowrap">
                   <button onClick={() => onEdit(tec)} className="inline-flex min-w-[82px] items-center justify-center gap-1 rounded-xl bg-blue-50 px-3 py-2 text-xs font-black text-blue-700 hover:bg-blue-100">
                     <Save size={13} />
-                    Editar
+                    {t("edit")}
                   </button>
 
                   {activeList ? (
                     <button onClick={() => onBaja(tec.id)} className="inline-flex min-w-[82px] items-center justify-center gap-1 rounded-xl bg-slate-950 px-3 py-2 text-xs font-black text-white">
                       <LogOut size={13} />
-                      Baja
+                      {t("inactive")}
                     </button>
                   ) : (
                     <button onClick={() => onReactivar(tec.id)} className="inline-flex min-w-[92px] items-center justify-center gap-1 rounded-xl bg-emerald-700 px-3 py-2 text-xs font-black text-white">
                       <RotateCcw size={13} />
-                      Reactivar
+                      {t("reactivate")}
                     </button>
                   )}
 
@@ -347,16 +347,16 @@ function TechniciansTable({ title, subtitle, icon: Icon, rows, activeList, onEdi
   );
 }
 
-function StatusBadge({ active }) {
+function StatusBadge({ t = (key) => key, active }) {
   return active ? (
     <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-black text-emerald-700">
       <CheckCircle2 size={12} />
-      Activo
+      {t("active")}
     </span>
   ) : (
     <span className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-slate-100 px-2 py-1 text-[11px] font-black text-slate-700">
       <LogOut size={12} />
-      Baja
+      {t("inactive")}
     </span>
   );
 }
@@ -383,7 +383,7 @@ export default function TecnicosPage({ t, tecnicos, actualizarTecnico, guardarTe
   };
 
   const eliminarTecnico = (tec) => {
-    if (window.confirm(`¿Eliminar permanentemente a ${tec.nombre}?`)) {
+    if (window.confirm(`${t("deleteTechnicianConfirm")} ${tec.nombre}?`)) {
       setTecnicos(tecnicos.filter((x) => String(x.id) !== String(tec.id)));
     }
   };
@@ -402,7 +402,7 @@ export default function TecnicosPage({ t, tecnicos, actualizarTecnico, guardarTe
         <div className="bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-900 p-5 text-white">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-300">Técnico</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-300">{t("technician")}</p>
               <h2 className="mt-1 flex items-center gap-2 text-2xl font-black">
                 <UserCog size={24} />
                 Técnico
@@ -411,9 +411,9 @@ export default function TecnicosPage({ t, tecnicos, actualizarTecnico, guardarTe
 
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
               <div className="flex flex-wrap items-center justify-start gap-2 lg:justify-end">
-                <CompactMetric icon={Users} label="Total" value={tecnicos.length} tone="from-slate-900 to-blue-900" />
-                <CompactMetric icon={CheckCircle2} label="Activos" value={tecnicos.filter((tec) => tec.activo !== false).length} tone="from-emerald-800 to-teal-600" />
-                <CompactMetric icon={LogOut} label="Baja" value={tecnicos.filter((tec) => tec.activo === false).length} tone="from-slate-700 to-slate-950" />
+                <CompactMetric icon={Users} label={t("total")} value={tecnicos.length} tone="from-slate-900 to-blue-900" />
+                <CompactMetric icon={CheckCircle2} label={t("active")} value={tecnicos.filter((tec) => tec.activo !== false).length} tone="from-emerald-800 to-teal-600" />
+                <CompactMetric icon={LogOut} label={t("inactive")} value={tecnicos.filter((tec) => tec.activo === false).length} tone="from-slate-700 to-slate-950" />
               </div>
 
               <div className="relative">
@@ -421,7 +421,7 @@ export default function TecnicosPage({ t, tecnicos, actualizarTecnico, guardarTe
                 <input
                   value={busqueda}
                   onChange={(e) => setBusqueda(e.target.value)}
-                  placeholder="Buscar técnico..."
+                  placeholder={t("searchTechnician")}
                   className="w-full rounded-xl border border-white/20 bg-white py-2 pl-9 pr-3 text-sm font-bold text-slate-800 outline-none lg:w-72"
                 />
               </div>
@@ -430,11 +430,11 @@ export default function TecnicosPage({ t, tecnicos, actualizarTecnico, guardarTe
         </div>
       </div>
 
-      <NewTechnicianForm setTecnicos={setTecnicos} tecnicos={tecnicos} />
+      <NewTechnicianForm t={t} setTecnicos={setTecnicos} tecnicos={tecnicos} />
 
-      <TechniciansTable
-        title="Técnicos activos"
-        subtitle="En servicio"
+      <TechniciansTable t={t}
+        title={t("activeTechnicians")}
+        subtitle={t("inService")}
         icon={CheckCircle2}
         rows={activos}
         activeList
@@ -444,9 +444,9 @@ export default function TecnicosPage({ t, tecnicos, actualizarTecnico, guardarTe
         onEliminar={eliminarTecnico}
       />
 
-      <TechniciansTable
-        title="Historial de bajas"
-        subtitle="Dados de baja"
+      <TechniciansTable t={t}
+        title={t("inactiveHistory")}
+        subtitle={t("inactiveData")}
         icon={History}
         rows={dadosDeBaja}
         activeList={false}
