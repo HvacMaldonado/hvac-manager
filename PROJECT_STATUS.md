@@ -1,36 +1,25 @@
-Proyecto: HVAC Manager
+# HVAC Manager - Estado actual
 
-Estado Git:
-- Rama actual: main
-- Sin cambios pendientes
-- Sincronizado con origin/main
+## Rama actual
+traduccion-completa-ui
 
-Avances completados:
-- GitHub funcionando
-- Vercel funcionando
-- Supabase conectado
-- Clientes conectados a Supabase
-- Direcciones de clientes guardadas en Supabase
-- Técnicos conectados a Supabase
-- Crear técnicos guarda en Supabase
-- Editar técnicos actualiza Supabase
-- Dar de baja/reactivar técnicos actualiza Supabase
-- Campo Pago por hora agregado a técnicos
-- Dashboard técnico organizado en Agenda, Órdenes e Historial
-- Órdenes completadas/canceladas salen de activas
-- Estado "Necesita seguimiento" agregado
+## Estado estable
+- UI 100% bilingüe ES/EN.
+- PDF/reporte cliente bilingüe.
+- Regla operativa: técnico/admin escribe notas en el idioma del cliente.
+- Proyecto cargando correctamente.
+- Git limpio antes de iniciar nueva fase.
 
-Pendiente:
-1. Citas conectadas a Supabase
-2. Órdenes conectadas a Supabase
-3. Inventario conectado a Supabase
-4. Herramientas conectadas a Supabase
-5. Fotos
-6. Firmas
-7. Dashboard final
-8. Reporte Dashboard → Técnicos
-9. Cálculo de horas trabajadas por período
-10. Cálculo de pago total por técnico
-11. Filtros Hoy / Semana / Mes / Año / Todo
-12. Mejorar visualmente Dashboard
-13. Revisar consistencia de colores y componentes
+## Decisión tomada
+No implementar traducción automática con OpenAI por ahora.
+
+## Próxima fase
+Migración completa a Supabase.
+
+## Orden de trabajo
+1. Migrar órdenes a Supabase.
+2. Migrar inventario a Supabase.
+3. Migrar herramientas a Supabase.
+4. Migrar fotos a Supabase Storage.
+5. Migrar firmas a Supabase Storage.
+6. Conectar Dashboard final con datos reales.
