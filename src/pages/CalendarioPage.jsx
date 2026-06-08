@@ -47,8 +47,8 @@ function monthGrid(date) {
   return Array.from({ length: 42 }, (_, index) => addDays(start, index));
 }
 
-function formatTime(value) {
-  if (!value) return "Sin hora";
+function formatTime(value, t = (key) => key) {
+  if (!value) return t("noTime");
 
   const raw = String(value).trim();
 
@@ -127,7 +127,7 @@ function CalendarEvent({ event, t = (key) => key }) {
       <div className="relative mt-2 flex items-center justify-between gap-2">
         <p className="flex items-center gap-1 rounded-full bg-white/65 px-2 py-1 text-[11px] font-black shadow-sm">
           <Clock3 size={12} />
-          {formatTime(event.time)}
+          {formatTime(event.time, t)}
         </p>
 
         {event.prioridad && (
@@ -221,12 +221,12 @@ export default function CalendarioPage({
         id: `cita-${cita.id}`,
         rawId: cita.id,
         type: "cita",
-        title: cliente?.nombre || "Cliente eliminado",
-        subtitle: cita.motivo || "Cita programada",
+        title: cliente?.nombre || t("deletedCustomer"),
+        subtitle: cita.motivo || t("scheduledAppointment"),
         date: toDateKey(cita.fecha),
         time: cita.hora || "",
         tecnicoId: cita.tecnicoId,
-        tecnico: tecnico?.nombre || "Sin técnico",
+        tecnico: tecnico?.nombre || t("noTechnician"),
         cliente,
         direccion: cliente?.direccion || "",
         telefono: cliente?.telefono || "",
@@ -247,12 +247,12 @@ export default function CalendarioPage({
           id: `orden-${orden.id}`,
           rawId: orden.id,
           type: "orden",
-          title: cliente?.nombre || "Cliente eliminado",
-          subtitle: orden.problema || "Orden de trabajo",
+          title: cliente?.nombre || t("deletedCustomer"),
+          subtitle: orden.problema || t("workOrderFallback"),
           date: toDateKey(orden.fechaProgramada || orden.fecha || orden.fechaCreacion),
           time: orden.horaProgramada || "",
           tecnicoId: orden.tecnicoId,
-          tecnico: tecnico?.nombre || "Sin técnico",
+          tecnico: tecnico?.nombre || t("noTechnician"),
           cliente,
           direccion: cliente?.direccion || "",
           telefono: cliente?.telefono || "",
@@ -416,7 +416,7 @@ export default function CalendarioPage({
             </div>
           </div>
           <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-black text-slate-600">
-            {tecnicos.length} técnicos
+            {tecnicos.length} {t("technicians").toLowerCase()}
           </span>
         </div>
 
@@ -543,7 +543,7 @@ export default function CalendarioPage({
                     <p className="text-[9px] font-black uppercase opacity-70">{t("time")}</p>
                     <p className="mt-1 flex items-center gap-1 text-sm font-black">
                       <Clock3 size={13} />
-                      {formatTime(event.time)}
+                      {formatTime(event.time, t)}
                     </p>
                   </div>
                   <div className="rounded-2xl bg-white/80 p-3 shadow-sm">
