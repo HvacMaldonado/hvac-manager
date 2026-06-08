@@ -150,6 +150,10 @@ const TEXT = {
     tools: "Herramientas técnico",
     reportsCustomers: "Reportes clientes",
     reportsInventory: "Reportes inventario",
+    reportsCenter: "Centro de reportes",
+    dashboardUnifiedDescription: "Reportes generales, clientes e inventario.",
+    inventoryShort: "Inventario",
+    general: "General",
     settings: "Configuración",
     activeOrders: "Órdenes activas",
     createOrder: "Crear orden",
@@ -598,6 +602,10 @@ const TEXT = {
     tools: "Technician tools",
     reportsCustomers: "Customer reports",
     reportsInventory: "Inventory reports",
+    reportsCenter: "Reports center",
+    dashboardUnifiedDescription: "General, customer, and inventory reports.",
+    inventoryShort: "Inventory",
+    general: "General",
     settings: "Settings",
     activeOrders: "Active orders",
     createOrder: "Create order",
@@ -2588,6 +2596,8 @@ const compartirOrden = async (orden, metodo) => {
             {adminPage === "dashboardReportes" && (
               <DashboardUnificadoPage
                 t={t}
+                lang={lang}
+                lang={lang}
                 clientes={clientes}
                 ordenes={ordenes}
                 inventario={inventario}
@@ -4333,6 +4343,7 @@ function FotoUploader({ titulo, imagen, onChange }) {
 
 function DashboardUnificadoPage({
   t,
+  lang,
   clientes,
   ordenes,
   inventario,
@@ -4349,10 +4360,10 @@ function DashboardUnificadoPage({
   const activas = ordenes.filter((o) => !["Completado", "Cancelada"].includes(o.estado)).length;
 
   const tabs = [
-    { id: "general", label: "General", count: activas },
-    { id: "clientes", label: "Clientes", count: clientes.length },
-    { id: "inventario", label: "Inventario", count: inventario.length },
-    { id: "tecnicos", label: "Técnicos", count: tecnicos.length },
+    { id: "general", label: t("general") || "General", count: activas },
+    { id: "clientes", label: t("customers") || "Clientes", count: clientes.length },
+    { id: "inventario", label: t("inventoryShort") || "Inventario", count: inventario.length },
+    { id: "tecnicos", label: t("technicians") || "Técnicos", count: tecnicos.length },
   ];
 
   return (
@@ -4360,7 +4371,7 @@ function DashboardUnificadoPage({
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-md shadow-slate-300/50">
         <div className="border-b border-blue-100 bg-gradient-to-br from-blue-50 via-indigo-50 to-white px-4 py-3">
           <p className="text-[10px] font-black uppercase tracking-[0.24em] text-blue-600">
-            Centro de reportes
+            {t("reportsCenter")}
           </p>
 
           <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -4369,19 +4380,19 @@ function DashboardUnificadoPage({
                 Dashboard
               </h2>
               <p className="mt-0.5 text-xs font-semibold text-blue-900/60">
-                Reportes generales, clientes e inventario.
+                {t("dashboardUnifiedDescription")}
               </p>
             </div>
 
             <div className="flex flex-wrap gap-1.5 text-[11px] font-black">
               <span className="rounded-full bg-blue-50 px-2.5 py-1 text-blue-700 ring-1 ring-blue-100">
-                Activas {activas}
+                {t("activeOrders")} {activas}
               </span>
               <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700 ring-1 ring-emerald-100">
-                Completadas {completadas}
+                {t("completedJobs")} {completadas}
               </span>
               <span className="rounded-full bg-rose-50 px-2.5 py-1 text-rose-700 ring-1 ring-rose-100">
-                Canceladas {canceladas}
+                {t("cancelled")} {canceladas}
               </span>
             </div>
           </div>
@@ -4415,6 +4426,8 @@ function DashboardUnificadoPage({
       {tab === "general" && (
         <ReportesDashboardPage
           t={t}
+          lang={lang}
+          lang={lang}
           clientes={clientes}
           ordenes={ordenes}
           inventario={inventario}
