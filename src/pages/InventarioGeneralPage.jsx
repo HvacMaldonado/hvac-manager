@@ -209,7 +209,7 @@ function InventoryTable({ items, update, remove, t = (key) => key }) {
   );
 }
 
-export default function InventarioGeneralPage({ t, inventario, inventarioForm, setInventarioForm, agregarInventario, actualizarInventario, setInventario }) {
+export default function InventarioGeneralPage({ t, inventario, inventarioForm, setInventarioForm, agregarInventario, actualizarInventario, setInventario, eliminarInventario }) {
   const [busqueda, setBusqueda] = useState("");
   const [categoriaFiltro, setCategoriaFiltro] = useState("todas");
 
@@ -343,7 +343,7 @@ export default function InventarioGeneralPage({ t, inventario, inventarioForm, s
       <InventoryTable
         items={inventarioFiltrado}
         update={actualizarInventario}
-        remove={(id) => setInventario(inventario.filter((i) => i.id !== id))}
+        remove={eliminarInventario || ((id) => setInventario(inventario.filter((i) => i.id !== id)))}
       />
     </section>
   );

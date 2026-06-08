@@ -19,6 +19,7 @@ export async function obtenerInventarioSupabase() {
   const { data, error } = await supabase
     .from("inventario")
     .select("*")
+    .eq("activo", true)
     .order("created_at", { ascending: true });
 
   if (error) throw error;
@@ -62,6 +63,19 @@ export async function actualizarInventarioSupabase(id, cambios) {
   const { data, error } = await supabase
     .from("inventario")
     .update(payload)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return mapInventario(data);
+}
+
+
+export async function eliminarInventarioSupabase(id) {
+  const { data, error } = await supabase
+    .from("inventario")
+    .update({ activo: false })
     .eq("id", id)
     .select()
     .single();
