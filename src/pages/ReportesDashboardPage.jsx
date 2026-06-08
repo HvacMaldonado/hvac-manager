@@ -371,6 +371,7 @@ export default function ReportesDashboardPage({ t = (key) => key, lang = "es", c
         </div>
 
         <InsightPanel
+          t={t}
           completadas={completadas}
           canceladas={canceladas}
           total={data.ordenesFiltradas.length}
