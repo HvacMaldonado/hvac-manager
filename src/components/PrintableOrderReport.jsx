@@ -67,7 +67,7 @@ function TimelineRow({ label, value, done }) {
   );
 }
 
-export default function PrintableOrderReport({ orden, cliente, tecnico }) {
+export default function PrintableOrderReport({ orden, cliente, tecnico, t = (key) => key }) {
   if (!orden) return null;
 
   const fotos = orden.fotos || {};
@@ -114,7 +114,7 @@ export default function PrintableOrderReport({ orden, cliente, tecnico }) {
       <div className="mx-auto max-w-[900px] bg-white text-slate-950">
         <header className="mb-5 flex items-start justify-between border-b-4 border-slate-950 pb-4">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-slate-500">Reporte de servicio HVAC</p>
+            <p className="text-xs font-black uppercase tracking-[0.25em] text-slate-500">{t("serviceReportTitle")}</p>
             <h1 className="mt-1 text-3xl font-black">Orden #{orden.id}</h1>
             <p className="mt-1 text-sm font-bold text-slate-600">
               Estado: {orden.estado || "Sin estado"} · Prioridad: {orden.prioridad || "Media"}
@@ -123,7 +123,7 @@ export default function PrintableOrderReport({ orden, cliente, tecnico }) {
 
           <div className="text-right">
             <p className="text-xl font-black">HVAC Manager</p>
-            <p className="text-xs font-bold text-slate-500">Reporte para cliente</p>
+            <p className="text-xs font-bold text-slate-500">{t("customerReport")}</p>
             <p className="mt-2 text-xs font-bold text-slate-500">{formatDate(new Date())}</p>
           </div>
         </header>
@@ -134,9 +134,9 @@ export default function PrintableOrderReport({ orden, cliente, tecnico }) {
               <MapPin size={14} />
               Cliente
             </p>
-            <p className="text-lg font-black">{cliente?.nombre || "Cliente eliminado"}</p>
+            <p className="text-lg font-black">{cliente?.nombre || t("deletedCustomer")}</p>
             <p className="mt-1 text-sm font-bold">{formatPhone(cliente?.telefono)}</p>
-            <p className="mt-2 text-sm text-slate-700">{cliente?.direccion || "Sin dirección"}</p>
+            <p className="mt-2 text-sm text-slate-700">{cliente?.direccion || t("noAddress")}</p>
             <p className="mt-1 text-xs text-slate-500">
               Apt {cliente?.apartamento || "—"} · Edificio {cliente?.edificio || "—"} · Código {cliente?.codigoAcceso || "—"}
             </p>
@@ -147,9 +147,9 @@ export default function PrintableOrderReport({ orden, cliente, tecnico }) {
               <UserCog size={14} />
               Técnico
             </p>
-            <p className="text-lg font-black">{tecnico?.nombre || "Sin técnico"}</p>
+            <p className="text-lg font-black">{tecnico?.nombre || t("noTechnician")}</p>
             <p className="mt-1 text-sm font-bold">{formatPhone(tecnico?.telefono)}</p>
-            <p className="mt-2 text-sm text-slate-700">{tecnico?.direccion || "Sin dirección"}</p>
+            <p className="mt-2 text-sm text-slate-700">{tecnico?.direccion || t("noAddress")}</p>
           </div>
         </section>
 
@@ -166,7 +166,7 @@ export default function PrintableOrderReport({ orden, cliente, tecnico }) {
         <section className="no-break mb-4 rounded-2xl border border-slate-300 p-4">
           <p className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-wide text-slate-600">
             <FileText size={14} />
-            Notas del técnico
+            {t("technicianNotes")}
           </p>
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-800">
             {orden.notasTecnico || "Sin notas registradas."}
@@ -198,7 +198,7 @@ export default function PrintableOrderReport({ orden, cliente, tecnico }) {
           </p>
 
           {materiales.length === 0 ? (
-            <p className="text-sm font-semibold text-slate-500">Sin materiales registrados.</p>
+            <p className="text-sm font-semibold text-slate-500">{t("noRegisteredMaterials")}</p>
           ) : (
             <table className="w-full border-collapse text-sm">
               <thead>
@@ -228,12 +228,12 @@ export default function PrintableOrderReport({ orden, cliente, tecnico }) {
         <section className="no-break mb-4 rounded-2xl border border-slate-300 p-4">
           <p className="mb-3 flex items-center gap-2 text-xs font-black uppercase tracking-wide text-slate-600">
             <PenLine size={14} />
-            Firma del cliente
+            {t("customerSignature")}
           </p>
 
           {orden.firmaCliente ? (
             <div>
-              <img src={orden.firmaCliente} alt="Firma del cliente" className="h-28 w-full rounded-xl border object-contain" />
+              <img src={orden.firmaCliente} alt={t("customerSignature")} className="h-28 w-full rounded-xl border object-contain" />
               <p className="mt-2 text-xs font-bold text-slate-500">Firmado: {formatDate(orden.fechaFirmaCliente)}</p>
             </div>
           ) : (
@@ -242,7 +242,7 @@ export default function PrintableOrderReport({ orden, cliente, tecnico }) {
         </section>
 
         <footer className="mt-6 border-t border-slate-300 pt-3 text-center text-xs font-bold text-slate-500">
-          Reporte generado desde HVAC Manager · Información interna de costos excluida.
+          {t("generatedReportFooter")}
         </footer>
       </div>
     </div>

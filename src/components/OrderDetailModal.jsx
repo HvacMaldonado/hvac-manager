@@ -222,7 +222,7 @@ export default function OrderDetailModal({ open, onClose, orden, cliente, tecnic
         </main>
       </div>
 
-      <PrintableOrderReport orden={orden} cliente={cliente} tecnico={tecnico} />
+      <PrintableOrderReport orden={orden} cliente={cliente} tecnico={tecnico} t={ordenProps?.t || ((key) => key)} />
 
       <PhotoEvidenceModal
         open={showPhotos}
