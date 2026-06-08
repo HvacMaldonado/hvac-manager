@@ -477,9 +477,9 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
                         "border-cyan-200 bg-cyan-50 text-cyan-700"
                       }`}
                     >
-                      <option>Programada</option>
-                      <option>Completada</option>
-                      <option>Cancelada</option>
+                      <option value="Programada">{t("scheduled")}</option>
+                      <option value="Completada">{t("completed")}</option>
+                      <option value="Cancelada">{t("cancelled")}</option>
                     </select>
 
                     <div className="flex items-center justify-end gap-2 whitespace-nowrap">
