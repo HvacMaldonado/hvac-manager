@@ -50,7 +50,7 @@ function inventoryCategoryLabel(value, t = (key) => key) {
 function inventoryUnitLabel(value, t = (key) => key) {
   const map = {
     pieza: t("piece"),
-    unidad: t("unitSingle"),
+    unidad: t("unitSingle") === "unitSingle" ? "unit" : t("unitSingle"),
     caja: t("box"),
     rollo: t("roll"),
     libra: t("pound"),
@@ -149,7 +149,7 @@ function InventoryTable({ items, update, remove, t = (key) => key }) {
                         {CATEGORIAS_HVAC.map((c) => <option key={c} value={c}>{inventoryCategoryLabel(c, t)}</option>)}
                       </select>
                     ) : (
-                      <p className="truncate rounded-full bg-slate-100 px-2 py-1 text-xs font-black text-slate-700">{i.categoria || "Sin categoría"}</p>
+                      <p className="truncate rounded-full bg-slate-100 px-2 py-1 text-xs font-black text-slate-700">{i.categoria ? inventoryCategoryLabel(i.categoria, t) : t("noCategory")}</p>
                     )}
                   </div>
 
@@ -245,7 +245,7 @@ export default function InventarioGeneralPage({ t, inventario, inventarioForm, s
                 {t("generalInventoryTitle")}
               </h2>
               <p className="mt-1 text-sm text-slate-300">
-                Control de materiales, costos internos y stock mínimo.
+                {t("generalInventoryDescription")}
               </p>
             </div>
 
@@ -335,7 +335,7 @@ export default function InventarioGeneralPage({ t, inventario, inventarioForm, s
 
           <select value={categoriaFiltro} onChange={(e) => setCategoriaFiltro(e.target.value)} className="rounded-2xl border border-slate-300 bg-white px-3 py-3 text-sm font-bold text-slate-700 outline-none shadow-sm focus:border-blue-700 focus:ring-4 focus:ring-blue-100">
             <option value="todas">{t("allCategories")}</option>
-            {CATEGORIAS_HVAC.map((c) => <option key={c} value={c}>{c}</option>)}
+            {CATEGORIAS_HVAC.map((c) => <option key={c} value={c}>{inventoryCategoryLabel(c, t)}</option>)}
           </select>
         </div>
       </div>
