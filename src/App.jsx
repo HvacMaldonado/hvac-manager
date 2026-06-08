@@ -1240,7 +1240,7 @@ export default function App() {
   const [now, setNow] = useState(new Date());
   const [busquedaClienteOrden, setBusquedaClienteOrden] = useState("");
   const [clienteForm, setClienteForm] = useState({ nombre: "", telefono: "", email: "", direccion: "", apartamento: "", calle: "", codigoAcceso: "", edificio: "" });
-  const [ordenForm, setOrdenForm] = useState({ clienteId: "", problema: "", tecnicoId: "", prioridad: "Media", fechaProgramada: "", horaProgramada: "" });
+  const [ordenForm, setOrdenForm] = useState({ clienteId: "", problema: "", tecnicoId: "", prioridad: "Media", fechaProgramada: "", horaProgramada: "", precioCobrado: "" });
   const [inventarioForm, setInventarioForm] = useState({ nombre: "", categoria: "Unidades de aire acondicionado", tipo: "Material consumible", cantidad: "", unidad: "pieza", costo: "", stockMinimo: "1" });
   const [herramientaForm, setHerramientaForm] = useState({ nombre: "", tecnicoId: "", cantidad: "", estado: "Disponible", notas: "" });
   const [tecnicoHerramientasSeleccionado, setTecnicoHerramientasSeleccionado] = useState("");
@@ -1642,6 +1642,7 @@ export default function App() {
       duracionHoras: "",
       materialesUsados: [],
       costoMateriales: 0,
+      precioCobrado: Number(ordenForm.precioCobrado || 0),
       fotos: { antes: "", durante: "", despues: "" },
       notasTecnico: "",
       inventarioDescontado: false,
@@ -1651,7 +1652,7 @@ export default function App() {
     try {
       const nuevaOrden = await crearOrdenSupabase(orden);
       setOrdenes([...ordenes, nuevaOrden]);
-      setOrdenForm({ clienteId: String(ordenForm.clienteId), problema: "", tecnicoId: "", prioridad: "Media", fechaProgramada: "", horaProgramada: "" });
+      setOrdenForm({ clienteId: String(ordenForm.clienteId), problema: "", tecnicoId: "", prioridad: "Media", fechaProgramada: "", horaProgramada: "", precioCobrado: "" });
       setMensaje("Orden asignada correctamente. Ahora aparecerá en el panel del técnico seleccionado.");
     } catch (error) {
       console.error("Error guardando orden en Supabase:", error);

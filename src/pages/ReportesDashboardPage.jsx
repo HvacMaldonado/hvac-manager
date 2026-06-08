@@ -221,7 +221,7 @@ function InsightPanel({ t = (key) => key, completadas, canceladas, total, stockB
                 {tx(t, "premiumStageFour", "Dashboard Premium · Etapa 4")}
               </h3>
               <p className="mt-1 text-sm font-semibold text-white/70">
-                {tx(t, "estimatedProfitabilityNote", "Costos internos estimados. Rentabilidad real pendiente hasta agregar precio cobrado por orden.")}
+                {tx(t, "realProfitabilityNote", "Rentabilidad real calculada con precio cobrado, materiales y nómina del periodo.")}
               </p>
             </div>
 
@@ -235,8 +235,8 @@ function InsightPanel({ t = (key) => key, completadas, canceladas, total, stockB
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <SoftMetric icon={Users} label={tx(t, "recurringCustomers", "Clientes recurrentes")} value={data.clientesRecurrentes} positive />
             <SoftMetric icon={UserCog} label={tx(t, "mostActiveTechnician", "Técnico más activo")} value={data.tecnicosMasActivos[0]?.tecnico || "-"} />
-            <SoftMetric icon={Package} label={tx(t, "materialCost", "Costo materiales")} value={money(materialesUsados)} />
-            <SoftMetric icon={FileSpreadsheet} label={tx(t, "estimatedInternalCost", "Costo interno")} value={money(costoInternoEstimado)} alert={costoInternoEstimado > 0} />
+            <SoftMetric icon={Package} label={tx(t, "income", "Ingresos")} value={money(ingresoReal)} positive />
+            <SoftMetric icon={FileSpreadsheet} label={tx(t, "realProfit", "Ganancia real")} value={money(gananciaReal)} alert={gananciaReal < 0} positive={gananciaReal >= 0} />
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
@@ -452,6 +452,8 @@ export default function ReportesDashboardPage({ t = (key) => key, lang = "es", c
   const porcentajeSeguimiento = Math.round((seguimiento / totalOperativo) * 100);
   const materialesUsados = data.consumoMateriales.reduce((sum, m) => sum + Number(m.costo || 0), 0);
   const costoInternoEstimado = materialesUsados + Number(data.resumenNomina.totalNomina || 0);
+  const ingresoReal = data.ordenesFiltradas.reduce((sum, orden) => sum + Number(orden.precioCobrado || 0), 0);
+  const gananciaReal = ingresoReal - costoInternoEstimado;
   const ordenesUrgentes = data.ordenesFiltradas.filter((o) => ["Urgente", "Alta"].includes(o.prioridad) && !["Completado", "Cancelada"].includes(o.estado)).length;
   const citasHoy = citas.filter((c) => isToday(c.fecha || c.fechaCita || c.created_at)).length;
   const stockCritico = inventario.filter((item) => Number(item.cantidad || 0) <= Number(item.stockMinimo || 0)).length;
@@ -805,7 +807,7 @@ export default function ReportesDashboardPage({ t = (key) => key, lang = "es", c
                 {tx(t, "premiumStageFour", "Dashboard Premium · Etapa 4")}
               </h3>
               <p className="mt-1 text-sm font-semibold text-white/70">
-                {tx(t, "estimatedProfitabilityNote", "Costos internos estimados. Rentabilidad real pendiente hasta agregar precio cobrado por orden.")}
+                {tx(t, "realProfitabilityNote", "Rentabilidad real calculada con precio cobrado, materiales y nómina del periodo.")}
               </p>
             </div>
 
@@ -819,8 +821,8 @@ export default function ReportesDashboardPage({ t = (key) => key, lang = "es", c
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <SoftMetric icon={Users} label={tx(t, "recurringCustomers", "Clientes recurrentes")} value={data.clientesRecurrentes} positive />
             <SoftMetric icon={UserCog} label={tx(t, "mostActiveTechnician", "Técnico más activo")} value={data.tecnicosMasActivos[0]?.tecnico || "-"} />
-            <SoftMetric icon={Package} label={tx(t, "materialCost", "Costo materiales")} value={money(materialesUsados)} />
-            <SoftMetric icon={FileSpreadsheet} label={tx(t, "estimatedInternalCost", "Costo interno")} value={money(costoInternoEstimado)} alert={costoInternoEstimado > 0} />
+            <SoftMetric icon={Package} label={tx(t, "income", "Ingresos")} value={money(ingresoReal)} positive />
+            <SoftMetric icon={FileSpreadsheet} label={tx(t, "realProfit", "Ganancia real")} value={money(gananciaReal)} alert={gananciaReal < 0} positive={gananciaReal >= 0} />
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">

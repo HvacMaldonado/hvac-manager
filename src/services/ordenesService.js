@@ -26,6 +26,7 @@ function mapOrden(row) {
     cancelReason: row.cancel_reason || "",
     costoMateriales: row.costo_materiales || 0,
     costoTotal: row.costo_total || 0,
+    precioCobrado: row.precio_cobrado || 0,
     inventarioDescontado: row.inventario_descontado || false,
     fechaCompletada: row.fecha_completada || "",
     materialesUsados: [],
@@ -60,6 +61,7 @@ export async function crearOrdenSupabase(orden) {
       cancel_reason: orden.cancelReason || "",
       costo_materiales: Number(orden.costoMateriales || 0),
       costo_total: Number(orden.costoTotal || 0),
+      precio_cobrado: Number(orden.precioCobrado || 0),
       inventario_descontado: orden.inventarioDescontado || false,
     })
     .select()
@@ -106,6 +108,7 @@ export async function actualizarOrdenSupabase(id, cambios) {
   if ("cancelReason" in cambios) payload.cancel_reason = cambios.cancelReason || "";
   if ("costoMateriales" in cambios) payload.costo_materiales = Number(cambios.costoMateriales || 0);
   if ("costoTotal" in cambios) payload.costo_total = Number(cambios.costoTotal || 0);
+  if ("precioCobrado" in cambios) payload.precio_cobrado = Number(cambios.precioCobrado || 0);
   if ("inventarioDescontado" in cambios) payload.inventario_descontado = cambios.inventarioDescontado || false;
   if ("fechaCompletada" in cambios) payload.fecha_completada = cambios.fechaCompletada || null;
   if ("historialAdmin" in cambios) payload.historial_admin = cambios.historialAdmin || [];
