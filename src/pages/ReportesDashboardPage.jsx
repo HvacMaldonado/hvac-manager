@@ -137,7 +137,7 @@ function InsightPanel({ t = (key) => key, completadas, canceladas, total, stockB
 
       <div className="grid gap-4 xl:grid-cols-3">
         <DonutFigure t={t} label={tx(t, "completedOrders", "Órdenes completadas")} value={completadas} total={total} tone="green" />
-        <DonutFigure t={t} label="Cancelaciones" value={canceladas} total={total} tone={canceladas > 0 ? "rose" : "blue"} />
+        <DonutFigure t={t} label={tx(t, "cancellations", "Cancelaciones")} value={canceladas} total={total} tone={canceladas > 0 ? "rose" : "blue"} />
 
         <div className="rounded-[1.75rem] border border-slate-200 bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-800 p-4 text-white shadow-lg shadow-slate-300/60">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-200">{tx(t, "inventory", "Inventario")}</p>
@@ -363,10 +363,10 @@ export default function ReportesDashboardPage({ t = (key) => key, lang = "es", c
         <div>
           <p className="mb-3 text-[10px] font-black uppercase tracking-[0.28em] text-slate-500">{tx(t, "mainSummary", "Resumen principal")}</p>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <Metric icon={ClipboardList} label="Órdenes" value={data.ordenesFiltradas.length} hint={tx(t, "filteredTotal", "Total filtrado")} tone="from-slate-950 via-blue-950 to-cyan-800" />
-            <Metric icon={TrendingUp} label="Completadas" value={completadas} hint={tx(t, "closedJobs", "Trabajos cerrados")} tone="from-emerald-700 via-teal-700 to-cyan-700" />
-            <Metric icon={Users} label="Clientes" value={clientes.length} hint={tx(t, "currentBase", "Base actual")} tone="from-blue-950 via-slate-950 to-indigo-900" />
-            <Metric icon={Package} label="Materiales usados" value={money(materialesUsados)} hint={tx(t, "periodCost", "Costo del periodo")} tone="from-cyan-700 via-blue-800 to-slate-900" />
+            <Metric icon={ClipboardList} label={tx(t, "orders", "Órdenes")} value={data.ordenesFiltradas.length} hint={tx(t, "filteredTotal", "Total filtrado")} tone="from-slate-950 via-blue-950 to-cyan-800" />
+            <Metric icon={TrendingUp} label={tx(t, "completedJobs", "Completadas")} value={completadas} hint={tx(t, "closedJobs", "Trabajos cerrados")} tone="from-emerald-700 via-teal-700 to-cyan-700" />
+            <Metric icon={Users} label={tx(t, "customers", "Clientes")} value={clientes.length} hint={tx(t, "currentBase", "Base actual")} tone="from-blue-950 via-slate-950 to-indigo-900" />
+            <Metric icon={Package} label={tx(t, "usedMaterials", "Materiales usados")} value={money(materialesUsados)} hint={tx(t, "periodCost", "Costo del periodo")} tone="from-cyan-700 via-blue-800 to-slate-900" />
           </div>
         </div>
 
@@ -392,10 +392,10 @@ export default function ReportesDashboardPage({ t = (key) => key, lang = "es", c
           </div>
 
           <div className="grid gap-3 md:grid-cols-4">
-            <SoftMetric icon={AlertTriangle} label="Cancelaciones" value={canceladas} alert={canceladas > 0} />
-            <SoftMetric icon={AlertTriangle} label="Por cliente" value={canceladasCliente} alert={canceladasCliente > 0} />
-            <SoftMetric icon={AlertTriangle} label="Por empresa" value={canceladasEmpresa} alert={canceladasEmpresa > 0} />
-            <SoftMetric icon={AlertTriangle} label="Por técnico" value={canceladasTecnico} alert={canceladasTecnico > 0} />
+            <SoftMetric icon={AlertTriangle} label={tx(t, "cancellations", "Cancelaciones")} value={canceladas} alert={canceladas > 0} />
+            <SoftMetric icon={AlertTriangle} label={tx(t, "byCustomer", "Por cliente")} value={canceladasCliente} alert={canceladasCliente > 0} />
+            <SoftMetric icon={AlertTriangle} label={tx(t, "byCompany", "Por empresa")} value={canceladasEmpresa} alert={canceladasEmpresa > 0} />
+            <SoftMetric icon={AlertTriangle} label={tx(t, "byTechnician", "Por técnico")} value={canceladasTecnico} alert={canceladasTecnico > 0} />
           </div>
         </div>
       </div>

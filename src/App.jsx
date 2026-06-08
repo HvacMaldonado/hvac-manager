@@ -324,8 +324,8 @@ const TEXT = {
     inventoryValue: "Valor de inventario",
     lowStock: "Stock bajo",
     toolAlerts: "Herramientas",
-    dashboardExecutive: "Dashboard ejecutivo",
-    dashboardReports: "Dashboard reportes",
+    dashboardExecutive: "Panel ejecutivo",
+    dashboardReports: "Reportes del panel",
     exportExcel: "Exportar Excel",
     printPdf: "Imprimir/PDF",
     searchDashboardPlaceholder: "Buscar por técnico, estado, prioridad o problema...",
@@ -385,7 +385,7 @@ const TEXT = {
     noEventsDay: "No hay eventos para este día.",
     noActiveTechnicians: "No hay técnicos activos.",
     history: "Historial",
-    dashboard: "Dashboard",
+    dashboard: "Panel",
     searchCalendarPlaceholder: "Buscar cliente, técnico, dirección o trabajo...",
     technician: "Técnico",
     customer: "Cliente",
@@ -417,18 +417,18 @@ const TEXT = {
     techPanel: "Technician Panel",
     logout: "Log out",
     changePassword: "Change password",
-    customers: "Clientes",
-    technicians: "Técnicos",
+    customers: "Customers",
+    technicians: "Technicians",
     appointments: "Appointments",
-    orders: "Órdenes",
+    orders: "Orders",
     completedHistory: "Completed history",
-    inventory: "Inventario general",
+    inventory: "General inventory",
     tools: "Technician tools",
     reportsCustomers: "Customer reports",
     reportsInventory: "Inventory reports",
-    reportsCenter: "Centro de reportes",
-    dashboardUnifiedDescription: "Reportes generales, clientes e inventario.",
-    inventoryShort: "Inventario",
+    reportsCenter: "Reports center",
+    dashboardUnifiedDescription: "General, customer, and inventory reports.",
+    inventoryShort: "Inventory",
     general: "General",
     settings: "Settings",
     createOrder: "Create order",
@@ -598,31 +598,31 @@ const TEXT = {
     completedOrders: "Completed orders",
     cancellations: "Cancellations",
     inventoryValue: "Inventory value",
-    lowStock: "Stock bajo",
-    toolAlerts: "Herramientas",
-    dashboardExecutive: "Dashboard ejecutivo",
-    dashboardReports: "Dashboard reportes",
-    exportExcel: "Exportar Excel",
-    printPdf: "Imprimir/PDF",
-    searchDashboardPlaceholder: "Buscar por técnico, estado, prioridad o problema...",
-    allMonths: "Todos los meses",
-    filteredTotal: "Total filtrado",
-    currentBase: "Base actual",
-    usedMaterials: "Materiales usados",
-    periodCost: "Costo del periodo",
-    mainSummary: "Resumen principal",
-    completedJobs: "Completadas",
-    closedJobs: "Trabajos cerrados",
-    cancellationDetails: "Detalle de cancelaciones",
-    internalAdminInfo: "Información interna para administración",
-    byCustomer: "Por cliente",
-    byCompany: "Por empresa",
-    byTechnician: "Por técnico",
-    monthlyTrend: "Tendencia mensual",
-    activeOrders: "Activas",
-    consumption: "Consumo",
+    lowStock: "Low stock",
+    toolAlerts: "Tools",
+    dashboardExecutive: "Executive dashboard",
+    dashboardReports: "Dashboard reports",
+    exportExcel: "Export Excel",
+    printPdf: "Print/PDF",
+    searchDashboardPlaceholder: "Search by technician, status, priority, or issue...",
+    allMonths: "All months",
+    filteredTotal: "Filtered total",
+    currentBase: "Current base",
+    usedMaterials: "Used materials",
+    periodCost: "Period cost",
+    mainSummary: "Main summary",
+    completedJobs: "Completed",
+    closedJobs: "Closed jobs",
+    cancellationDetails: "Cancellation details",
+    internalAdminInfo: "Internal administration information",
+    byCustomer: "By customer",
+    byCompany: "By company",
+    byTechnician: "By technician",
+    monthlyTrend: "Monthly trend",
+    activeOrders: "Active",
+    consumption: "Consumption",
     unitsUsed: "units used",
-    operationalHistory: "Historial operativo",
+    operationalHistory: "Operational history",
     months: "months",
     noMaterialsFiltered: "No materials consumed in the filtered orders.",
     noNamedMaterial: "Unnamed material",
@@ -4008,10 +4008,10 @@ function DashboardUnificadoPage({
   const activas = ordenes.filter((o) => !["Completado", "Cancelada"].includes(o.estado)).length;
 
   const tabs = [
-    { id: "general", label: "General", count: activas },
-    { id: "clientes", label: "Clientes", count: clientes.length },
-    { id: "inventario", label: "Inventario", count: inventario.length },
-    { id: "tecnicos", label: "Técnicos", count: tecnicos.length },
+    { id: "general", label: t("general") || "General", count: activas },
+    { id: "clientes", label: t("customers") || "Clientes", count: clientes.length },
+    { id: "inventario", label: t("inventoryShort") || "Inventario", count: inventario.length },
+    { id: "tecnicos", label: t("technicians") || "Técnicos", count: tecnicos.length },
   ];
 
   return (
@@ -4019,28 +4019,28 @@ function DashboardUnificadoPage({
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-md shadow-slate-300/50">
         <div className="border-b border-blue-100 bg-gradient-to-br from-blue-50 via-indigo-50 to-white px-4 py-3">
           <p className="text-[10px] font-black uppercase tracking-[0.24em] text-blue-600">
-            Centro de reportes
+            {t("reportsCenter")}
           </p>
 
           <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 className="text-xl font-black text-slate-950">
-                Dashboard
+                {t("dashboard")}
               </h2>
               <p className="mt-0.5 text-xs font-semibold text-blue-900/60">
-                Reportes generales, clientes e inventario.
+                {t("dashboardUnifiedDescription")}
               </p>
             </div>
 
             <div className="flex flex-wrap gap-1.5 text-[11px] font-black">
               <span className="rounded-full bg-blue-50 px-2.5 py-1 text-blue-700 ring-1 ring-blue-100">
-                Activas {activas}
+                {t("activeOrders")} {activas}
               </span>
               <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700 ring-1 ring-emerald-100">
-                Completadas {completadas}
+                {t("completedJobs")} {completadas}
               </span>
               <span className="rounded-full bg-rose-50 px-2.5 py-1 text-rose-700 ring-1 ring-rose-100">
-                Canceladas {canceladas}
+                {t("cancelledPlural")} {canceladas}
               </span>
             </div>
           </div>
