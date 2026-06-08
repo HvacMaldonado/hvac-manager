@@ -117,7 +117,7 @@ function DonutFigure({ t = (key) => key, label, value, total, tone = "blue" }) {
         <div className="min-w-0">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">{label}</p>
           <p className="mt-1 text-2xl font-black text-slate-950">{value}</p>
-          <p className="text-xs font-semibold text-slate-500">{tx(t, "of", "de")} {total} {tx(t, "recordsCount", "registros")}</p>
+          <p className="text-xs font-semibold text-slate-500">{t("of")} {total} {t("recordsCount")}</p>
         </div>
       </div>
     </div>
