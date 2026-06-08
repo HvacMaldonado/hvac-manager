@@ -27,10 +27,10 @@ import {
 const iconProps = { size: 18, strokeWidth: 2 };
 
 const PRIORIDADES = [
-  { value: "Baja", help: "mantenimiento normal", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  { value: "Media", help: "servicio programado", cls: "bg-blue-50 text-blue-700 border-blue-200" },
-  { value: "Alta", help: "cliente sin aire o calefacción", cls: "bg-sky-50 text-sky-700 border-sky-200" },
-  { value: "Urgente", help: "emergencia / sistema detenido", cls: "bg-rose-50 text-rose-700 border-rose-200" },
+  { value: "Baja", labelKey: "low", helpKey: "normalMaintenance", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  { value: "Media", labelKey: "medium", helpKey: "scheduledService", cls: "bg-blue-50 text-blue-700 border-blue-200" },
+  { value: "Alta", labelKey: "high", helpKey: "customerNoAcHeat", cls: "bg-sky-50 text-sky-700 border-sky-200" },
+  { value: "Urgente", labelKey: "urgent", helpKey: "emergencySystemStopped", cls: "bg-rose-50 text-rose-700 border-rose-200" },
 ];
 
 function IconText({ icon: Icon, children, className = "" }) {
@@ -47,6 +47,29 @@ function formatReportDate(value) {
   if (!value) return new Date().toLocaleDateString();
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleDateString();
+}
+
+function statusLabel(status, t = (key) => key) {
+  const map = {
+    Pendiente: t("pending"),
+    Asignada: t("assigned"),
+    "En ruta": t("onRoute"),
+    "En proceso": t("inProgress"),
+    Completado: t("completed"),
+    Cancelada: t("cancelled"),
+    "Necesita seguimiento": t("needsFollowUp"),
+  };
+  return map[status] || status;
+}
+
+function priorityLabel(priority, t = (key) => key) {
+  const map = {
+    Baja: t("low"),
+    Media: t("medium"),
+    Alta: t("high"),
+    Urgente: t("urgent"),
+  };
+  return map[priority] || priority;
 }
 
 function ModernField({ label, icon: Icon, children }) {
@@ -91,7 +114,7 @@ function FormSection({ icon: Icon, title, subtitle, tone = "blue", children }) {
   );
 }
 
-function PriorityChips({ value, onChange }) {
+function PriorityChips({ value, onChange, t = (key) => key }) {
   const iconByPriority = {
     Baja: CheckCircle2,
     Media: Clock3,
@@ -128,8 +151,8 @@ function PriorityChips({ value, onChange }) {
               </span>
 
               <div className="min-w-0">
-                <p className="truncate text-sm font-black">{p.value}</p>
-                <p className="truncate text-[11px] opacity-75">{p.help}</p>
+                <p className="truncate text-sm font-black">{t(p.labelKey)}</p>
+                <p className="truncate text-[11px] opacity-75">{t(p.helpKey)}</p>
               </div>
             </div>
           </button>
@@ -279,7 +302,7 @@ export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, cr
                 className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-slate-950 via-blue-900 to-cyan-700 px-5 py-3 text-sm font-black text-white shadow-lg shadow-slate-300 transition hover:-translate-y-0.5"
               >
                 <Send size={16} />
-                Asignar al técnico
+                {t("assignToTechnician")}
               </button>
             </div>
           </div>
@@ -637,7 +660,7 @@ function AdminOrdenRow({ orden, cliente, ordenProps, t = (key) => key }) {
           <div className="min-w-0">
             <p className="text-[9px] font-black uppercase tracking-wide text-slate-500">{t("status")}</p>
             <p className={`truncate rounded-full border px-2 py-0.5 text-[10px] font-black ${ordenProps.colorEstado(orden.estado)}`}>
-              {orden.estado}
+              {statusLabel(orden.estado, t)}
             </p>
           </div>
         </div>
@@ -650,7 +673,7 @@ function AdminOrdenRow({ orden, cliente, ordenProps, t = (key) => key }) {
           <div className="min-w-0">
             <p className="text-[9px] font-black uppercase tracking-wide text-slate-500">{t("priority")}</p>
             <p className={`truncate rounded-full border px-2 py-0.5 text-[10px] font-black ${ordenProps.colorPrioridad(orden.prioridad)}`}>
-              {orden.prioridad}
+              {priorityLabel(orden.prioridad, t)}
             </p>
           </div>
         </div>

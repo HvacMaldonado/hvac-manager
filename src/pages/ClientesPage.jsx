@@ -654,8 +654,8 @@ export default function ClientesPage({
         </div>
 
         <div className="overflow-x-auto [-webkit-overflow-scrolling:touch]">
-          <div className="min-w-[1240px]">
-            <div className="grid grid-cols-[1.15fr_0.8fr_1.25fr_0.7fr_0.75fr_360px] gap-3 bg-slate-950 px-4 py-3 text-[11px] font-black uppercase tracking-wide text-white">
+          <div className="min-w-[1500px]">
+            <div className="grid grid-cols-[1.1fr_0.75fr_1.25fr_0.65fr_0.8fr_560px] gap-3 bg-slate-950 px-4 py-3 text-[11px] font-black uppercase tracking-wide text-white">
               <span>{t("customer")}</span>
               <span>{t("phone")}</span>
               <span>{t("address")}</span>
@@ -680,7 +680,7 @@ export default function ClientesPage({
                 const ultimaOrden = hist[hist.length - 1];
 
                 return (
-                  <article key={c.id} className="grid grid-cols-[1.15fr_0.8fr_1.25fr_0.7fr_0.75fr_360px] gap-3 px-4 py-3 text-sm transition hover:bg-blue-50/50">
+                  <article key={c.id} className="grid grid-cols-[1.1fr_0.75fr_1.25fr_0.65fr_0.8fr_560px] gap-3 px-4 py-3 text-sm transition hover:bg-blue-50/50">
                     <div className="min-w-0">
                       {isEdit ? (
                         <EditInput value={data.nombre} onChange={(v) => setClienteEdit({ ...clienteEdit, nombre: v })} />
@@ -747,32 +747,40 @@ export default function ClientesPage({
                           </button>
                         </>
                       ) : (
-                        <button onClick={() => iniciarEdicion(c)} className="inline-flex min-w-[78px] items-center justify-center gap-1 rounded-xl bg-blue-50 px-3 py-2 text-xs font-black text-blue-700 hover:bg-blue-100">
+                        <button onClick={() => iniciarEdicion(c)} className="inline-flex min-w-[120px] items-center justify-center gap-1 rounded-xl bg-blue-50 px-3 py-2 text-xs font-black text-blue-700 hover:bg-blue-100">
                           <Pencil size={13} />
                           {t("edit")}
                         </button>
                       )}
 
-                      <button onClick={() => abrirCrearOrdenConCliente(c)} className="inline-flex min-w-[78px] items-center justify-center gap-1 rounded-xl bg-slate-950 px-3 py-2 text-xs font-black text-white">
+                      <button onClick={() => abrirCrearOrdenConCliente(c)} className="inline-flex min-w-[120px] items-center justify-center gap-1 rounded-xl bg-slate-950 px-3 py-2 text-xs font-black text-white">
                         <ClipboardList size={13} />
                         {t("orderAction")}
                       </button>
 
-                      <button onClick={() => abrirProgramarCitaConCliente(c)} className="inline-flex min-w-[68px] items-center justify-center gap-1 rounded-xl bg-cyan-700 px-3 py-2 text-xs font-black text-white">
+                      <button onClick={() => abrirProgramarCitaConCliente(c)} className="inline-flex min-w-[140px] items-center justify-center gap-1 rounded-xl bg-cyan-700 px-3 py-2 text-xs font-black text-white">
                         <CalendarDays size={13} />
                         {t("appointmentAction")}
                       </button>
 
-                      {c.telefono && (
+                      {c.telefono ? (
                         <a href={urlTelefono(c.telefono)} className="inline-flex min-w-[44px] items-center justify-center gap-1 rounded-xl bg-emerald-700 px-3 py-2 text-xs font-black text-white">
                           <Phone size={13} />
                         </a>
+                      ) : (
+                        <span className="inline-flex min-w-[44px] items-center justify-center gap-1 rounded-xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-300">
+                          <Phone size={13} />
+                        </span>
                       )}
 
-                      {c.direccion && (
+                      {c.direccion ? (
                         <a href={urlAppleMaps(c.direccion)} target="_blank" rel="noreferrer" className="inline-flex min-w-[44px] items-center justify-center gap-1 rounded-xl border bg-white px-3 py-2 text-xs font-black text-slate-700">
                           <Navigation size={13} />
                         </a>
+                      ) : (
+                        <span className="inline-flex min-w-[44px] items-center justify-center gap-1 rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-xs font-black text-slate-300">
+                          <Navigation size={13} />
+                        </span>
                       )}
 
                       <button

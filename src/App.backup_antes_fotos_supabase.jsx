@@ -7,7 +7,6 @@ import { obtenerHerramientasSupabase, crearHerramientaSupabase, actualizarHerram
 import { obtenerInventarioSupabase, crearInventarioSupabase, actualizarInventarioSupabase } from "./services/inventarioService";
 import { crearOrdenMaterialSupabase, actualizarOrdenMaterialSupabase, eliminarOrdenMaterialSupabase } from "./services/ordenMaterialesService";
 import { obtenerFirmasOrdenesSupabase, guardarFirmaOrdenSupabase } from "./services/ordenFirmasService";
-import { obtenerFotosOrdenesSupabase, guardarFotoOrdenSupabase } from "./services/ordenFotosService";
 import {
   AlertCircle,
   AlertTriangle,
@@ -148,142 +147,18 @@ const TEXT = {
     completedHistory: "Historial completado",
     inventory: "Inventario general",
     tools: "Herramientas técnico",
-    toolsAssignment: "Asignación",
-    technicianToolsTitle: "Herramientas técnico",
-    technicianToolsDescription: "Control de herramientas asignadas, devueltas, dañadas o perdidas por técnico.",
-    availableTools: "Disponibles",
-    assignedTools: "Asignadas",
-    returnedTools: "Devueltas",
-    selectedTechnician: "Técnico seleccionado",
-    selectTechnician: "Seleccionar técnico",
-    selectTechnicianShort: "Selecciona técnico",
-    selectedTechnicianDescription: "El selector principal define a quién se asignará la herramienta. No se repite el técnico dentro del formulario.",
-    modernForm: "Formulario moderno",
-    addTool: "Agregar herramienta",
-    technicianAssignment: "Asignación por técnico",
-    tool: "Herramienta",
-    quantity: "Cantidad",
-    status: "Estado",
-    notes: "Notas",
-    toolPlaceholder: "Ej. Manifold, taladro, bomba...",
-    notesPlaceholder: "Condición o comentario",
-    assignTool: "Asignar herramienta",
-    searchToolsPlaceholder: "Buscar herramienta, técnico, estado o notas...",
-    allStatuses: "Todos los estados",
-    technician: "Técnico",
-    actions: "Acciones",
-    noToolsFilters: "No hay herramientas con esos filtros.",
-    noName: "Sin nombre",
-    noTechnician: "Sin técnico",
-    noNotes: "Sin notas",
-    save: "Guardar",
-    edit: "Editar",
-    return: "Devolver",
-    selectTechnicianAlert: "Selecciona un técnico antes de agregar herramientas.",
-    enterToolNameAlert: "Ingresa el nombre de la herramienta.",
-    statusAvailable: "Disponible",
-    statusAssigned: "Asignada",
-    statusDamaged: "Dañada",
-    statusLost: "Perdida",
-    statusReturned: "Devuelta",
     reportsCustomers: "Reportes clientes",
-    customerReportsTitle: "Reportes clientes",
-    customerReportsDescription: "Resumen por cliente con órdenes, citas, actividad y acciones rápidas.",
-    withHistory: "Con historial",
-    withAppointments: "Con citas",
-    withAppointment: "Con cita",
-    lastActivity: "Última actividad",
-    noCustomersFilters: "No hay clientes con esos filtros.",
-    noEmail: "Sin email",
-    noAddress: "Sin dirección",
-    export: "Exportar",
     reportsInventory: "Reportes inventario",
-    inventoryReportsTitle: "Reportes inventario",
-    inventoryReportsDescription: "Vista consolidada de materiales, herramientas, alertas y valor interno.",
-    alerts: "Alertas",
-    categories: "Categorías",
-    value: "Valor",
-    searchInventoryReport: "Buscar material, herramienta, responsable, categoría...",
-    allStatuses: "Todos los estados",
-    onlyAlerts: "Solo alertas",
-    internalValue: "Valor interno",
-    type: "Tipo",
-    itemName: "Nombre",
-    category: "Categoría",
-    quantityShort: "Cant.",
-    unitStatus: "Unidad/Estado",
-    responsible: "Responsable",
-    noRecordsFilters: "No hay registros con esos filtros.",
-    noName: "Sin nombre",
-    noCategory: "Sin categoría",
-    warehouse: "Almacén",
-    available: "Disponible",
-    assignedStatus: "Asignada",
-    damaged: "Dañada",
-    lost: "Perdida",
-    stockLow: "Stock bajo",
-    technicalTool: "Herramienta técnico",
-    unit: "unidad",
-    reportsCenter: "Centro de reportes",
-    dashboardUnifiedDescription: "Reportes generales, clientes e inventario.",
-    inventoryShort: "Inventario",
-    general: "General",
     settings: "Configuración",
+    activeOrders: "Órdenes activas",
     createOrder: "Crear orden",
     searchCustomer: "Buscar cliente",
-    customerManagement: "Gestión de clientes",
-    customersLabel: "Clientes",
-    activeCustomersLabel: "Activos",
-    appointmentsLabel: "Citas",
-    quickRegistration: "Registro rápido",
-    newLabel: "Nuevo",
-    contactDescription: "Nombre, teléfono y email",
-    locationDescription: "Dirección del servicio",
-    accessDescription: "Apt, edificio y código",
-    createNewCustomer: "Crear nuevo cliente",
-    saveCustomer: "Guardar cliente",
-    registeredCustomers: "Clientes registrados",
-    contact: "Contacto",
-    contactDescription: "Nombre, teléfono y email",
-    location: "Ubicación",
-    locationDescription: "Dirección del servicio",
-    access: "Acceso",
-    accessDescription: "Apt, edificio y código",
-    mainInformation: "Información principal",
-    basicContactData: "Datos básicos de contacto",
-    serviceLocation: "Ubicación del servicio",
-    serviceLocationDescription: "Dirección donde se realizará el trabajo",
-    accessDetails: "Detalles de acceso",
-    accessDetailsDescription: "Información útil para llegar sin retrasos",
-    customerName: "Nombre del cliente",
-    customerNamePlaceholder: "Ej. Luis Martínez",
-    emailPlaceholder: "correo@cliente.com",
-    fullAddress: "Dirección completa",
-    addressPlaceholder: "Empieza a escribir la dirección...",
-    compactTable: "Tabla compacta",
-    searchCustomerPlaceholder: "Buscar cliente...",
-    mostRecent: "Más recientes",
-    nameAZ: "Nombre A-Z",
-    dateLastMovement: "Fecha / último movimiento",
-    noHistory: "Sin historial",
-    noEmail: "Sin email",
-    noAddress: "Sin dirección",
-    activeOrder: "Orden activa",
-    noOrder: "Sin orden",
-    customerRequiredAlert: "Nombre, teléfono y dirección son obligatorios.",
-    ordersCountLabel: "Órdenes",
-    appointmentsCountLabel: "Citas",
-    orderAction: "Orden",
-    appointmentAction: "Cita",
-    building: "Edificio",
-    street: "Calle",
-    accessCode: "Código de acceso",
-    geoapifyHelp: "Autocompletado con Geoapify. Escribe mínimo 3 letras y selecciona una dirección.",
     reportedProblem: "Problema reportado",
     assignTech: "Asignar técnico",
     priority: "Prioridad",
     create: "Crear",
     add: "Agregar",
+    edit: "Editar",
     save: "Guardar",
     delete: "Eliminar",
     call: "Llamar",
@@ -317,245 +192,6 @@ const TEXT = {
     reusableTool: "Herramienta / equipo",
     returnTool: "Devolver herramienta",
     translate: "Traducir",
-    calendar: "Calendario",
-    visualAgenda: "Agenda visual",
-    calendarDescription: "Visualiza citas y órdenes programadas por día, semana, técnico y prioridad.",
-    events: "Eventos",
-    today: "Hoy",
-    allTechnicians: "Todos los técnicos",
-    month: "Mes",
-    week: "Semana",
-    monthlyView: "Vista mensual",
-    weeklyView: "Vista semanal",
-    colorsByTechnician: "Colores por técnico",
-    activeTeam: "Equipo activo",
-    low: "Baja",
-    medium: "Media",
-    high: "Alta",
-    urgent: "Urgente",
-    historyTitle: "Historial de órdenes",
-    historyDescription: "Consulta en un solo lugar las órdenes completadas y canceladas, con filtros y acciones rápidas.",
-    total: "Total",
-    records: "registros",
-    orderRecords: "Registros de órdenes",
-    completedAndCancelled: "Completadas y canceladas",
-    searchHistoryPlaceholder: "Buscar por cliente, técnico, problema, dirección o estado...",
-    all: "Todos",
-    mostRecent: "Más recientes",
-    oldest: "Más antiguos",
-    noHistoryOrders: "No hay órdenes en historial con esos filtros.",
-    deletedCustomer: "Cliente eliminado",
-    noPhone: "Sin teléfono",
-    noTechnician: "Sin técnico",
-    noDate: "Sin fecha",
-    noTime: "Sin hora",
-    scheduledAppointment: "Cita programada",
-    workOrderFallback: "Orden de trabajo",
-    weekOf: "Semana de",
-    noAssignedTechnician: "Sin técnico asignado",
-    noGeneratedOrdersYet: "No hay órdenes generadas todavía.",
-    quickActions: "Acciones rápidas",
-    noMaterials: "Sin materiales",
-    viewOrder: "Ver orden",
-    sendReport: "Enviar reporte",
-    adminCorrection: "Corrección administrativa",
-    newTechnician: "Nuevo técnico",
-    addTechnician: "Agregar técnico",
-    technicianCreateDescription: "Crea usuarios técnicos para asignar órdenes, citas y herramientas.",
-    active: "Activo",
-    entry: "Ingreso",
-    quickForm: "Formulario rápido",
-    technicianData: "Datos del técnico",
-    userPasswordContact: "Usuario · Password · Contacto",
-    name: "Nombre",
-    technicianName: "Nombre del técnico",
-    passwordLabel: "Password",
-    entryDate: "Fecha ingreso",
-    exitDate: "Fecha salida",
-    hourlyPay: "Pago por hora ($)",
-    payrollOperational: "Nómina operativa",
-    technicianHoursPay: "Horas y pago por técnico",
-    realWorkOnly: "Calculado solo con horas reales de trabajo, no traslado.",
-    consultedWeek: "Semana consultada",
-    consultedDay: "Hoy",
-    consultedMonth: "Mes consultado",
-    consultedYear: "Año consultado",
-    allHistory: "Todo el historial",
-    work: "Trabajo",
-    travel: "Traslado",
-    pay: "Pago",
-    earned: "Ganado",
-    completedOrdersPeriod: "órdenes completadas en este período",
-    hourlyPayShort: "Pago por hora",
-    totalPay: "Total",
-    technicianActiveLogin: "El técnico quedará activo y podrá iniciar sesión con su usuario y contraseña.",
-    editTechnician: "Editar técnico",
-    cancel: "Cancelar",
-    enterTechnicianName: "Ingresa el nombre del técnico.",
-    saveTechnicianError: "No se pudo guardar el técnico en Supabase.",
-    agenda: "Agenda",
-    upcoming: "Próximas",
-    new: "Nueva",
-    quickAgenda: "Agenda rápida",
-    createAppointmentTitle: "Crear cita",
-    appointmentCreateDescription: "Selecciona cliente, técnico, fecha y motivo para dejar la visita programada.",
-    whoReceivesService: "Quién recibirá el servicio",
-    whoHandlesAppointment: "Quién atenderá la cita",
-    dateAndTime: "Fecha y hora",
-    clearScheduling: "Programación clara",
-    modernForm: "Formulario moderno",
-    appointmentData: "Datos de la cita",
-    saveAppointment: "Guardar cita",
-    customerAndTechnician: "Cliente y técnico",
-    selectCustomerAndTechnician: "Selecciona quién recibe y quién atiende",
-    searchCustomerAppointment: "Buscar cliente, teléfono, email o dirección...",
-    selectedCustomer: "Cliente seleccionado",
-    change: "Cambiar",
-    noCustomersFound: "No se encontraron clientes.",
-    selectTechnician: "Seleccionar técnico",
-    scheduling: "Programación",
-    visitDateAndTime: "Fecha y hora de la visita",
-    visitDetail: "Detalle de la visita",
-    describeAppointmentReason: "Describe el motivo de la cita",
-    reason: "Motivo",
-    reasonPlaceholder: "Ej. Revisión de aire acondicionado",
-    dynamicTable: "Tabla dinámica",
-    appointmentsList: "Listado de citas",
-    searchAppointment: "Buscar cita...",
-    allAppointments: "Todas",
-    scheduledPlural: "Programadas",
-    completedPlural: "Completadas",
-    cancelledPlural: "Canceladas",
-    dateTime: "Fecha / Hora",
-    noAppointments: "No hay citas para mostrar.",
-    noReason: "Sin motivo",
-    createOrderAction: "Crear orden",
-    quickOrder: "Orden rápida",
-    quickOrderDescription: "Crea y asigna una orden de trabajo en pocos pasos.",
-    selectCustomerForOrder: "Busca y selecciona el cliente para esta orden",
-    customerSearchPlaceholder: "Nombre, teléfono, email o dirección",
-    schedulingDescription: "Define fecha y hora para la visita",
-    reportedProblemDescription: "Describe lo que necesita revisar el técnico",
-    assignedTechnician: "Técnico asignado",
-    assignedTechnicianDescription: "El administrador asigna, el técnico completa",
-    priorityDescription: "Define qué tan urgente es el servicio",
-    administrativeTracking: "Seguimiento administrativo",
-    administrativeTrackingDescription: "Órdenes activas agrupadas por técnico, prioridad y periodo.",
-    year: "Año",
-    assignedTechnicianLabel: "Técnico asignado",
-    ordersLabel: "órdenes",
-    urgentPlural: "Urgentes",
-    overduePlural: "Atrasadas",
-    period: "Periodo",
-    orderSingular: "orden",
-    orderPlural: "órdenes",
-    orderId: "Orden",
-    noReportedProblem: "Sin problema reportado",
-    unassigned: "Sin asignar",
-    scheduledLabel: "Programado",
-    closeShareMenu: "Cerrar menú de compartir",
-    systemShare: "Compartir sistema",
-    createOrderTitle: "Crear orden",
-    createOrderDescription: "Crea, programa y asigna el trabajo al técnico correcto.",
-    generatedOrdersList: "Lista de órdenes generadas",
-    generatedOrdersDescription: "Aquí solo se revisan las órdenes. La ejecución queda en el perfil del técnico asignado.",
-    operationalHealth: "Salud operativa",
-    visualIndicators: "Indicadores visuales",
-    selectedPeriodSummary: "Resumen interno del periodo seleccionado",
-    completedOrders: "Órdenes completadas",
-    cancellations: "Cancelaciones",
-    inventoryValue: "Valor de inventario",
-    lowStock: "Stock bajo",
-    toolAlerts: "Herramientas",
-    dashboardExecutive: "Panel ejecutivo",
-    dashboardReports: "Reportes del panel",
-    exportExcel: "Exportar Excel",
-    printPdf: "Imprimir/PDF",
-    searchDashboardPlaceholder: "Buscar por técnico, estado, prioridad o problema...",
-    allMonths: "Todos los meses",
-    filteredTotal: "Total filtrado",
-    currentBase: "Base actual",
-    usedMaterials: "Materiales usados",
-    periodCost: "Costo del periodo",
-    mainSummary: "Resumen principal",
-    completedJobs: "Completadas",
-    closedJobs: "Trabajos cerrados",
-    cancellationDetails: "Detalle de cancelaciones",
-    internalAdminInfo: "Información interna para administración",
-    byCustomer: "Por cliente",
-    byCompany: "Por empresa",
-    byTechnician: "Por técnico",
-    monthlyTrend: "Tendencia mensual",
-    activeOrders: "Activas",
-    consumption: "Consumo",
-    unitsUsed: "unidades usadas",
-    operationalHistory: "Historial operativo",
-    months: "meses",
-    noMaterialsFiltered: "No hay materiales consumidos en las órdenes filtradas.",
-    noNamedMaterial: "Material sin nombre",
-    topTen: "Top 10",
-    totalLabel: "total",
-    recordsCount: "registros",
-    of: "de",
-    themeLabel: "Tema",
-    teamLabel: "Equipo",
-    normalMaintenance: "mantenimiento normal",
-    scheduledService: "servicio programado",
-    customerNoAcHeat: "cliente sin aire o calefacción",
-    emergencySystemStopped: "emergencia / sistema detenido",
-    assignToTechnician: "Asignar al técnico",
-    blue: "Azul",
-    green: "Verde",
-    purple: "Morado",
-    orange: "Naranja",
-    pink: "Rosa",
-    gray: "Gris",
-    deleteAppointmentConfirm: "¿Eliminar esta cita?",
-    scheduled: "Programada",
-    completedAppointment: "Completada",
-    convertedToOrder: "Convertida en orden",
-    activeTechnicians: "Técnicos activos",
-    inactiveHistory: "Historial de bajas",
-    inService: "En servicio",
-    inactiveData: "Datos de baja",
-    actions: "Acciones",
-    contact: "Contacto",
-    color: "Color",
-    startDate: "Start Date",
-    exit: "Exit",
-    inactive: "Baja",
-    deactivate: "Dar de baja",
-    reactivate: "Reactivar",
-    remove: "Eliminar",
-    edit: "Editar",
-    searchTechnician: "Buscar técnico...",
-    deleteTechnicianConfirm: "¿Eliminar permanentemente a",
-    dayDetail: "Detalle del día",
-    noEventsDay: "No hay eventos para este día.",
-    noActiveTechnicians: "No hay técnicos activos.",
-    history: "Historial",
-    dashboard: "Panel",
-    searchCalendarPlaceholder: "Buscar cliente, técnico, dirección o trabajo...",
-    technician: "Técnico",
-    customer: "Cliente",
-    address: "Dirección",
-    phone: "Teléfono",
-    status: "Estado",
-    completed: "Completado",
-    cancelled: "Cancelada",
-    needsFollowUp: "Necesita seguimiento",
-    time: "Hora",
-    map: "Mapa",
-    noAddress: "Sin dirección",
-    appointment: "Cita",
-    workOrder: "Orden",
-    sundayShort: "Dom",
-    mondayShort: "Lun",
-    tuesdayShort: "Mar",
-    wednesdayShort: "Mié",
-    thursdayShort: "Jue",
-    fridayShort: "Vie",
-    saturdayShort: "Sáb",
   },
   en: {
     app: "HVAC Manager",
@@ -573,151 +209,18 @@ const TEXT = {
     completedHistory: "Completed history",
     inventory: "General inventory",
     tools: "Technician tools",
-    toolsAssignment: "Assignment",
-    technicianToolsTitle: "Technician tools",
-    technicianToolsDescription: "Track tools assigned, returned, damaged, or lost by technician.",
-    availableTools: "Available",
-    assignedTools: "Assigned",
-    returnedTools: "Returned",
-    selectedTechnician: "Selected technician",
-    selectTechnician: "Select technician",
-    selectTechnicianShort: "Select technician",
-    selectedTechnicianDescription: "The main selector defines who the tool will be assigned to. The technician is not repeated inside the form.",
-    modernForm: "Modern form",
-    addTool: "Add tool",
-    technicianAssignment: "Technician assignment",
-    tool: "Tool",
-    quantity: "Quantity",
-    status: "Status",
-    notes: "Notes",
-    toolPlaceholder: "Ex. Manifold, drill, pump...",
-    notesPlaceholder: "Condition or comment",
-    assignTool: "Assign tool",
-    searchToolsPlaceholder: "Search tool, technician, status, or notes...",
-    allStatuses: "All statuses",
-    technician: "Technician",
-    actions: "Actions",
-    noToolsFilters: "No tools match those filters.",
-    noName: "No name",
-    noTechnician: "No technician",
-    noNotes: "No notes",
-    save: "Save",
-    edit: "Edit",
-    return: "Return",
-    selectTechnicianAlert: "Select a technician before adding tools.",
-    enterToolNameAlert: "Enter the tool name.",
-    statusAvailable: "Available",
-    statusAssigned: "Assigned",
-    statusDamaged: "Damaged",
-    statusLost: "Lost",
-    statusReturned: "Returned",
     reportsCustomers: "Customer reports",
-    customerReportsTitle: "Customer reports",
-    customerReportsDescription: "Customer summary with orders, appointments, activity, and quick actions.",
-    withHistory: "With history",
-    withAppointments: "With appointments",
-    withAppointment: "With appointment",
-    lastActivity: "Last activity",
-    noCustomersFilters: "No customers match those filters.",
-    noEmail: "No email",
-    noAddress: "No address",
-    export: "Export",
-    contact: "Contact",
-    activity: "Activity",
-    actions: "Actions",
-    activePlural: "Active",
-    customerReportsSearchPlaceholder: "Search customer, phone, email, or address...",
-    withOrders: "With orders",
-    noActivity: "No activity",
-    nameSort: "Name",
-    mostOrders: "Most orders",
     reportsInventory: "Inventory reports",
-    inventoryReportsTitle: "Inventory reports",
-    inventoryReportsDescription: "Consolidated view of materials, tools, alerts, and internal value.",
-    alerts: "Alerts",
-    categories: "Categories",
-    value: "Value",
-    searchInventoryReport: "Search material, tool, person responsible, or category...",
-    allStatuses: "All statuses",
-    onlyAlerts: "Only alerts",
-    internalValue: "Internal value",
-    type: "Type",
-    itemName: "Name",
-    category: "Category",
-    quantityShort: "Qty.",
-    unitStatus: "Unit/Status",
-    responsible: "Responsible",
-    noRecordsFilters: "No records match those filters.",
-    noName: "No name",
-    noCategory: "No category",
-    warehouse: "Warehouse",
-    available: "Available",
-    assignedStatus: "Assigned",
-    damaged: "Damaged",
-    lost: "Lost",
-    stockLow: "Low stock",
-    technicalTool: "Technician tool",
-    unit: "unit",
-    reportsCenter: "Reports center",
-    dashboardUnifiedDescription: "General, customer, and inventory reports.",
-    inventoryShort: "Inventory",
-    general: "General",
     settings: "Settings",
+    activeOrders: "Active orders",
     createOrder: "Create order",
     searchCustomer: "Search customer",
-    customerManagement: "Customer management",
-    customersLabel: "Customers",
-    activeCustomersLabel: "Active",
-    appointmentsLabel: "Appointments",
-    quickRegistration: "Quick registration",
-    newLabel: "New",
-    contactDescription: "Name, phone, and email",
-    locationDescription: "Service address",
-    accessDescription: "Apt, building, and code",
-    createNewCustomer: "Create new customer",
-    saveCustomer: "Save customer",
-    registeredCustomers: "Registered customers",
-    contact: "Contact",
-    contactDescription: "Name, phone, and email",
-    location: "Location",
-    locationDescription: "Service address",
-    access: "Access",
-    accessDescription: "Apt, building, and code",
-    mainInformation: "Main information",
-    basicContactData: "Basic contact details",
-    serviceLocation: "Service location",
-    serviceLocationDescription: "Address where the work will be performed",
-    accessDetails: "Access details",
-    accessDetailsDescription: "Useful information to arrive without delays",
-    customerName: "Customer name",
-    customerNamePlaceholder: "Ex. Luis Martinez",
-    emailPlaceholder: "customer@email.com",
-    fullAddress: "Full address",
-    addressPlaceholder: "Start typing the address...",
-    compactTable: "Compact table",
-    searchCustomerPlaceholder: "Search customer...",
-    mostRecent: "Most recent",
-    nameAZ: "Name A-Z",
-    dateLastMovement: "Date / last activity",
-    noHistory: "No history",
-    noEmail: "No email",
-    noAddress: "No address",
-    activeOrder: "Active order",
-    noOrder: "No order",
-    customerRequiredAlert: "Name, phone, and address are required.",
-    ordersCountLabel: "Orders",
-    appointmentsCountLabel: "Appointments",
-    orderAction: "Order",
-    appointmentAction: "Appointment",
-    building: "Building",
-    street: "Street",
-    accessCode: "Access code",
-    geoapifyHelp: "Autocomplete with Geoapify. Type at least 3 letters and select an address.",
     reportedProblem: "Reported problem",
     assignTech: "Assign technician",
     priority: "Priority",
     create: "Create",
     add: "Add",
+    edit: "Edit",
     save: "Save",
     delete: "Delete",
     call: "Call",
@@ -751,245 +254,6 @@ const TEXT = {
     reusableTool: "Tool / equipment",
     returnTool: "Return tool",
     translate: "Translate",
-    calendar: "Calendar",
-    visualAgenda: "Visual agenda",
-    calendarDescription: "View appointments and scheduled work orders by day, week, technician, and priority.",
-    events: "Events",
-    today: "Today",
-    allTechnicians: "All technicians",
-    month: "Month",
-    week: "Week",
-    monthlyView: "Monthly view",
-    weeklyView: "Weekly view",
-    colorsByTechnician: "Technician colors",
-    activeTeam: "Active team",
-    low: "Low",
-    medium: "Medium",
-    high: "High",
-    urgent: "Urgent",
-    historyTitle: "Order history",
-    historyDescription: "View completed and canceled work orders in one place, with filters and quick actions.",
-    total: "Total",
-    records: "records",
-    orderRecords: "Order records",
-    completedAndCancelled: "Completed and canceled",
-    searchHistoryPlaceholder: "Search by customer, technician, issue, address, or status...",
-    all: "All",
-    mostRecent: "Most recent",
-    oldest: "Oldest",
-    noHistoryOrders: "No history orders match those filters.",
-    deletedCustomer: "Deleted customer",
-    noPhone: "No phone",
-    noTechnician: "No technician",
-    noDate: "No date",
-    noTime: "No time",
-    scheduledAppointment: "Scheduled appointment",
-    workOrderFallback: "Work order",
-    quickActions: "Quick actions",
-    noMaterials: "No materials",
-    viewOrder: "View order",
-    sendReport: "Send report",
-    adminCorrection: "Administrative correction",
-    newTechnician: "New technician",
-    addTechnician: "Add technician",
-    technicianCreateDescription: "Create technician users to assign work orders, appointments, and tools.",
-    active: "Active",
-    entry: "Start date",
-    quickForm: "Quick form",
-    technicianData: "Technician data",
-    userPasswordContact: "User · Password · Contact",
-    name: "Name",
-    technicianName: "Technician name",
-    passwordLabel: "Password",
-    entryDate: "Start date",
-    exitDate: "Exit date",
-    hourlyPay: "Hourly pay ($)",
-    payrollOperational: "Operational payroll",
-    technicianHoursPay: "Technician hours and pay",
-    realWorkOnly: "Calculated only with real work hours, not travel.",
-    consultedWeek: "Selected week",
-    consultedDay: "Today",
-    consultedMonth: "Selected month",
-    consultedYear: "Selected year",
-    allHistory: "All history",
-    work: "Work",
-    travel: "Travel",
-    pay: "Pay",
-    earned: "Earned",
-    completedOrdersPeriod: "completed orders in this period",
-    hourlyPayShort: "Hourly pay",
-    totalPay: "Total",
-    technicianActiveLogin: "The technician will remain active and can sign in with their username and password.",
-    editTechnician: "Edit technician",
-    cancel: "Cancel",
-    enterTechnicianName: "Enter the technician name.",
-    saveTechnicianError: "Could not save the technician in Supabase.",
-    agenda: "Agenda",
-    upcoming: "Upcoming",
-    new: "New",
-    quickAgenda: "Quick agenda",
-    createAppointmentTitle: "Create appointment",
-    appointmentCreateDescription: "Select customer, technician, date, and reason to schedule the visit.",
-    whoReceivesService: "Who will receive the service",
-    whoHandlesAppointment: "Who will handle the appointment",
-    dateAndTime: "Date and time",
-    clearScheduling: "Clear scheduling",
-    modernForm: "Modern form",
-    appointmentData: "Appointment data",
-    saveAppointment: "Save appointment",
-    customerAndTechnician: "Customer and technician",
-    selectCustomerAndTechnician: "Select who receives and who handles it",
-    searchCustomerAppointment: "Search customer, phone, email, or address...",
-    selectedCustomer: "Selected customer",
-    change: "Change",
-    noCustomersFound: "No customers found.",
-    selectTechnician: "Select technician",
-    scheduling: "Scheduling",
-    visitDateAndTime: "Visit date and time",
-    visitDetail: "Visit details",
-    describeAppointmentReason: "Describe the appointment reason",
-    reason: "Reason",
-    reasonPlaceholder: "Ex. Air conditioner inspection",
-    dynamicTable: "Dynamic table",
-    appointmentsList: "Appointments list",
-    searchAppointment: "Search appointment...",
-    allAppointments: "All",
-    scheduledPlural: "Scheduled",
-    completedPlural: "Completed",
-    cancelledPlural: "Cancelled",
-    dateTime: "Date / Time",
-    noAppointments: "No appointments to show.",
-    noReason: "No reason",
-    createOrderAction: "Create order",
-    quickOrder: "Quick order",
-    quickOrderDescription: "Create and assign a work order in a few steps.",
-    selectCustomerForOrder: "Search and select the customer for this order",
-    customerSearchPlaceholder: "Name, phone, email, or address",
-    schedulingDescription: "Set the date and time for the visit",
-    reportedProblemDescription: "Describe what the technician needs to check",
-    assignedTechnician: "Assigned technician",
-    assignedTechnicianDescription: "The administrator assigns it, the technician completes it",
-    priorityDescription: "Define how urgent the service is",
-    administrativeTracking: "Administrative tracking",
-    administrativeTrackingDescription: "Active work orders grouped by technician, priority, and period.",
-    year: "Year",
-    assignedTechnicianLabel: "Assigned technician",
-    ordersLabel: "orders",
-    weekOf: "Week of",
-    noAssignedTechnician: "No assigned technician",
-    noGeneratedOrdersYet: "No orders generated yet.",
-    urgentPlural: "Urgent",
-    overduePlural: "Overdue",
-    period: "Period",
-    orderSingular: "order",
-    orderPlural: "orders",
-    orderId: "Order",
-    noReportedProblem: "No reported problem",
-    unassigned: "Unassigned",
-    scheduledLabel: "Scheduled",
-    closeShareMenu: "Close share menu",
-    systemShare: "System share",
-    createOrderTitle: "Create order",
-    createOrderDescription: "Create, schedule, and assign the job to the right technician.",
-    generatedOrdersList: "Generated work orders",
-    generatedOrdersDescription: "Orders are reviewed here. Execution stays in the assigned technician profile.",
-    operationalHealth: "Operational health",
-    visualIndicators: "Visual indicators",
-    selectedPeriodSummary: "Internal summary for the selected period",
-    completedOrders: "Completed orders",
-    cancellations: "Cancellations",
-    inventoryValue: "Inventory value",
-    lowStock: "Low stock",
-    toolAlerts: "Tools",
-    dashboardExecutive: "Executive dashboard",
-    dashboardReports: "Dashboard reports",
-    exportExcel: "Export Excel",
-    printPdf: "Print/PDF",
-    searchDashboardPlaceholder: "Search by technician, status, priority, or issue...",
-    allMonths: "All months",
-    filteredTotal: "Filtered total",
-    currentBase: "Current base",
-    usedMaterials: "Used materials",
-    periodCost: "Period cost",
-    mainSummary: "Main summary",
-    completedJobs: "Completed",
-    closedJobs: "Closed jobs",
-    cancellationDetails: "Cancellation details",
-    internalAdminInfo: "Internal administration information",
-    byCustomer: "By customer",
-    byCompany: "By company",
-    byTechnician: "By technician",
-    monthlyTrend: "Monthly trend",
-    activeOrders: "Active",
-    consumption: "Consumption",
-    unitsUsed: "units used",
-    operationalHistory: "Operational history",
-    months: "months",
-    noMaterialsFiltered: "No materials consumed in the filtered orders.",
-    noNamedMaterial: "Unnamed material",
-    topTen: "Top 10",
-    totalLabel: "total",
-    recordsCount: "records",
-    of: "of",
-    themeLabel: "Theme",
-    teamLabel: "Team",
-    normalMaintenance: "normal maintenance",
-    scheduledService: "scheduled service",
-    customerNoAcHeat: "customer without AC or heat",
-    emergencySystemStopped: "emergency / stopped system",
-    assignToTechnician: "Assign to technician",
-    blue: "Blue",
-    green: "Green",
-    purple: "Purple",
-    orange: "Orange",
-    pink: "Pink",
-    gray: "Gray",
-    deleteAppointmentConfirm: "Delete this appointment?",
-    scheduled: "Scheduled",
-    completedAppointment: "Completed",
-    convertedToOrder: "Converted to work order",
-    activeTechnicians: "Active technicians",
-    inactiveHistory: "Inactive history",
-    inService: "In service",
-    inactiveData: "Inactive records",
-    actions: "Actions",
-    contact: "Contact",
-    color: "Color",
-    startDate: "Start Date",
-    exit: "Exit",
-    inactive: "Inactive",
-    deactivate: "Deactivate",
-    reactivate: "Reactivate",
-    remove: "Delete",
-    edit: "Edit",
-    searchTechnician: "Search technician...",
-    deleteTechnicianConfirm: "Permanently delete",
-    dayDetail: "Day details",
-    noEventsDay: "No events for this day.",
-    noActiveTechnicians: "No active technicians.",
-    history: "History",
-    dashboard: "Dashboard",
-    searchCalendarPlaceholder: "Search customer, technician, address, or work...",
-    technician: "Technician",
-    customer: "Customer",
-    address: "Address",
-    phone: "Phone",
-    status: "Status",
-    completed: "Completed",
-    cancelled: "Canceladas",
-    needsFollowUp: "Follow-up needed",
-    time: "Time",
-    map: "Map",
-    noAddress: "No address",
-    appointment: "Appointment",
-    workOrder: "Work order",
-    sundayShort: "Sun",
-    mondayShort: "Mon",
-    tuesdayShort: "Tue",
-    wednesdayShort: "Wed",
-    thursdayShort: "Thu",
-    fridayShort: "Fri",
-    saturdayShort: "Sat",
   },
 };
 
@@ -1227,37 +491,6 @@ export default function App() {
     }
 
     cargarFirmasSupabase();
-  }, []);
-
-
-  useEffect(() => {
-    async function cargarFotosSupabase() {
-      try {
-        const fotosSupabase = await obtenerFotosOrdenesSupabase();
-
-        if (!fotosSupabase.length) return;
-
-        setOrdenes((actual) =>
-          actual.map((orden) => {
-            const fotosOrden = fotosSupabase.filter((f) => String(f.ordenId) === String(orden.id));
-
-            if (!fotosOrden.length) return orden;
-
-            const fotos = { ...(orden.fotos || {}) };
-
-            fotosOrden.forEach((foto) => {
-              if (foto.tipo) fotos[foto.tipo] = foto.url;
-            });
-
-            return { ...orden, fotos };
-          })
-        );
-      } catch (error) {
-        console.error("Error cargando fotos desde Supabase:", error);
-      }
-    }
-
-    cargarFotosSupabase();
   }, []);
 
 
@@ -1615,24 +848,7 @@ export default function App() {
     setMensaje("Cita reprogramada correctamente.");
   };
 
-  const marcarEnRuta = async (id) => {
-    const orden = ordenes.find((o) => o.id === id);
-    if (!orden) return;
-
-    const cambios = {
-      estado: "En ruta",
-      horaEnRuta: orden.horaEnRuta || new Date().toISOString(),
-    };
-
-    setOrdenes(ordenes.map((o) => o.id === id ? { ...o, ...cambios } : o));
-
-    try {
-      await actualizarOrdenSupabase(id, cambios);
-    } catch (error) {
-      console.error("Error actualizando En ruta en Supabase:", error);
-      setMensaje("No se pudo guardar el estado En ruta en Supabase.");
-    }
-  };
+  const marcarEnRuta = (id) => setOrdenes(ordenes.map((o) => o.id === id ? { ...o, estado: "En ruta", horaEnRuta: o.horaEnRuta || new Date().toISOString() } : o));
 
   const marcarLlegada = (id) => {
     const ahora = new Date().toISOString();
@@ -1655,26 +871,9 @@ export default function App() {
 
     setMensaje("Llegada registrada correctamente. Tiempo de traslado calculado.");
   };
-  const iniciarTrabajo = async (id) => {
-    const orden = ordenes.find((o) => o.id === id);
-    if (!orden) return;
+  const iniciarTrabajo = (id) => setOrdenes(ordenes.map((o) => o.id === id ? { ...o, estado: "En proceso", horaInicio: o.horaInicio || new Date().toISOString() } : o));
 
-    const cambios = {
-      estado: "En proceso",
-      horaInicio: orden.horaInicio || new Date().toISOString(),
-    };
-
-    setOrdenes(ordenes.map((o) => o.id === id ? { ...o, ...cambios } : o));
-
-    try {
-      await actualizarOrdenSupabase(id, cambios);
-    } catch (error) {
-      console.error("Error iniciando trabajo en Supabase:", error);
-      setMensaje("No se pudo guardar el inicio de trabajo en Supabase.");
-    }
-  };
-
-  const marcarNecesitaSeguimiento = async (id) => {
+  const marcarNecesitaSeguimiento = (id) => {
     const orden = ordenes.find((o) => o.id === id);
     if (!orden) return;
 
@@ -1692,25 +891,19 @@ export default function App() {
 
     const fechaSugerida = prompt("Fecha sugerida para regresar (opcional, formato YYYY-MM-DD):", "");
 
-    const cambios = {
-      estado: "Necesita seguimiento",
-      seguimientoMotivo: motivo.trim(),
-      seguimientoFechaSugerida: fechaSugerida || "",
-      seguimientoFechaRegistro: new Date().toISOString(),
-    };
-
     setOrdenes(ordenes.map((o) => (
-      o.id === id ? { ...o, ...cambios } : o
+      o.id === id
+        ? {
+            ...o,
+            estado: "Necesita seguimiento",
+            seguimientoMotivo: motivo.trim(),
+            seguimientoFechaSugerida: fechaSugerida || "",
+            seguimientoFechaRegistro: new Date().toISOString(),
+          }
+        : o
     )));
 
-    try {
-      await actualizarOrdenSupabase(id, cambios);
-      setMensaje("Orden marcada como Necesita seguimiento. Seguirá apareciendo en órdenes activas.");
-    } catch (error) {
-      console.error("Error guardando seguimiento en Supabase:", error);
-      alert(JSON.stringify(error, null, 2));
-      setMensaje("No se pudo guardar el seguimiento en Supabase.");
-    }
+    setMensaje("Orden marcada como Necesita seguimiento. Seguirá apareciendo en órdenes activas.");
   };
   const guardarFirmaCliente = async (ordenId, firmaDataUrl) => {
     if (!firmaDataUrl) {
@@ -1924,129 +1117,13 @@ export default function App() {
     }
   };
 
-  const subirFoto = async (id, tipo, archivo) => {
+  const subirFoto = (id, tipo, archivo) => {
     if (!archivo) return;
-
     const reader = new FileReader();
-
-    reader.onloadend = async () => {
-      const fotoDataUrl = reader.result;
-
-      setOrdenes((actual) =>
-        actual.map((o) =>
-          o.id === id ? { ...o, fotos: { ...o.fotos, [tipo]: fotoDataUrl } } : o
-        )
-      );
-
-      try {
-        await guardarFotoOrdenSupabase({
-          ordenId: id,
-          tipo,
-          url: fotoDataUrl,
-        });
-      } catch (error) {
-        console.error("Error guardando foto en Supabase:", error);
-        alert(JSON.stringify(error, null, 2));
-      }
-    };
-
+    reader.onloadend = () => setOrdenes((actual) => actual.map((o) => o.id === id ? { ...o, fotos: { ...o.fotos, [tipo]: reader.result } } : o));
     reader.readAsDataURL(archivo);
   };
-  const guardarNotaTecnico = async (id, nota) => {
-    setOrdenes(ordenes.map((o) => o.id === id ? { ...o, notasTecnico: nota } : o));
-
-    try {
-      await actualizarOrdenSupabase(id, { notasTecnico: nota });
-    } catch (error) {
-      console.error("Error guardando nota técnica en Supabase:", error);
-      setMensaje("No se pudo guardar la nota técnica en Supabase.");
-    }
-  };
-
-  const corregirOrdenAdmin = async (id) => {
-    const orden = ordenes.find((o) => String(o.id) === String(id));
-    if (!orden) return;
-
-    const motivo = prompt("Motivo obligatorio de la corrección:");
-    if (!motivo || !motivo.trim()) {
-      return setMensaje("Debes escribir un motivo para corregir la orden.");
-    }
-
-    const nuevoInicio = prompt("Hora inicio corregida en formato ISO o vacío para no cambiar:", orden.horaInicio || "");
-    const nuevoCierre = prompt("Hora cierre corregida en formato ISO o vacío para no cambiar:", orden.horaCierre || "");
-    const nuevaDuracionTraslado = prompt("Tiempo de traslado corregido o vacío para no cambiar:", orden.duracionTraslado || "");
-    const nuevaNota = prompt("Nota técnica corregida o vacío para no cambiar:", orden.notasTecnico || "");
-    const nuevoEstado = prompt("Estado corregido: Completado o Necesita seguimiento. Vacío para no cambiar:", orden.estado || "");
-
-    const cambios = {};
-    const historialNuevo = [...(orden.historialAdmin || [])];
-
-    const registrarCambio = (campo, anterior, nuevo) => {
-      if (String(anterior || "") === String(nuevo || "")) return;
-
-      cambios[campo] = nuevo;
-      historialNuevo.push({
-        fecha: new Date().toISOString(),
-        usuario: session?.nombre || session?.usuario || "Admin",
-        rol: session?.role || "admin",
-        campo,
-        anterior: anterior || "",
-        nuevo: nuevo || "",
-        motivo: motivo.trim(),
-      });
-    };
-
-    if (nuevoInicio !== null && nuevoInicio !== "") {
-      registrarCambio("horaInicio", orden.horaInicio || "", nuevoInicio);
-    }
-
-    if (nuevoCierre !== null && nuevoCierre !== "") {
-      registrarCambio("horaCierre", orden.horaCierre || "", nuevoCierre);
-    }
-
-    if (nuevaDuracionTraslado !== null && nuevaDuracionTraslado !== "") {
-      registrarCambio("duracionTraslado", orden.duracionTraslado || "", nuevaDuracionTraslado);
-    }
-
-    if (nuevaNota !== null && nuevaNota !== "") {
-      registrarCambio("notasTecnico", orden.notasTecnico || "", nuevaNota);
-    }
-
-    if (nuevoEstado !== null && nuevoEstado !== "") {
-      if (!["Completado", "Necesita seguimiento"].includes(nuevoEstado)) {
-        return setMensaje("Estado inválido. Solo puedes usar Completado o Necesita seguimiento.");
-      }
-
-      registrarCambio("estado", orden.estado || "", nuevoEstado);
-    }
-
-    const inicioFinal = cambios.horaInicio || orden.horaInicio;
-    const cierreFinal = cambios.horaCierre || orden.horaCierre;
-
-    if (inicioFinal && cierreFinal) {
-      const nuevaDuracion = calcularHoras(inicioFinal, cierreFinal);
-      registrarCambio("duracionHoras", orden.duracionHoras || "", nuevaDuracion);
-    }
-
-    if (historialNuevo.length === (orden.historialAdmin || []).length) {
-      return setMensaje("No se realizó ningún cambio.");
-    }
-
-    cambios.historialAdmin = historialNuevo;
-
-    setOrdenes(ordenes.map((o) => (
-      String(o.id) === String(id) ? { ...o, ...cambios } : o
-    )));
-
-    try {
-      await actualizarOrdenSupabase(id, cambios);
-      setMensaje("Orden corregida por admin. Cambio registrado en auditoría interna.");
-    } catch (error) {
-      console.error("Error corrigiendo orden como admin:", error);
-      alert(JSON.stringify(error, null, 2));
-      setMensaje("No se pudo guardar la corrección en Supabase.");
-    }
-  };
+  const guardarNotaTecnico = (id, nota) => setOrdenes(ordenes.map((o) => o.id === id ? { ...o, notasTecnico: nota } : o));
 
   const materialesTexto = (orden) => (orden.materialesUsados || []).filter((m) => m.inventarioId && Number(m.cantidad) > 0).map((m) => `${obtenerMaterial(m.inventarioId)?.nombre || "Material"} (${m.cantidad} ${obtenerMaterial(m.inventarioId)?.unidad || ""})`).join("; ");
 
@@ -2444,7 +1521,7 @@ const compartirOrden = async (orden, metodo) => {
   const colorEstado = (estado) => estado === "Completado" ? "bg-emerald-100 text-emerald-700 border-emerald-200" : estado === "Cancelada" ? "bg-rose-100 text-rose-700 border-rose-200" : estado === "Necesita seguimiento" ? "bg-amber-100 text-amber-800 border-amber-200" : estado === "En proceso" ? "bg-sky-100 text-sky-700 border-sky-200" : estado === "En ruta" ? "bg-cyan-100 text-cyan-700 border-cyan-200" : estado === "Asignada" ? "bg-blue-100 text-blue-700 border-blue-200" : "bg-slate-100 text-slate-700 border-slate-200";
   const colorPrioridad = (p) => PRIORIDADES.find((x) => x.value === p)?.cls || "bg-slate-100 text-slate-700 border-slate-200";
 
-  const ordenProps = { inventario, obtenerMaterial, obtenerTecnico, colorEstado, colorPrioridad, marcarEnRuta, marcarLlegada, iniciarTrabajo, marcarNecesitaSeguimiento, setFirmaOrdenModal, completarOrden, cancelarOrden, subirFoto, guardarNotaTecnico, corregirOrdenAdmin, session, urlGoogleMaps, urlAppleMaps, urlTelefono, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, calcularCostoOrden, materialesTexto, compartirOrden, convertirCitaEnOrden, reprogramarCita, setReprogramarCitaModal, cancelarOrden: (ordenOrId) => {
+  const ordenProps = { inventario, obtenerMaterial, obtenerTecnico, colorEstado, colorPrioridad, marcarEnRuta, marcarLlegada, iniciarTrabajo, marcarNecesitaSeguimiento, setFirmaOrdenModal, completarOrden, cancelarOrden, subirFoto, guardarNotaTecnico, urlGoogleMaps, urlAppleMaps, urlTelefono, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, calcularCostoOrden, materialesTexto, compartirOrden, convertirCitaEnOrden, reprogramarCita, setReprogramarCitaModal, cancelarOrden: (ordenOrId) => {
     const orden = typeof ordenOrId === "object" ? ordenOrId : ordenes.find((o) => o.id === ordenOrId);
     setCancelModalOrden(orden || null);
   }, t };
@@ -2455,12 +1532,12 @@ const compartirOrden = async (orden, metodo) => {
     ["clientes", t("customers"), Users],
     ["tecnicos", t("technicians"), UserCog],
     ["citas", t("appointments"), CalendarDays],
-    ["calendario", t("calendar"), CalendarCheck2],
+    ["calendario", "Calendario", CalendarCheck2],
     ["ordenes", t("orders"), ClipboardList],
-    ["historial", t("history"), History],
+    ["historial", "Historial", History],
     ["inventario", t("inventory"), Package],
     ["herramientas", t("tools"), Wrench],
-    ["dashboardReportes", t("dashboard"), TrendingUp],
+    ["dashboardReportes", "Dashboard", TrendingUp],
   ];
 
   return (
@@ -2469,10 +1546,10 @@ const compartirOrden = async (orden, metodo) => {
         <div className="w-full px-3 2xl:px-8 py-2.5 2xl:py-4 flex flex-col 2xl:flex-row 2xl:items-center justify-center 2xl:justify-between gap-2.5 2xl:gap-4">
           <div><p className="text-[10px] 2xl:text-xs uppercase tracking-[0.24em] 2xl:tracking-[0.3em] text-slate-300 font-black">{t("app")}</p><h1 className="text-lg 2xl:text-lg font-black tracking-tight text-white">{session.role === "admin" ? t("adminPanel") : `${t("techPanel")}: ${session.nombre}`}</h1></div>
           <div className="flex flex-col sm:flex-row sm:items-center justify-center gap-2 2xl:gap-3 xl:ml-auto">
-            <button onClick={() => setLang(lang === "es" ? "en" : "es")} className="flex items-center justify-center justify-center gap-1.5 2xl:gap-2 rounded-xl 2xl:rounded-2xl min-w-[140px] 2xl:min-w-[170px] bg-white px-3 2xl:px-5 py-2 2xl:py-3 text-xs 2xl:text-base text-slate-700 font-black border shadow-sm"><Languages {...iconProps} />{t("translate")}</button>
-            {session.role === "admin" && <button onClick={() => setAdminPage("configuracion")} className="flex items-center justify-center justify-center gap-1.5 2xl:gap-2 rounded-xl 2xl:rounded-2xl min-w-[150px] 2xl:min-w-[190px] bg-slate-950 px-3 2xl:px-5 py-2 2xl:py-3 text-xs 2xl:text-base text-white font-black shadow-lg shadow-slate-300/40 transition hover:-translate-y-0.5"><ShieldCheck {...iconProps} />{t("changePassword")}</button>}
+            <button onClick={() => setLang(lang === "es" ? "en" : "es")} className="flex items-center justify-center justify-center gap-1.5 2xl:gap-2 rounded-xl 2xl:rounded-2xl bg-white px-3 2xl:px-5 py-2 2xl:py-3 text-xs 2xl:text-base text-slate-700 font-black border shadow-sm"><Languages {...iconProps} />{t("translate")}</button>
+            {session.role === "admin" && <button onClick={() => setAdminPage("configuracion")} className="flex items-center justify-center justify-center gap-1.5 2xl:gap-2 rounded-xl 2xl:rounded-2xl bg-slate-950 px-3 2xl:px-5 py-2 2xl:py-3 text-xs 2xl:text-base text-white font-black shadow-lg shadow-slate-300/40 transition hover:-translate-y-0.5"><ShieldCheck {...iconProps} />{t("changePassword")}</button>}
             <TopInfo now={now} />
-            <button onClick={cerrarSesion} className="flex items-center justify-center justify-center gap-1.5 2xl:gap-2 rounded-xl 2xl:rounded-2xl min-w-[150px] 2xl:min-w-[190px] bg-slate-950 px-3 2xl:px-5 py-2 2xl:py-3 text-xs 2xl:text-base text-white font-black shadow-lg shadow-slate-300/40 transition hover:-translate-y-0.5"><LogOut {...iconProps} />{t("logout")}</button>
+            <button onClick={cerrarSesion} className="flex items-center justify-center justify-center gap-1.5 2xl:gap-2 rounded-xl 2xl:rounded-2xl bg-slate-950 px-3 2xl:px-5 py-2 2xl:py-3 text-xs 2xl:text-base text-white font-black shadow-lg shadow-slate-300/40 transition hover:-translate-y-0.5"><LogOut {...iconProps} />{t("logout")}</button>
           </div>
         </div>
       </header>
@@ -2510,7 +1587,7 @@ const compartirOrden = async (orden, metodo) => {
 
         {session.role === "admin" && (
           <>
-            <nav className="sticky top-[66px] 2xl:top-[92px] z-10 mb-4 grid w-full grid-cols-9 gap-2 rounded-[1.6rem] border border-white/70 bg-gradient-to-r from-white/95 via-blue-50/90 to-cyan-50/90 p-2 shadow-xl shadow-slate-300/50 backdrop-blur-xl">
+            <nav className="sticky top-[66px] 2xl:top-[92px] z-10 mb-3 grid w-full grid-cols-9 gap-1.5 rounded-2xl border border-slate-200 bg-white/95 p-1.5 shadow-lg shadow-slate-300/40 backdrop-blur">
               {adminNav.map(([id, label, Icon]) => (
                 <button
                   key={id}
@@ -2518,41 +1595,37 @@ const compartirOrden = async (orden, metodo) => {
                   className={`
                     flex
                     w-full
-                    min-w-[150px]
-                    2xl:min-w-[170px]
                     items-center justify-center
                     gap-1.5
-                    rounded-[1.25rem]
-                    px-3
-                    py-3
-                    text-[12px]
+                    rounded-xl
+                    px-2
+                    py-2
+                    text-[11px]
                     font-black
                     transition
                     ${
                       adminPage === id
-                        ? "bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-900 text-white shadow-xl shadow-blue-900/30 ring-1 ring-cyan-300/30"
-                        : "border border-slate-200 bg-white/85 text-slate-700 shadow-md shadow-slate-200/60 hover:-translate-y-0.5 hover:border-blue-200 hover:bg-white hover:text-slate-950 hover:shadow-xl"
+                        ? "bg-slate-950 text-white shadow-lg shadow-slate-300/40"
+                        : "bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-950 border border-slate-200"
                     }
                   `}
                 >
                   <Icon size={16} strokeWidth={2.2} />
-                  <span className="truncate">{label}</span>
+                  {label}
                 </button>
               ))}</nav>
 
             {adminPage === "clientes" && <ClientesPage t={t} clientes={clientes} setClientes={setClientes} ordenes={ordenes} citas={citas} clienteForm={clienteForm} setClienteForm={setClienteForm} agregarCliente={agregarCliente} abrirCrearOrdenConCliente={abrirCrearOrdenConCliente} abrirProgramarCitaConCliente={abrirProgramarCitaConCliente} urlGoogleMaps={urlGoogleMaps} urlAppleMaps={urlAppleMaps} urlTelefono={urlTelefono} />}
             {adminPage === "tecnicos" && <TecnicosPage t={t} tecnicos={tecnicos} actualizarTecnico={actualizarTecnico} guardarTecnico={guardarTecnico} darDeBajaTecnico={darDeBajaTecnico} setTecnicos={setTecnicos} />}
             {adminPage === "citas" && <CitasPage t={t} citas={citas} setCitas={setCitas} citaForm={citaForm} setCitaForm={setCitaForm} crearCita={crearCita} convertirCitaEnOrden={convertirCitaEnOrden} clientes={clientes} tecnicos={tecnicosActivos} obtenerCliente={obtenerCliente} obtenerTecnico={obtenerTecnico} />}
-            {adminPage === "calendario" && <CalendarioPage t={t} lang={lang} citas={citas} ordenes={ordenes} clientes={clientes} tecnicos={tecnicosActivos} obtenerCliente={obtenerCliente} obtenerTecnico={obtenerTecnico} urlAppleMaps={urlAppleMaps} urlTelefono={urlTelefono} />}
+            {adminPage === "calendario" && <CalendarioPage citas={citas} ordenes={ordenes} clientes={clientes} tecnicos={tecnicosActivos} obtenerCliente={obtenerCliente} obtenerTecnico={obtenerTecnico} urlAppleMaps={urlAppleMaps} urlTelefono={urlTelefono} />}
             {adminPage === "ordenes" && <OrdenesPage t={t} ordenes={ordenesActivasAdmin} obtenerCliente={obtenerCliente} ordenProps={ordenProps} crearOrden={crearOrden} ordenForm={ordenForm} setOrdenForm={setOrdenForm} busquedaClienteOrden={busquedaClienteOrden} setBusquedaClienteOrden={setBusquedaClienteOrden} clientesFiltradosOrden={clientesFiltradosOrden} tecnicos={tecnicosActivos} />}
-            {adminPage === "historial" && <HistorialPage t={t} lang={lang} ordenes={historialAdmin} obtenerCliente={obtenerCliente} ordenProps={ordenProps} />}
+            {adminPage === "historial" && <HistorialPage t={t} ordenes={historialAdmin} obtenerCliente={obtenerCliente} ordenProps={ordenProps} />}
             {adminPage === "inventario" && <InventarioGeneralPage t={t} inventario={inventario} inventarioForm={inventarioForm} setInventarioForm={setInventarioForm} agregarInventario={agregarInventario} actualizarInventario={actualizarInventario} setInventario={setInventario} />}
             {adminPage === "herramientas" && <HerramientasPage t={t} herramientas={herramientas} herramientaForm={herramientaForm} setHerramientaForm={setHerramientaForm} agregarHerramienta={agregarHerramienta} actualizarHerramienta={actualizarHerramienta} setHerramientas={setHerramientas} tecnicos={tecnicosActivos} obtenerTecnico={obtenerTecnico} tecnicoHerramientasSeleccionado={tecnicoHerramientasSeleccionado} setTecnicoHerramientasSeleccionado={setTecnicoHerramientasSeleccionado} />}
             {adminPage === "dashboardReportes" && (
               <DashboardUnificadoPage
                 t={t}
-                lang={lang}
-                lang={lang}
                 clientes={clientes}
                 ordenes={ordenes}
                 inventario={inventario}
@@ -4298,7 +3371,6 @@ function FotoUploader({ titulo, imagen, onChange }) {
 
 function DashboardUnificadoPage({
   t,
-  lang,
   clientes,
   ordenes,
   inventario,
@@ -4315,10 +3387,10 @@ function DashboardUnificadoPage({
   const activas = ordenes.filter((o) => !["Completado", "Cancelada"].includes(o.estado)).length;
 
   const tabs = [
-    { id: "general", label: t("general") || "General", count: activas },
-    { id: "clientes", label: t("customers") || "Clientes", count: clientes.length },
-    { id: "inventario", label: t("inventoryShort") || "Inventario", count: inventario.length },
-    { id: "tecnicos", label: t("technicians") || "Técnicos", count: tecnicos.length },
+    { id: "general", label: "General", count: activas },
+    { id: "clientes", label: "Clientes", count: clientes.length },
+    { id: "inventario", label: "Inventario", count: inventario.length },
+    { id: "tecnicos", label: "Técnicos", count: tecnicos.length },
   ];
 
   return (
@@ -4326,28 +3398,28 @@ function DashboardUnificadoPage({
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-md shadow-slate-300/50">
         <div className="border-b border-blue-100 bg-gradient-to-br from-blue-50 via-indigo-50 to-white px-4 py-3">
           <p className="text-[10px] font-black uppercase tracking-[0.24em] text-blue-600">
-            {t("reportsCenter")}
+            Centro de reportes
           </p>
 
           <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 className="text-xl font-black text-slate-950">
-                {t("dashboard")}
+                Dashboard
               </h2>
               <p className="mt-0.5 text-xs font-semibold text-blue-900/60">
-                {t("dashboardUnifiedDescription")}
+                Reportes generales, clientes e inventario.
               </p>
             </div>
 
             <div className="flex flex-wrap gap-1.5 text-[11px] font-black">
               <span className="rounded-full bg-blue-50 px-2.5 py-1 text-blue-700 ring-1 ring-blue-100">
-                {t("activeOrders")} {activas}
+                Activas {activas}
               </span>
               <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700 ring-1 ring-emerald-100">
-                {t("completedJobs")} {completadas}
+                Completadas {completadas}
               </span>
               <span className="rounded-full bg-rose-50 px-2.5 py-1 text-rose-700 ring-1 ring-rose-100">
-                {t("cancelledPlural")} {canceladas}
+                Canceladas {canceladas}
               </span>
             </div>
           </div>
@@ -4381,8 +3453,6 @@ function DashboardUnificadoPage({
       {tab === "general" && (
         <ReportesDashboardPage
           t={t}
-          lang={lang}
-          lang={lang}
           clientes={clientes}
           ordenes={ordenes}
           inventario={inventario}
@@ -4416,8 +3486,6 @@ function DashboardUnificadoPage({
 
       {tab === "tecnicos" && (
         <ReportePagoTecnicos
-          t={t}
-          lang={lang}
           tecnicos={tecnicos}
           ordenes={ordenes}
         />
@@ -4428,7 +3496,7 @@ function DashboardUnificadoPage({
 
 
 
-function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ordenes = [] }) {
+function ReportePagoTecnicos({ tecnicos = [], ordenes = [] }) {
   const [periodo, setPeriodo] = useState("mes");
 
   const getFechaOrden = (orden) =>
@@ -4512,11 +3580,11 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
   const totalPagado = filas.reduce((sum, row) => sum + row.totalGanado, 0);
 
   const periodos = [
-    ["hoy", t("today")],
-    ["semana", t("week")],
-    ["mes", t("month")],
-    ["ano", t("year")],
-    ["todo", t("all")],
+    ["hoy", "Hoy"],
+    ["semana", "Semana"],
+    ["mes", "Mes"],
+    ["ano", "Año"],
+    ["todo", "Todo"],
   ];
 
   const hoyNomina = new Date();
@@ -4527,7 +3595,7 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
   finSemanaNomina.setDate(inicioSemanaNomina.getDate() + 6);
 
   const formatoNomina = (fecha) =>
-    fecha.toLocaleDateString(lang === "en" ? "en-US" : "es-US", {
+    fecha.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
@@ -4535,45 +3603,45 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
 
   const periodoNominaLabel =
     periodo === "semana"
-      ? `${t("consultedWeek")} · ${formatoNomina(inicioSemanaNomina)} - ${formatoNomina(finSemanaNomina)}`
+      ? `Semana consultada · ${formatoNomina(inicioSemanaNomina)} - ${formatoNomina(finSemanaNomina)}`
       : periodo === "hoy"
-        ? `${t("consultedDay")} · ${formatoNomina(hoyNomina)}`
+        ? `Hoy · ${formatoNomina(hoyNomina)}`
         : periodo === "mes"
-          ? `${t("consultedMonth")} · ${hoyNomina.toLocaleDateString(lang === "en" ? "en-US" : "es-US", { month: "long", year: "numeric" })}`
+          ? `Mes consultado · ${hoyNomina.toLocaleDateString("en-US", { month: "long", year: "numeric" })}`
           : periodo === "ano"
-            ? `${t("consultedYear")} · ${hoyNomina.getFullYear()}`
-            : t("allHistory");
+            ? `Año consultado · ${hoyNomina.getFullYear()}`
+            : "Todo el historial";
 
   return (
     <section className="space-y-3">
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-md shadow-slate-300/50">
         <div className="border-b border-blue-100 bg-gradient-to-br from-blue-50 via-indigo-50 to-white px-4 py-3">
           <p className="text-[10px] font-black uppercase tracking-[0.24em] text-blue-600">
-            {t("payrollOperational")}
+            Nómina operativa
           </p>
 
           <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 className="text-xl font-black text-slate-950">
-                {t("technicianHoursPay")}
+                Horas y pago por técnico
               </h2>
               <p className="mt-2 inline-flex rounded-full bg-blue-700 px-4 py-1.5 text-sm font-black text-white shadow-sm">
                 {periodoNominaLabel}
               </p>
               <p className="mt-0.5 text-xs font-semibold text-blue-900/60">
-                {t("realWorkOnly")}
+                Calculado solo con horas reales de trabajo, no traslado.
               </p>
             </div>
 
             <div className="flex flex-wrap gap-1.5 text-[11px] font-black">
               <span className="rounded-full bg-blue-50 px-2.5 py-1 text-blue-700 ring-1 ring-blue-100">
-                {t("work")} {totalHoras.toFixed(2)} h
+                Trabajo {totalHoras.toFixed(2)} h
               </span>
               <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-indigo-700 ring-1 ring-indigo-100">
-                {t("travel")} {totalTraslado.toFixed(2)} h
+                Traslado {totalTraslado.toFixed(2)} h
               </span>
               <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700 ring-1 ring-emerald-100">
-                {t("pay")} ${totalPagado.toFixed(2)}
+                Pago ${totalPagado.toFixed(2)}
               </span>
             </div>
           </div>
@@ -4610,13 +3678,13 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
                     {row.tecnico.nombre}
                   </p>
                   <p className="mt-1 text-xs font-bold text-blue-100">
-                    {row.ordenes} {t("completedOrdersPeriod")}
+                    {row.ordenes} órdenes completadas en este período
                   </p>
                 </div>
 
                 <div className="text-right">
                   <p className="text-[10px] font-black uppercase tracking-wide text-blue-100">
-                    {t("earned")}
+                    Ganado
                   </p>
                   <p className="text-lg font-black leading-tight">
                     ${row.totalGanado.toFixed(2)}
@@ -4629,7 +3697,7 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
               <div className="grid grid-cols-2 gap-2.5 text-xs font-black">
                 <div className="rounded-xl bg-blue-50 p-1.5 text-blue-700">
                   <p className="text-[10px] uppercase tracking-wide text-blue-500">
-                    {t("work")}
+                    Trabajo
                   </p>
                   <p className="mt-0.5 text-sm text-slate-950">
                     {row.horasTrabajo.toFixed(2)} h
@@ -4638,7 +3706,7 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
 
                 <div className="rounded-xl bg-indigo-50 p-1.5 text-indigo-700">
                   <p className="text-[10px] uppercase tracking-wide text-indigo-500">
-                    {t("travel")}
+                    Traslado
                   </p>
                   <p className="mt-0.5 text-sm text-slate-950">
                     {row.horasTraslado.toFixed(2)} h
@@ -4647,7 +3715,7 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
 
                 <div className="rounded-xl bg-slate-50 p-1.5 text-slate-700">
                   <p className="text-[10px] uppercase tracking-wide text-slate-500">
-                    {t("hourlyPayShort")}
+                    Pago por hora
                   </p>
                   <p className="mt-0.5 text-sm text-slate-950">
                     ${row.pagoHora.toFixed(2)} / h
@@ -4656,7 +3724,7 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
 
                 <div className="rounded-xl bg-emerald-50 p-1.5 text-emerald-700">
                   <p className="text-[10px] uppercase tracking-wide text-emerald-600">
-                    {t("totalPay")}
+                    Total
                   </p>
                   <p className="mt-0.5 text-sm text-slate-950">
                     ${row.totalGanado.toFixed(2)}

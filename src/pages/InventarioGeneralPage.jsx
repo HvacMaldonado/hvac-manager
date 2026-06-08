@@ -208,10 +208,10 @@ export default function InventarioGeneralPage({ t, inventario, inventarioForm, s
         <div className="bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-900 p-5 text-white">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">Inventario</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">{t("inventory")}</p>
               <h2 className="mt-1 flex items-center gap-2 text-2xl font-black">
                 <Boxes size={24} />
-                Inventario general
+                {t("generalInventoryTitle")}
               </h2>
               <p className="mt-1 text-sm text-slate-300">
                 Control de materiales, costos internos y stock mínimo.
@@ -219,10 +219,10 @@ export default function InventarioGeneralPage({ t, inventario, inventarioForm, s
             </div>
 
             <div className="flex flex-wrap items-center gap-2 xl:justify-end">
-              <MiniMetric icon={PackageOpen} label="Materiales" value={totalItems} tone="from-slate-950 to-blue-900" />
-              <MiniMetric icon={AlertTriangle} label="Stock bajo" value={stockBajo} tone="from-amber-700 to-orange-600" />
-              <MiniMetric icon={Layers3} label="Categorías" value={categoriasUsadas} tone="from-cyan-800 to-blue-700" />
-              <MiniMetric icon={DollarSign} label="Valor" value={`$${valorTotal.toFixed(2)}`} tone="from-emerald-800 to-teal-600" />
+              <MiniMetric icon={PackageOpen} label={t("materials")} value={totalItems} tone="from-slate-950 to-blue-900" />
+              <MiniMetric icon={AlertTriangle} label={t("lowStock")} value={stockBajo} tone="from-amber-700 to-orange-600" />
+              <MiniMetric icon={Layers3} label={t("categories")} value={categoriasUsadas} tone="from-cyan-800 to-blue-700" />
+              <MiniMetric icon={DollarSign} label={t("valueLabel")} value={`$${valorTotal.toFixed(2)}`} tone="from-emerald-800 to-teal-600" />
             </div>
           </div>
         </div>
@@ -235,8 +235,8 @@ export default function InventarioGeneralPage({ t, inventario, inventarioForm, s
                   <Package size={24} />
                 </div>
 
-                <p className="mt-5 text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">Nuevo material</p>
-                <h3 className="mt-1 text-2xl font-black leading-tight">Agregar inventario</h3>
+                <p className="mt-5 text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">{t("newMaterial")}</p>
+                <h3 className="mt-1 text-2xl font-black leading-tight">{t("addInventory")}</h3>
                 <p className="mt-2 text-sm font-medium leading-relaxed text-slate-300">
                   Agrega materiales consumibles, controla cantidades y detecta stock bajo.
                 </p>
@@ -245,13 +245,13 @@ export default function InventarioGeneralPage({ t, inventario, inventarioForm, s
               <div className="rounded-3xl border border-white/70 bg-white/90 p-4 shadow-xl shadow-slate-300/50 backdrop-blur">
                 <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
                   <div className="lg:col-span-4">
-                    <ModernField label="Material">
-                      <input value={inventarioForm.nombre} onChange={(e) => setInventarioForm({ ...inventarioForm, nombre: e.target.value })} placeholder="Nombre del material" className={fieldClass} />
+                    <ModernField label={t("material")}>
+                      <input value={inventarioForm.nombre} onChange={(e) => setInventarioForm({ ...inventarioForm, nombre: e.target.value })} placeholder={t("materialNamePlaceholder")} className={fieldClass} />
                     </ModernField>
                   </div>
 
                   <div className="lg:col-span-4">
-                    <ModernField label="Categoría">
+                    <ModernField label={t("category")}>
                       <select value={inventarioForm.categoria} onChange={(e) => setInventarioForm({ ...inventarioForm, categoria: e.target.value })} className={fieldClass}>
                         {CATEGORIAS_HVAC.map((c) => <option key={c}>{c}</option>)}
                       </select>
@@ -259,13 +259,13 @@ export default function InventarioGeneralPage({ t, inventario, inventarioForm, s
                   </div>
 
                   <div className="lg:col-span-2">
-                    <ModernField label="Cantidad">
+                    <ModernField label={t("quantity")}>
                       <input type="number" value={inventarioForm.cantidad} onChange={(e) => setInventarioForm({ ...inventarioForm, cantidad: e.target.value })} placeholder="0" className={fieldClass} />
                     </ModernField>
                   </div>
 
                   <div className="lg:col-span-2">
-                    <ModernField label="Unidad">
+                    <ModernField label={t("unit")}>
                       <select value={inventarioForm.unidad} onChange={(e) => setInventarioForm({ ...inventarioForm, unidad: e.target.value })} className={fieldClass}>
                         {UNIDADES.map((u) => <option key={u}>{u}</option>)}
                       </select>
@@ -273,13 +273,13 @@ export default function InventarioGeneralPage({ t, inventario, inventarioForm, s
                   </div>
 
                   <div className="lg:col-span-3">
-                    <ModernField label="Costo interno">
+                    <ModernField label={t("internalCost")}>
                       <input type="number" step="0.01" value={inventarioForm.costo} onChange={(e) => setInventarioForm({ ...inventarioForm, costo: e.target.value })} placeholder="$0.00" className={fieldClass} />
                     </ModernField>
                   </div>
 
                   <div className="lg:col-span-3">
-                    <ModernField label="Stock mínimo">
+                    <ModernField label={t("minimumStock")}>
                       <input type="number" value={inventarioForm.stockMinimo || ""} onChange={(e) => setInventarioForm({ ...inventarioForm, stockMinimo: e.target.value })} placeholder="0" className={fieldClass} />
                     </ModernField>
                   </div>
@@ -287,7 +287,7 @@ export default function InventarioGeneralPage({ t, inventario, inventarioForm, s
                   <div className="lg:col-span-6 flex items-end">
                     <button onClick={agregarInventario} className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-slate-950 via-blue-900 to-cyan-700 px-5 py-3 text-sm font-black text-white shadow-lg shadow-slate-300 transition hover:-translate-y-0.5">
                       <Plus size={16} />
-                      Agregar material
+                      {t("addMaterial")}
                     </button>
                   </div>
                 </div>
@@ -299,11 +299,11 @@ export default function InventarioGeneralPage({ t, inventario, inventarioForm, s
         <div className="grid gap-3 border-t border-slate-200 bg-white p-4 lg:grid-cols-[1fr_260px]">
           <div className="relative">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar material, categoría o unidad..." className="w-full rounded-2xl border border-slate-300 bg-white py-3 pl-10 pr-3 text-sm outline-none shadow-sm transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100" />
+            <input value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder={t("searchInventoryPlaceholder")} className="w-full rounded-2xl border border-slate-300 bg-white py-3 pl-10 pr-3 text-sm outline-none shadow-sm transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100" />
           </div>
 
           <select value={categoriaFiltro} onChange={(e) => setCategoriaFiltro(e.target.value)} className="rounded-2xl border border-slate-300 bg-white px-3 py-3 text-sm font-bold text-slate-700 outline-none shadow-sm focus:border-blue-700 focus:ring-4 focus:ring-blue-100">
-            <option value="todas">Todas las categorías</option>
+            <option value="todas">{t("allCategories")}</option>
             {CATEGORIAS_HVAC.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
