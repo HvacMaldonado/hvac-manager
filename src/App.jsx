@@ -397,6 +397,10 @@ const TEXT = {
     customerSignature: "Firma del cliente",
     noPhotosAdded: "No se agregaron imágenes a esta orden.",
     noCustomerSignatureCaptured: "No se capturó firma del cliente.",
+    customerRequest: "Solicitud del cliente",
+    serviceDetails: "Detalle del servicio",
+    photoEvidence: "Evidencia fotográfica",
+    generatedFromHVACManager: "Generado desde HVAC Manager",
     generatedReportFooter: "Reporte generado desde HVAC Manager · Información interna de costos excluida.",
     reportStatus: "Estado",
     noStatus: "Sin estado",
@@ -886,6 +890,10 @@ const TEXT = {
     customerSignature: "Customer signature",
     noPhotosAdded: "No images were added to this order.",
     noCustomerSignatureCaptured: "No customer signature was captured.",
+    customerRequest: "Customer request",
+    serviceDetails: "Service details",
+    photoEvidence: "Photo evidence",
+    generatedFromHVACManager: "Generated from HVAC Manager",
     generatedReportFooter: "Report generated from HVAC Manager · Internal cost information excluded.",
     reportStatus: "Status",
     noStatus: "No status",
@@ -2170,6 +2178,8 @@ export default function App() {
     const c = obtenerCliente(orden.clienteId);
     const tec = obtenerTecnico(orden.tecnicoId);
     const fecha = formatReportDate(orden.fechaCompletada || orden.fechaCreacion || orden.fecha);
+    const ordenIdCompleto = String(orden.id || "");
+    const ordenIdCorto = ordenIdCompleto ? ordenIdCompleto.slice(0, 8) : "";
     const fotos = ["antes", "durante", "despues"].filter((k) => orden.fotos?.[k]).length;
 
     return [
@@ -2205,6 +2215,8 @@ export default function App() {
     const c = obtenerCliente(orden.clienteId);
     const tec = obtenerTecnico(orden.tecnicoId);
     const fecha = formatReportDate(orden.fechaCompletada || orden.fechaCreacion || orden.fecha);
+    const ordenIdCompleto = String(orden.id || "");
+    const ordenIdCorto = ordenIdCompleto ? ordenIdCompleto.slice(0, 8) : "";
 
     const fotos = [
       [t("before"), orden.fotos?.antes],
@@ -2312,43 +2324,37 @@ input.login-glass-input:-webkit-autofill:active{
         </div>
       </div>
       <div class="meta">
-        <div class="id">Orden #${escapeHtml(String(orden.id || ""))}</div>
+        <div style="font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.18em;color:#64748b">${t("order")}</div><div class="id">#${escapeHtml(ordenIdCorto)}</div>
         <div style="margin-top:10px">
-          <span class="badge ${orden.estado === "Completado" ? "ok" : orden.estado === "Cancelada" ? "bad" : ""}">${escapeHtml(orden.estado || "Pendiente")}</span>
+          <span class="badge ${orden.estado === "Completado" ? "ok" : orden.estado === "Cancelada" ? "bad" : ""}">${escapeHtml(({ Pendiente: t("pending"), Asignada: t("assigned"), "En ruta": t("onRoute"), "En proceso": t("inProgress"), Completado: t("completed"), Cancelada: t("cancelled"), "Necesita seguimiento": t("needsFollowUp") }[orden.estado] || orden.estado || t("pending")))}</span>
         </div>
         <div style="margin-top:10px;color:#64748b;font-weight:900">${escapeHtml(fecha)}</div>
       </div>
     </header>
 
-    <section class="grid">
+    <section class="section">
       <div class="card soft">
-        <h2>Cliente</h2>
-        <div class="row"><div class="label">Nombre</div><div class="value">${escapeHtml(c?.nombre || "")}</div></div>
-        <div class="row"><div class="label">Teléfono</div><div class="value">${escapeHtml(formatPhoneDisplay(c?.telefono || ""))}</div></div>
-        <div class="row"><div class="label">Dirección</div><div class="value">${escapeHtml(c?.direccion || "")}</div></div>
-        <div class="row"><div class="label">Acceso</div><div class="value">Apt ${escapeHtml(c?.apartamento || "—")} · Edificio ${escapeHtml(c?.edificio || "—")} · Calle ${escapeHtml(c?.calle || "—")} · Código ${escapeHtml(c?.codigoAcceso || "—")}</div></div>
-      </div>
-
-      <div class="card">
-        <h2>Técnico</h2>
-        <div class="row"><div class="label">Nombre</div><div class="value">${escapeHtml(tec?.nombre || "Sin técnico")}</div></div>
-        <div class="row"><div class="label">Prioridad</div><div class="value">${escapeHtml(orden.prioridad || "Media")}</div></div>
-        <div class="row"><div class="label">Fecha</div><div class="value">${escapeHtml(fecha)}</div></div>
+        <h2>${t("customer")}</h2>
+        <div class="row"><div class="label">${t("name")}</div><div class="value">${escapeHtml(c?.nombre || "")}</div></div>
+        <div class="row"><div class="label">${t("phone")}</div><div class="value">${escapeHtml(formatPhoneDisplay(c?.telefono || ""))}</div></div>
+        <div class="row"><div class="label">${t("address")}</div><div class="value">${escapeHtml(c?.direccion || "")}</div></div>
+        <div class="row"><div class="label">${t("accessDetailsShort")}</div><div class="value">Apt ${escapeHtml(c?.apartamento || "—")} · ${t("building")} ${escapeHtml(c?.edificio || "—")} · ${t("street")} ${escapeHtml(c?.calle || "—")} · ${t("accessCode")} ${escapeHtml(c?.codigoAcceso || "—")}</div></div>
+        <div class="row"><div class="label">${t("date")}</div><div class="value">${escapeHtml(fecha)}</div></div>
       </div>
     </section>
 
     <section class="section">
-      <div class="section-title"><h2>Solicitud del cliente</h2></div>
+      <div class="section-title"><h2>${t("customerRequest")}</h2></div>
       <div class="text-box">${escapeHtml(orden.problema || "Sin problema reportado.")}</div>
     </section>
 
     <section class="section">
-      <div class="section-title"><h2>Detalle del servicio</h2></div>
+      <div class="section-title"><h2>${t("serviceDetails")}</h2></div>
       <div class="text-box">${escapeHtml(orden.notasTecnico || "Sin notas del técnico.")}</div>
     </section>
 
     <section class="section">
-      <div class="section-title"><h2>Evidencia fotográfica</h2><span class="badge">${fotos.length}/3 fotos</span></div>
+      <div class="section-title"><h2>${t("photoEvidence")}</h2><span class="badge">${fotos.length}/3 ${t("photos").toLowerCase()}</span></div>
       <div class="photos">${fotoHTML}</div>
     </section>
 
@@ -2358,7 +2364,7 @@ input.login-glass-input:-webkit-autofill:active{
     </section>
 
     <footer class="footer">
-      <div>Generado desde HVAC Manager</div>
+      <div>${t("generatedFromHVACManager")}</div>
       <div>${new Date().toLocaleString()}</div>
     </footer>
   </main>
