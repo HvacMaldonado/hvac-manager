@@ -645,27 +645,27 @@ export default function ReportesDashboardPage({ t = (key) => key, lang = "es", c
               <SoftMetric icon={AlertTriangle} label={tx(t, "canceledPercent", "Canceladas")} value={`${porcentajeCanceladas}%`} alert={canceladas > 0} />
               <SoftMetric icon={Wrench} label={tx(t, "followUpPercent", "Seguimiento")} value={`${porcentajeSeguimiento}%`} alert={seguimiento > 0} />
             </div>
+
+            <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
+              <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">{tx(t, "cancellationDetails", "Detalle de cancelaciones")}</p>
+                  <p className="text-sm font-bold text-slate-500">{tx(t, "internalAdminInfo", "Información interna para administración")}</p>
+                </div>
+                <span className={`w-fit rounded-full px-3 py-1 text-xs font-black ${canceladas > 0 ? "bg-rose-100 text-rose-700" : "bg-white text-slate-500"}`}>
+                  {canceladas} {tx(t, "totalLabel", "total")}
+                </span>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-3">
+                <SoftMetric icon={AlertTriangle} label={tx(t, "byCustomer", "Por cliente")} value={canceladasCliente} alert={canceladasCliente > 0} />
+                <SoftMetric icon={AlertTriangle} label={tx(t, "byCompany", "Por empresa")} value={canceladasEmpresa} alert={canceladasEmpresa > 0} />
+                <SoftMetric icon={AlertTriangle} label={tx(t, "byTechnician", "Por técnico")} value={canceladasTecnico} alert={canceladasTecnico > 0} />
+              </div>
+            </div>
           </div>
         </section>
 
-        <div className="rounded-[2rem] border border-slate-200 bg-white/90 p-4 shadow-lg shadow-slate-200/70">
-          <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">{tx(t, "cancellationDetails", "Detalle de cancelaciones")}</p>
-              <p className="text-sm font-bold text-slate-500">{tx(t, "internalAdminInfo", "Información interna para administración")}</p>
-            </div>
-            <span className={`w-fit rounded-full px-3 py-1 text-xs font-black ${canceladas > 0 ? "bg-rose-50 text-rose-700" : "bg-slate-100 text-slate-500"}`}>
-              {canceladas} {tx(t, "totalLabel", "total")}
-            </span>
-          </div>
-
-          <div className="grid gap-3 md:grid-cols-4">
-            <SoftMetric icon={AlertTriangle} label={tx(t, "cancellations", "Cancelaciones")} value={canceladas} alert={canceladas > 0} />
-            <SoftMetric icon={AlertTriangle} label={tx(t, "byCustomer", "Por cliente")} value={canceladasCliente} alert={canceladasCliente > 0} />
-            <SoftMetric icon={AlertTriangle} label={tx(t, "byCompany", "Por empresa")} value={canceladasEmpresa} alert={canceladasEmpresa > 0} />
-            <SoftMetric icon={AlertTriangle} label={tx(t, "byTechnician", "Por técnico")} value={canceladasTecnico} alert={canceladasTecnico > 0} />
-          </div>
-        </div>
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
