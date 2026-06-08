@@ -53,3 +53,14 @@ export async function eliminarOrdenMaterialSupabase(id) {
   if (error) throw error;
   return true;
 }
+
+
+export async function obtenerMaterialesOrdenesSupabase() {
+  const { data, error } = await supabase
+    .from("orden_materiales")
+    .select("*")
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+  return (data || []).map(mapMaterial);
+}

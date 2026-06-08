@@ -5,7 +5,7 @@ import { obtenerCitasSupabase, crearCitaSupabase } from "./services/citasService
 import { obtenerOrdenesSupabase, crearOrdenSupabase, actualizarOrdenSupabase } from "./services/ordenesService";
 import { obtenerHerramientasSupabase, crearHerramientaSupabase, actualizarHerramientaSupabase } from "./services/herramientasService";
 import { obtenerInventarioSupabase, crearInventarioSupabase, actualizarInventarioSupabase } from "./services/inventarioService";
-import { crearOrdenMaterialSupabase, actualizarOrdenMaterialSupabase, eliminarOrdenMaterialSupabase } from "./services/ordenMaterialesService";
+import { obtenerMaterialesOrdenesSupabase, crearOrdenMaterialSupabase, actualizarOrdenMaterialSupabase, eliminarOrdenMaterialSupabase } from "./services/ordenMaterialesService";
 import { obtenerFirmasOrdenesSupabase, guardarFirmaOrdenSupabase } from "./services/ordenFirmasService";
 import { obtenerFotosOrdenesSupabase, guardarFotoOrdenSupabase } from "./services/ordenFotosService";
 import {
@@ -1325,6 +1325,35 @@ export default function App() {
     cargarOrdenesSupabase();
   }, []);
 
+
+
+  useEffect(() => {
+    async function cargarMaterialesOrdenesSupabase() {
+      try {
+        const materialesSupabase = await obtenerMaterialesOrdenesSupabase();
+
+        if (!materialesSupabase.length) return;
+
+        setOrdenes((actual) =>
+          actual.map((orden) => ({
+            ...orden,
+            materialesUsados: materialesSupabase
+              .filter((m) => String(m.ordenId) === String(orden.id))
+              .map((m) => ({
+                id: m.id,
+                inventarioId: m.inventarioId,
+                cantidad: m.cantidad,
+                costoUnitario: m.costoUnitario,
+              })),
+          }))
+        );
+      } catch (error) {
+        console.error("Error cargando materiales de órdenes desde Supabase:", error);
+      }
+    }
+
+    cargarMaterialesOrdenesSupabase();
+  }, []);
 
   useEffect(() => {
     async function cargarFirmasSupabase() {
