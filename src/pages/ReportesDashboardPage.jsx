@@ -324,10 +324,16 @@ export default function ReportesDashboardPage({ t = (key) => key, lang = "es", c
 
   const completadas = data.ordenesFiltradas.filter((o) => o.estado === "Completado").length;
   const canceladas = data.ordenesFiltradas.filter((o) => o.estado === "Cancelada").length;
+  const seguimiento = data.ordenesFiltradas.filter((o) => o.estado === "Necesita seguimiento").length;
   const canceladasCliente = data.ordenesFiltradas.filter((o) => o.cancelTipo === "Cancelada por cliente").length;
   const canceladasEmpresa = data.ordenesFiltradas.filter((o) => o.cancelTipo === "Cancelada por empresa").length;
   const canceladasTecnico = data.ordenesFiltradas.filter((o) => o.cancelTipo === "Cancelada por técnico").length;
   const activas = data.ordenesFiltradas.length - completadas - canceladas;
+  const totalOperativo = Math.max(data.ordenesFiltradas.length, 1);
+  const porcentajeActivas = Math.round((activas / totalOperativo) * 100);
+  const porcentajeCompletadas = Math.round((completadas / totalOperativo) * 100);
+  const porcentajeCanceladas = Math.round((canceladas / totalOperativo) * 100);
+  const porcentajeSeguimiento = Math.round((seguimiento / totalOperativo) * 100);
   const materialesUsados = data.consumoMateriales.reduce((sum, m) => sum + Number(m.costo || 0), 0);
 
   const exportDashboard = () => {
@@ -490,6 +496,45 @@ export default function ReportesDashboardPage({ t = (key) => key, lang = "es", c
                   </p>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/95 shadow-xl shadow-slate-300/50 backdrop-blur">
+          <div className="bg-gradient-to-br from-blue-950 via-slate-950 to-indigo-900 p-5 text-white">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-blue-200">
+                  {tx(t, "operationalDashboard", "Dashboard operativo")}
+                </p>
+                <h3 className="mt-1 flex items-center gap-2 text-xl font-black">
+                  <ClipboardList size={22} />
+                  {tx(t, "premiumStageTwo", "Dashboard Premium · Etapa 2")}
+                </h3>
+                <p className="mt-1 text-sm font-semibold text-white/70">
+                  {tx(t, "ordersByStatus", "Resumen de órdenes por estado operativo.")}
+                </p>
+              </div>
+
+              <span className="w-fit rounded-full bg-white/10 px-4 py-2 text-xs font-black ring-1 ring-white/20">
+                {data.ordenesFiltradas.length} {tx(t, "ordersLabel", "órdenes")}
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-4 p-5">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <Metric icon={ClipboardList} label={tx(t, "activeOrders", "Órdenes activas")} value={activas} hint={`${porcentajeActivas}% ${tx(t, "ofTotal", "del total")}`} tone="from-blue-950 via-blue-800 to-cyan-700" />
+              <Metric icon={TrendingUp} label={tx(t, "completedJobs", "Completadas")} value={completadas} hint={`${porcentajeCompletadas}% ${tx(t, "ofTotal", "del total")}`} tone="from-emerald-700 via-teal-700 to-cyan-700" />
+              <Metric icon={AlertTriangle} label={tx(t, "cancellations", "Canceladas")} value={canceladas} hint={`${porcentajeCanceladas}% ${tx(t, "ofTotal", "del total")}`} tone="from-rose-800 via-red-700 to-orange-700" />
+              <Metric icon={Wrench} label={tx(t, "needsFollowUp", "Necesita seguimiento")} value={seguimiento} hint={`${porcentajeSeguimiento}% ${tx(t, "ofTotal", "del total")}`} tone="from-amber-700 via-orange-700 to-slate-900" />
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-4">
+              <SoftMetric icon={ClipboardList} label={tx(t, "activePercent", "Activas")} value={`${porcentajeActivas}%`} />
+              <SoftMetric icon={TrendingUp} label={tx(t, "completedPercent", "Completadas")} value={`${porcentajeCompletadas}%`} positive />
+              <SoftMetric icon={AlertTriangle} label={tx(t, "canceledPercent", "Canceladas")} value={`${porcentajeCanceladas}%`} alert={canceladas > 0} />
+              <SoftMetric icon={Wrench} label={tx(t, "followUpPercent", "Seguimiento")} value={`${porcentajeSeguimiento}%`} alert={seguimiento > 0} />
             </div>
           </div>
         </section>
