@@ -413,7 +413,7 @@ export default function ReportesDashboardPage({ t = (key) => key, lang = "es", c
                 </h3>
               </div>
               <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black ring-1 ring-white/20">
-                {data.mensual.slice(0, 8).length} {tx(t, "months", "meses")}
+                {data.mensual.slice(0, 8).length} {data.mensual.slice(0, 8).length === 1 ? t("month") : t("months")}
               </span>
             </div>
           </div>

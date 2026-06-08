@@ -403,42 +403,63 @@ export default function CalendarioPage({
         </div>
       </div>
 
-      <div className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white/95 p-4 shadow-xl shadow-slate-300/50">
-        <div className="absolute -right-16 -top-20 h-44 w-44 rounded-full bg-cyan-200/25 blur-3xl" />
-        <div className="relative mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-lg shadow-slate-300/70">
-              <UserCog size={18} />
+      <div className="relative overflow-hidden rounded-[2.35rem] border border-white/70 bg-white/95 p-5 shadow-2xl shadow-slate-300/60 ring-1 ring-slate-100 backdrop-blur">
+        <div className="absolute -right-20 -top-24 h-56 w-56 rounded-full bg-cyan-300/30 blur-3xl" />
+        <div className="absolute -bottom-24 left-16 h-56 w-56 rounded-full bg-blue-400/20 blur-3xl" />
+
+        <div className="relative mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="inline-flex h-14 w-14 items-center justify-center rounded-3xl bg-gradient-to-br from-slate-950 via-blue-900 to-cyan-700 text-white shadow-xl shadow-blue-200/70 ring-1 ring-white/40">
+              <UserCog size={26} />
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-700">{t("activeTeam")}</p>
-              <h3 className="text-base font-black text-slate-950">{t("colorsByTechnician")}</h3>
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-blue-700">{t("activeTeam")}</p>
+              <h3 className="text-xl font-black leading-tight text-slate-950">{t("colorsByTechnician")}</h3>
+              <p className="mt-0.5 text-xs font-semibold text-slate-500">{t("appointments")} · {t("orders")} · {t("calendar")}</p>
             </div>
           </div>
-          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-black text-slate-600">
+
+          <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-gradient-to-br from-white to-slate-50 px-4 py-2 text-xs font-black text-slate-700 shadow-sm">
+            <Users size={14} />
             {tecnicos.length} {t("technicians").toLowerCase()}
           </span>
         </div>
 
-        <div className="relative grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="relative grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {tecnicos.map((tec) => {
             const theme = getTecnicoThemeById(tecnicos, tec.id);
             const eventosTecnico = events.filter((event) => String(event.tecnicoId) === String(tec.id));
             const citasTecnico = eventosTecnico.filter((event) => event.type === "cita").length;
             const ordenesTecnico = eventosTecnico.filter((event) => event.type === "orden").length;
+            const totalTecnico = citasTecnico + ordenesTecnico;
 
             return (
-              <div key={tec.id} className={`group relative overflow-hidden rounded-2xl border p-3 shadow-sm ring-1 ring-white/70 transition hover:-translate-y-0.5 hover:shadow-lg ${theme.event}`}>
-                <div className={`absolute left-0 top-0 h-full w-1.5 ${theme.dot}`} />
-                <div className="flex items-center gap-2 pl-1">
-                  <span className={`h-4 w-4 shrink-0 rounded-full border-2 border-white shadow-md ${theme.dot}`} />
+              <div key={tec.id} className={`group relative min-h-[118px] overflow-hidden rounded-[1.75rem] border p-4 shadow-lg shadow-slate-200/70 ring-1 ring-white/80 transition duration-300 hover:-translate-y-1 hover:shadow-2xl ${theme.event}`}>
+                <div className={`absolute left-0 top-0 h-full w-2 ${theme.dot}`} />
+                <div className="absolute -right-10 -top-12 h-32 w-32 rounded-full bg-white/50 blur-3xl transition group-hover:bg-white/70" />
+
+                <div className="relative flex items-start gap-3 pl-1">
+                  <div className={`inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-3xl border-2 border-white text-white shadow-xl ${theme.dot}`}>
+                    <UserCog size={25} />
+                  </div>
+
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-black">{tec.nombre}</p>
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      <span className="rounded-full bg-white/70 px-2 py-0.5 text-[9px] font-black uppercase shadow-sm">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-lg font-black leading-tight text-slate-950">{tec.nombre}</p>
+                        <p className="mt-1 text-[10px] font-black uppercase tracking-wide text-slate-500">
+                          {totalTecnico} {t("events").toLowerCase()}
+                        </p>
+                      </div>
+
+                      <span className={`mt-1 h-3.5 w-3.5 shrink-0 rounded-full border-2 border-white shadow-md ${theme.dot}`} />
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <span className="rounded-2xl bg-white/75 px-2 py-1.5 text-center text-[10px] font-black uppercase text-slate-700 shadow-sm ring-1 ring-white/70">
                         {citasTecnico} {t("appointments").toLowerCase()}
                       </span>
-                      <span className="rounded-full bg-white/70 px-2 py-0.5 text-[9px] font-black uppercase shadow-sm">
+                      <span className="rounded-2xl bg-white/75 px-2 py-1.5 text-center text-[10px] font-black uppercase text-slate-700 shadow-sm ring-1 ring-white/70">
                         {ordenesTecnico} {t("orders").toLowerCase()}
                       </span>
                     </div>
@@ -449,7 +470,7 @@ export default function CalendarioPage({
           })}
 
           {tecnicos.length === 0 && (
-            <span className="text-sm font-semibold text-slate-500">{t("noActiveTechnicians")}</span>
+            <span className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-center text-sm font-semibold text-slate-500">{t("noActiveTechnicians")}</span>
           )}
         </div>
       </div>
