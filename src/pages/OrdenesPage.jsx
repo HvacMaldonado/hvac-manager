@@ -294,7 +294,7 @@ export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, cr
               </FormSection>
 
               <FormSection icon={AlertTriangle} title={t("priority")} subtitle={t("priorityDescription")} tone="rose">
-                <PriorityChips value={ordenForm.prioridad} onChange={(p) => setOrdenForm({ ...ordenForm, prioridad: p })} />
+                <PriorityChips value={ordenForm.prioridad} onChange={(p) => setOrdenForm({ ...ordenForm, prioridad: p })} t={t} />
               </FormSection>
 
               <button

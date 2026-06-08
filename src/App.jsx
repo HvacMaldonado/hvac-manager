@@ -147,6 +147,7 @@ const TEXT = {
     orders: "Órdenes",
     completedHistory: "Historial completado",
     inventory: "Inventario general",
+    generalInventoryDescription: "Control de materiales, costos internos y stock mínimo.",
     generalInventoryTitle: "Inventario general",
     newMaterial: "Nuevo material",
     addInventory: "Agregar inventario",
@@ -634,6 +635,7 @@ const TEXT = {
     orders: "Orders",
     completedHistory: "Completed history",
     inventory: "General inventory",
+    generalInventoryDescription: "Control materials, internal costs, and minimum stock.",
     generalInventoryTitle: "General inventory",
     newMaterial: "New material",
     addInventory: "Add inventory",
@@ -2338,8 +2340,14 @@ input.login-glass-input:-webkit-autofill:active{
         <div class="row"><div class="label">${t("name")}</div><div class="value">${escapeHtml(c?.nombre || "")}</div></div>
         <div class="row"><div class="label">${t("phone")}</div><div class="value">${escapeHtml(formatPhoneDisplay(c?.telefono || ""))}</div></div>
         <div class="row"><div class="label">${t("address")}</div><div class="value">${escapeHtml(c?.direccion || "")}</div></div>
-        <div class="row"><div class="label">${t("accessDetailsShort")}</div><div class="value">Apt ${escapeHtml(c?.apartamento || "—")} · ${t("building")} ${escapeHtml(c?.edificio || "—")} · ${t("street")} ${escapeHtml(c?.calle || "—")} · ${t("accessCode")} ${escapeHtml(c?.codigoAcceso || "—")}</div></div>
-        <div class="row"><div class="label">${t("date")}</div><div class="value">${escapeHtml(fecha)}</div></div>
+        <div class="row">
+          <div class="label">Access</div>
+          <div class="value">
+            Apt: ${escapeHtml(c?.apartamento || "—")}<br/>
+            ${t("building")}: ${escapeHtml(c?.edificio || "—")}<br/>
+            ${t("accessCode")}: ${escapeHtml(c?.codigoAcceso || "—")}
+          </div>
+        </div>
       </div>
     </section>
 
