@@ -38,8 +38,8 @@ function formatPhoneDisplay(value) {
   return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
 }
 
-function formatReportDate(value) {
-  if (!value) return "Sin fecha";
+function formatReportDate(value, t = (key) => key) {
+  if (!value) return t("noDate");
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleDateString();
 }
@@ -299,7 +299,7 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
                         <p className="text-[10px] font-black uppercase tracking-wide text-slate-500">{t("technician")}</p>
                         <p className="mt-1 flex items-center gap-1 truncate text-sm font-black text-slate-900">
                           <BadgeCheck size={13} className="text-blue-700" />
-                          {tecnico?.nombre || "Sin técnico"}
+                          {tecnico?.nombre || t("noTechnician")}
                         </p>
                       </div>
 
