@@ -45,7 +45,7 @@ function StatMini({ label, value }) {
   );
 }
 
-function ClientStatus({ activeOrders, appointments }) {
+function ClientStatus({ activeOrders, appointments, t = (key) => key }) {
   if (activeOrders > 0) {
     return (
       <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-2 py-1 text-[10px] font-black text-blue-700">
@@ -370,7 +370,7 @@ export default function ClientesPage({
         <div className="bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-900 p-5 text-white">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">Gestión de clientes</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">{t("customerManagement")}</p>
               <h2 className="mt-1 flex items-center gap-2 text-2xl font-black">
                 <Users size={24} />
                 Clientes
@@ -378,9 +378,9 @@ export default function ClientesPage({
             </div>
 
             <div className="grid grid-cols-3 gap-2 text-center">
-              <StatMini label="Clientes" value={clientes.length} />
-              <StatMini label="Activos" value={clientes.filter((c) => ordenesCliente(c.id).some((o) => !["Completado", "Cancelada"].includes(o.estado))).length} />
-              <StatMini label="Citas" value={clientes.filter((c) => citasCliente(c.id).length > 0).length} />
+              <StatMini label={t("customersLabel")} value={clientes.length} />
+              <StatMini label={t("activeCustomersLabel")} value={clientes.filter((c) => ordenesCliente(c.id).some((o) => !["Completado", "Cancelada"].includes(o.estado))).length} />
+              <StatMini label={t("appointmentsLabel")} value={clientes.filter((c) => citasCliente(c.id).length > 0).length} />
             </div>
           </div>
         </div>
@@ -725,7 +725,7 @@ export default function ClientesPage({
                     </div>
 
                     <div className="flex items-center">
-                      <ClientStatus activeOrders={activas.length} appointments={citasC.length} />
+                      <ClientStatus activeOrders={activas.length} appointments={citasC.length} t={t} />
                     </div>
 
                     <div>
