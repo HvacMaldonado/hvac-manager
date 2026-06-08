@@ -13,10 +13,20 @@ import {
   Trash2,
   UserCog,
   Wrench,
-  XCircle,
 } from "lucide-react";
 
 const ESTADOS_HERRAMIENTA = ["Disponible", "Asignada", "Dañada", "Perdida", "Devuelta"];
+
+function toolStatusKey(estado) {
+  const map = {
+    Disponible: "statusAvailable",
+    Asignada: "statusAssigned",
+    Dañada: "statusDamaged",
+    Perdida: "statusLost",
+    Devuelta: "statusReturned",
+  };
+  return map[estado] || "statusAvailable";
+}
 
 function Metric({ icon: Icon, label, value, tone }) {
   return (
@@ -30,7 +40,7 @@ function Metric({ icon: Icon, label, value, tone }) {
   );
 }
 
-function EstadoBadge({ estado }) {
+function EstadoBadge({ estado, t }) {
   const cls =
     estado === "Dañada" || estado === "Perdida"
       ? "border-rose-200 bg-rose-50 text-rose-700"
@@ -45,7 +55,7 @@ function EstadoBadge({ estado }) {
   return (
     <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black ${cls}`}>
       <Icon size={12} />
-      {estado || "Disponible"}
+      {t(toolStatusKey(estado || "Disponible"))}
     </span>
   );
 }
@@ -107,12 +117,12 @@ export default function HerramientasPage({
 
   const agregarHerramientaParaTecnico = async () => {
     if (!tecnicoHerramientasSeleccionado) {
-      alert("Selecciona un técnico antes de agregar herramientas.");
+      alert(t("selectTechnicianAlert"));
       return;
     }
 
     if (!herramientaForm.nombre) {
-      alert("Ingresa el nombre de la herramienta.");
+      alert(t("enterToolNameAlert"));
       return;
     }
 
@@ -160,21 +170,19 @@ export default function HerramientasPage({
         <div className="bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-900 p-5 text-white">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">Asignación</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">{t("toolsAssignment")}</p>
               <h2 className="mt-1 flex items-center gap-2 text-2xl font-black">
                 <Wrench size={24} />
-                Herramientas técnico
+                {t("technicianToolsTitle")}
               </h2>
-              <p className="mt-1 text-sm text-slate-300">
-                Control de herramientas asignadas, devueltas, dañadas o perdidas por técnico.
-              </p>
+              <p className="mt-1 text-sm text-slate-300">{t("technicianToolsDescription")}</p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2 xl:justify-end">
-              <Metric icon={PackageOpen} label="Disponibles" value={disponibles} tone="from-emerald-800 to-teal-600" />
-              <Metric icon={UserCog} label="Asignadas" value={totalAsignadas} tone="from-blue-800 to-cyan-700" />
-              <Metric icon={AlertTriangle} label="Alertas" value={alertas} tone="from-rose-800 to-red-700" />
-              <Metric icon={History} label="Devueltas" value={devueltas} tone="from-slate-800 to-slate-950" />
+              <Metric icon={PackageOpen} label={t("availableTools")} value={disponibles} tone="from-emerald-800 to-teal-600" />
+              <Metric icon={UserCog} label={t("assignedTools")} value={totalAsignadas} tone="from-blue-800 to-cyan-700" />
+              <Metric icon={AlertTriangle} label={t("alerts")} value={alertas} tone="from-rose-800 to-red-700" />
+              <Metric icon={History} label={t("returnedTools")} value={devueltas} tone="from-slate-800 to-slate-950" />
             </div>
           </div>
         </div>
@@ -187,18 +195,12 @@ export default function HerramientasPage({
                   <ShieldCheck size={24} />
                 </div>
 
-                <p className="mt-5 text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">Técnico seleccionado</p>
-                <h3 className="mt-1 text-2xl font-black leading-tight">{tecnicoSeleccionado?.nombre || "Selecciona técnico"}</h3>
-                <p className="mt-2 text-sm font-medium leading-relaxed text-slate-300">
-                  El selector principal define a quién se asignará la herramienta. No se repite el técnico dentro del formulario.
-                </p>
+                <p className="mt-5 text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">{t("selectedTechnician")}</p>
+                <h3 className="mt-1 text-2xl font-black leading-tight">{tecnicoSeleccionado?.nombre || t("selectTechnicianShort")}</h3>
+                <p className="mt-2 text-sm font-medium leading-relaxed text-slate-300">{t("selectedTechnicianDescription")}</p>
 
-                <select
-                  value={tecnicoHerramientasSeleccionado}
-                  onChange={(e) => cambiarTecnicoPrincipal(e.target.value)}
-                  className="mt-5 w-full rounded-2xl border border-white/20 bg-white px-3 py-3 text-sm font-black text-slate-800 outline-none"
-                >
-                  <option value="">Seleccionar técnico</option>
+                <select value={tecnicoHerramientasSeleccionado} onChange={(e) => cambiarTecnicoPrincipal(e.target.value)} className="mt-5 w-full rounded-2xl border border-white/20 bg-white px-3 py-3 text-sm font-black text-slate-800 outline-none">
+                  <option value="">{t("selectTechnician")}</option>
                   {tecnicos.map((tec) => <option key={tec.id} value={tec.id}>{tec.nombre}</option>)}
                 </select>
               </aside>
@@ -206,48 +208,45 @@ export default function HerramientasPage({
               <div className="rounded-3xl border border-white/70 bg-white/90 p-4 shadow-xl shadow-slate-300/50 backdrop-blur">
                 <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-700">Formulario moderno</p>
-                    <h4 className="text-lg font-black text-slate-950">Agregar herramienta</h4>
+                    <p className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-700">{t("modernForm")}</p>
+                    <h4 className="text-lg font-black text-slate-950">{t("addTool")}</h4>
                   </div>
                   <span className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-[10px] font-black uppercase text-cyan-800">
-                    Asignación por técnico
+                    {t("technicianAssignment")}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
                   <div className="lg:col-span-4">
-                    <Field label="Herramienta">
-                      <input value={herramientaForm.nombre} onChange={(e) => setHerramientaForm({ ...herramientaForm, nombre: e.target.value })} placeholder="Ej. Manifold, taladro, bomba..." className={inputClass} />
+                    <Field label={t("tool")}>
+                      <input value={herramientaForm.nombre} onChange={(e) => setHerramientaForm({ ...herramientaForm, nombre: e.target.value })} placeholder={t("toolPlaceholder")} className={inputClass} />
                     </Field>
                   </div>
 
                   <div className="lg:col-span-2">
-                    <Field label="Cantidad">
+                    <Field label={t("quantity")}>
                       <input type="number" value={herramientaForm.cantidad} onChange={(e) => setHerramientaForm({ ...herramientaForm, cantidad: e.target.value })} placeholder="1" className={inputClass} />
                     </Field>
                   </div>
 
                   <div className="lg:col-span-3">
-                    <Field label="Estado">
+                    <Field label={t("status")}>
                       <select value={herramientaForm.estado || "Asignada"} onChange={(e) => setHerramientaForm({ ...herramientaForm, estado: e.target.value })} className={inputClass}>
-                        {ESTADOS_HERRAMIENTA.map((estado) => <option key={estado}>{estado}</option>)}
+                        {ESTADOS_HERRAMIENTA.map((estado) => <option key={estado} value={estado}>{t(toolStatusKey(estado))}</option>)}
                       </select>
                     </Field>
                   </div>
 
                   <div className="lg:col-span-3">
-                    <Field label="Notas">
-                      <input value={herramientaForm.notas} onChange={(e) => setHerramientaForm({ ...herramientaForm, notas: e.target.value })} placeholder="Condición o comentario" className={inputClass} />
+                    <Field label={t("notes")}>
+                      <input value={herramientaForm.notas} onChange={(e) => setHerramientaForm({ ...herramientaForm, notas: e.target.value })} placeholder={t("notesPlaceholder")} className={inputClass} />
                     </Field>
                   </div>
                 </div>
 
-                <button
-                  onClick={agregarHerramientaParaTecnico}
-                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-slate-950 via-blue-900 to-cyan-700 px-5 py-3 text-sm font-black text-white shadow-lg shadow-slate-300 transition hover:-translate-y-0.5"
-                >
+                <button onClick={agregarHerramientaParaTecnico} className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-slate-950 via-blue-900 to-cyan-700 px-5 py-3 text-sm font-black text-white shadow-lg shadow-slate-300 transition hover:-translate-y-0.5">
                   <Plus size={16} />
-                  Asignar herramienta
+                  {t("assignTool")}
                 </button>
               </div>
             </div>
@@ -257,12 +256,12 @@ export default function HerramientasPage({
         <div className="grid gap-3 border-t border-slate-200 bg-white p-4 lg:grid-cols-[1fr_220px]">
           <div className="relative">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar herramienta, técnico, estado o notas..." className="w-full rounded-2xl border border-slate-300 bg-white py-3 pl-10 pr-3 text-sm outline-none shadow-sm transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100" />
+            <input value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder={t("searchToolsPlaceholder")} className="w-full rounded-2xl border border-slate-300 bg-white py-3 pl-10 pr-3 text-sm outline-none shadow-sm transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100" />
           </div>
 
           <select value={estadoFiltro} onChange={(e) => setEstadoFiltro(e.target.value)} className="rounded-2xl border border-slate-300 bg-white px-3 py-3 text-sm font-bold text-slate-700 outline-none shadow-sm focus:border-blue-700 focus:ring-4 focus:ring-blue-100">
-            <option value="todos">Todos los estados</option>
-            {ESTADOS_HERRAMIENTA.map((estado) => <option key={estado}>{estado}</option>)}
+            <option value="todos">{t("allStatuses")}</option>
+            {ESTADOS_HERRAMIENTA.map((estado) => <option key={estado} value={estado}>{t(toolStatusKey(estado))}</option>)}
           </select>
         </div>
       </div>
@@ -271,18 +270,18 @@ export default function HerramientasPage({
         <div className="overflow-x-auto [-webkit-overflow-scrolling:touch]">
           <div className="min-w-[1120px]">
             <div className="grid grid-cols-[1.1fr_0.85fr_0.6fr_0.8fr_1.2fr_230px] gap-3 bg-slate-950 px-4 py-3 text-[11px] font-black uppercase tracking-wide text-white">
-              <span>Herramienta</span>
-              <span>Técnico</span>
-              <span>Cant.</span>
-              <span>Estado</span>
-              <span>Notas</span>
-              <span className="text-right">Acciones</span>
+              <span>{t("tool")}</span>
+              <span>{t("technician")}</span>
+              <span>{t("quantity")}</span>
+              <span>{t("status")}</span>
+              <span>{t("notes")}</span>
+              <span className="text-right">{t("actions")}</span>
             </div>
 
             <div className="divide-y divide-slate-200">
               {herramientasFiltradas.length === 0 && (
                 <div className="p-8 text-center text-sm font-semibold text-slate-500">
-                  No hay herramientas con esos filtros.
+                  {t("noToolsFilters")}
                 </div>
               )}
 
@@ -301,7 +300,7 @@ export default function HerramientasPage({
                             <Wrench size={19} />
                           </div>
                           <div className="min-w-0">
-                            <p className="truncate font-black text-slate-950">{h.nombre || "Sin nombre"}</p>
+                            <p className="truncate font-black text-slate-950">{h.nombre || t("noName")}</p>
                             <p className="text-xs text-slate-500">ID #{h.id}</p>
                           </div>
                         </div>
@@ -311,13 +310,13 @@ export default function HerramientasPage({
                     <div className="flex items-center">
                       {editing ? (
                         <select value={h.tecnicoId || ""} onChange={(e) => reasignarHerramienta(h.id, e.target.value)} className={rowInputClass}>
-                          <option value="">Sin técnico</option>
+                          <option value="">{t("noTechnician")}</option>
                           {tecnicos.map((tec) => <option key={tec.id} value={tec.id}>{tec.nombre}</option>)}
                         </select>
                       ) : (
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2 py-1 text-xs font-black text-blue-700">
                           <UserCog size={13} />
-                          {tecnico?.nombre || "Sin técnico"}
+                          {tecnico?.nombre || t("noTechnician")}
                         </span>
                       )}
                     </div>
@@ -333,10 +332,10 @@ export default function HerramientasPage({
                     <div className="flex items-center">
                       {editing ? (
                         <select value={h.estado || "Disponible"} onChange={(e) => actualizarHerramienta(h.id, "estado", e.target.value)} className={rowInputClass}>
-                          {ESTADOS_HERRAMIENTA.map((estado) => <option key={estado}>{estado}</option>)}
+                          {ESTADOS_HERRAMIENTA.map((estado) => <option key={estado} value={estado}>{t(toolStatusKey(estado))}</option>)}
                         </select>
                       ) : (
-                        <EstadoBadge estado={h.estado || "Disponible"} />
+                        <EstadoBadge estado={h.estado || "Disponible"} t={t} />
                       )}
                     </div>
 
@@ -344,19 +343,19 @@ export default function HerramientasPage({
                       {editing ? (
                         <input value={h.notas || ""} onChange={(e) => actualizarHerramienta(h.id, "notas", e.target.value)} className={rowInputClass} />
                       ) : (
-                        <p className="line-clamp-1 text-slate-600">{h.notas || "Sin notas"}</p>
+                        <p className="line-clamp-1 text-slate-600">{h.notas || t("noNotes")}</p>
                       )}
                     </div>
 
                     <div className="flex items-center justify-end gap-2 whitespace-nowrap">
                       <button onClick={() => setEditando(editing ? null : h.id)} className="inline-flex min-w-[82px] items-center justify-center gap-1 rounded-xl bg-blue-50 px-3 py-2 text-xs font-black text-blue-700 hover:bg-blue-100">
                         {editing ? <PackageCheck size={13} /> : <Edit3 size={13} />}
-                        {editing ? "Guardar" : "Editar"}
+                        {editing ? t("save") : t("edit")}
                       </button>
 
                       <button onClick={() => devolverHerramienta(h.id)} className="inline-flex min-w-[82px] items-center justify-center gap-1 rounded-xl bg-slate-950 px-3 py-2 text-xs font-black text-white">
                         <History size={13} />
-                        Devolver
+                        {t("return")}
                       </button>
 
                       <button onClick={() => setHerramientas(herramientas.filter((x) => x.id !== h.id))} className="inline-flex min-w-[42px] items-center justify-center rounded-xl bg-red-50 px-3 py-2 text-xs font-black text-red-700 hover:bg-red-100">

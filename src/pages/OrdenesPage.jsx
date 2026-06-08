@@ -345,14 +345,14 @@ function getStartOfWeek(date) {
   return monday.toISOString().slice(0, 10);
 }
 
-function getGroupKeyByPeriod(orden, periodo) {
+function getGroupKeyByPeriod(orden, periodo, t = (key) => key) {
   const raw = getOrdenDate(orden);
   const d = new Date(raw);
-  if (Number.isNaN(d.getTime())) return "Sin fecha";
+  if (Number.isNaN(d.getTime())) return t("noDate");
 
   if (periodo === "semana") {
     const start = getStartOfWeek(d);
-    return `Semana de ${formatReportDate(start)}`;
+    return `${t("weekOf")} ${formatReportDate(start)}`;
   }
 
   if (periodo === "mes") {
@@ -469,7 +469,7 @@ function AdminOrdenesRegistro({ ordenes, obtenerCliente, ordenProps, periodo, t 
     ordenes.forEach((orden) => {
       const tecnico = ordenProps.obtenerTecnico?.(orden.tecnicoId);
       const tecnicoKey = orden.tecnicoId ? String(orden.tecnicoId) : "sin-tecnico";
-      const tecnicoNombre = tecnico?.nombre || "Sin técnico asignado";
+      const tecnicoNombre = tecnico?.nombre || t("noAssignedTechnician");
 
       if (!porTecnico[tecnicoKey]) {
         porTecnico[tecnicoKey] = {
@@ -494,7 +494,7 @@ function AdminOrdenesRegistro({ ordenes, obtenerCliente, ordenProps, periodo, t 
         porTecnico[tecnicoKey].atrasadas += 1;
       }
 
-      const periodoKey = getGroupKeyByPeriod(orden, periodo);
+      const periodoKey = getGroupKeyByPeriod(orden, periodo, t);
       if (!porTecnico[tecnicoKey].periodos[periodoKey]) {
         porTecnico[tecnicoKey].periodos[periodoKey] = [];
       }
@@ -522,7 +522,7 @@ function AdminOrdenesRegistro({ ordenes, obtenerCliente, ordenProps, periodo, t 
   if (ordenes.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-slate-500">
-        No hay órdenes generadas todavía.
+        {t("noGeneratedOrdersYet")}
       </div>
     );
   }
@@ -576,7 +576,7 @@ function AdminOrdenesRegistro({ ordenes, obtenerCliente, ordenProps, periodo, t 
                   </div>
 
                   <span className="rounded-full bg-slate-950 px-3 py-1 text-xs font-black text-white">
-                    {grupoPeriodo.lista.length} orden{grupoPeriodo.lista.length === 1 ? "" : "es"}
+                    {grupoPeriodo.lista.length} {t("ordersLabel")}
                   </span>
                 </div>
 
