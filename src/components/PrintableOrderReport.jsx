@@ -117,7 +117,7 @@ export default function PrintableOrderReport({ orden, cliente, tecnico, t = (key
             <p className="text-xs font-black uppercase tracking-[0.25em] text-slate-500">{t("serviceReportTitle")}</p>
             <h1 className="mt-1 text-3xl font-black">Orden #{orden.id}</h1>
             <p className="mt-1 text-sm font-bold text-slate-600">
-              Estado: {orden.estado || "Sin estado"} · Prioridad: {orden.prioridad || "Media"}
+              {t("reportStatus")}: {orden.estado || t("noStatus")} · {t("reportPriority")}: {orden.prioridad || t("medium")}
             </p>
           </div>
 
@@ -132,7 +132,7 @@ export default function PrintableOrderReport({ orden, cliente, tecnico, t = (key
           <div className="rounded-2xl border border-slate-300 p-4">
             <p className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-wide text-slate-600">
               <MapPin size={14} />
-              Cliente
+              {t("customer")}
             </p>
             <p className="text-lg font-black">{cliente?.nombre || t("deletedCustomer")}</p>
             <p className="mt-1 text-sm font-bold">{formatPhone(cliente?.telefono)}</p>
@@ -145,7 +145,7 @@ export default function PrintableOrderReport({ orden, cliente, tecnico, t = (key
           <div className="rounded-2xl border border-slate-300 p-4">
             <p className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-wide text-slate-600">
               <UserCog size={14} />
-              Técnico
+              {t("technician")}
             </p>
             <p className="text-lg font-black">{tecnico?.nombre || t("noTechnician")}</p>
             <p className="mt-1 text-sm font-bold">{formatPhone(tecnico?.telefono)}</p>
@@ -156,10 +156,10 @@ export default function PrintableOrderReport({ orden, cliente, tecnico, t = (key
         <section className="no-break mb-4 rounded-2xl border border-slate-300 p-4">
           <p className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-wide text-slate-600">
             <ClipboardList size={14} />
-            Problema reportado
+            {t("reportedProblemTitle")}
           </p>
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-800">
-            {orden.problema || "Sin problema reportado."}
+            {orden.problema || t("noReportedProblemSentence")}
           </p>
         </section>
 
@@ -169,7 +169,7 @@ export default function PrintableOrderReport({ orden, cliente, tecnico, t = (key
             {t("technicianNotes")}
           </p>
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-800">
-            {orden.notasTecnico || "Sin notas registradas."}
+            {orden.notasTecnico || t("noNotes")}
           </p>
         </section>
 
