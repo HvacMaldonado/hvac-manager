@@ -72,6 +72,14 @@ function isWithinPremiumPeriod(value, periodo) {
   return true;
 }
 
+function isToday(value) {
+  if (!value) return false;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return false;
+  const now = new Date();
+  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+}
+
 function premiumPeriodLabel(t, periodo) {
   const labels = {
     hoy: tx(t, "today", "Hoy"),
@@ -293,7 +301,7 @@ function InsightPanel({ t = (key) => key, completadas, canceladas, total, stockB
 }
 
 
-export default function ReportesDashboardPage({ t = (key) => key, lang = "es", clientes, ordenes, inventario, herramientas, tecnicos, obtenerTecnico, exportarCSV }) {
+export default function ReportesDashboardPage({ t = (key) => key, lang = "es", citas = [], clientes, ordenes, inventario, herramientas, tecnicos, obtenerTecnico, exportarCSV }) {
   const [busqueda, setBusqueda] = useState("");
   const [periodo, setPeriodo] = useState("todos");
 
@@ -444,6 +452,9 @@ export default function ReportesDashboardPage({ t = (key) => key, lang = "es", c
   const porcentajeSeguimiento = Math.round((seguimiento / totalOperativo) * 100);
   const materialesUsados = data.consumoMateriales.reduce((sum, m) => sum + Number(m.costo || 0), 0);
   const costoInternoEstimado = materialesUsados + Number(data.resumenNomina.totalNomina || 0);
+  const ordenesUrgentes = data.ordenesFiltradas.filter((o) => ["Urgente", "Alta"].includes(o.prioridad) && !["Completado", "Cancelada"].includes(o.estado)).length;
+  const citasHoy = citas.filter((c) => isToday(c.fecha || c.fechaCita || c.created_at)).length;
+  const stockCritico = inventario.filter((item) => Number(item.cantidad || 0) <= Number(item.stockMinimo || 0)).length;
 
   const exportDashboard = () => {
     const rows = [
@@ -521,6 +532,13 @@ export default function ReportesDashboardPage({ t = (key) => key, lang = "es", c
             <option value="todos">{tx(t, "all", "Todo")}</option>
           </select>
         </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Metric icon={AlertTriangle} label={tx(t, "urgentOrders", "Órdenes urgentes")} value={ordenesUrgentes} hint={tx(t, "needsAttention", "Requieren atención")} tone="from-rose-800 via-red-700 to-orange-700" />
+        <Metric icon={CalendarDays} label={tx(t, "appointmentsToday", "Citas hoy")} value={citasHoy} hint={tx(t, "todaySchedule", "Agenda del día")} tone="from-blue-950 via-blue-800 to-cyan-700" />
+        <Metric icon={Package} label={tx(t, "criticalStock", "Stock crítico")} value={stockCritico} hint={tx(t, "reviewInventory", "Revisar inventario")} tone="from-amber-700 via-orange-700 to-slate-900" />
+        <Metric icon={TrendingUp} label={tx(t, "periodPayroll", "Nómina periodo")} value={money(data.resumenNomina.totalNomina)} hint={premiumPeriodLabel(t, periodo)} tone="from-emerald-700 via-teal-700 to-cyan-700" />
       </div>
 
       <div className="space-y-5">

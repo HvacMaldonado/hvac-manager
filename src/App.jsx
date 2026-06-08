@@ -4561,7 +4561,7 @@ function DashboardUnificadoPage({
         <ReportesDashboardPage
           t={t}
           lang={lang}
-          lang={lang}
+          citas={citas}
           clientes={clientes}
           ordenes={ordenes}
           inventario={inventario}
