@@ -281,6 +281,21 @@ const TEXT = {
     entryDate: "Fecha ingreso",
     exitDate: "Fecha salida",
     hourlyPay: "Pago por hora ($)",
+    payrollOperational: "Nómina operativa",
+    technicianHoursPay: "Horas y pago por técnico",
+    realWorkOnly: "Calculado solo con horas reales de trabajo, no traslado.",
+    consultedWeek: "Semana consultada",
+    consultedDay: "Hoy",
+    consultedMonth: "Mes consultado",
+    consultedYear: "Año consultado",
+    allHistory: "Todo el historial",
+    work: "Trabajo",
+    travel: "Traslado",
+    pay: "Pago",
+    earned: "Ganado",
+    completedOrdersPeriod: "órdenes completadas en este período",
+    hourlyPayShort: "Pago por hora",
+    totalPay: "Total",
     technicianActiveLogin: "El técnico quedará activo y podrá iniciar sesión con su usuario y contraseña.",
     editTechnician: "Editar técnico",
     cancel: "Cancelar",
@@ -602,6 +617,21 @@ const TEXT = {
     entryDate: "Start date",
     exitDate: "Exit date",
     hourlyPay: "Hourly pay ($)",
+    payrollOperational: "Operational payroll",
+    technicianHoursPay: "Technician hours and pay",
+    realWorkOnly: "Calculated only with real work hours, not travel.",
+    consultedWeek: "Selected week",
+    consultedDay: "Today",
+    consultedMonth: "Selected month",
+    consultedYear: "Selected year",
+    allHistory: "All history",
+    work: "Work",
+    travel: "Travel",
+    pay: "Pay",
+    earned: "Earned",
+    completedOrdersPeriod: "completed orders in this period",
+    hourlyPayShort: "Hourly pay",
+    totalPay: "Total",
     technicianActiveLogin: "The technician will remain active and can sign in with their username and password.",
     editTechnician: "Edit technician",
     cancel: "Cancel",
@@ -4190,6 +4220,8 @@ function DashboardUnificadoPage({
 
       {tab === "tecnicos" && (
         <ReportePagoTecnicos
+          t={t}
+          lang={lang}
           tecnicos={tecnicos}
           ordenes={ordenes}
         />
@@ -4200,7 +4232,7 @@ function DashboardUnificadoPage({
 
 
 
-function ReportePagoTecnicos({ tecnicos = [], ordenes = [] }) {
+function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ordenes = [] }) {
   const [periodo, setPeriodo] = useState("mes");
 
   const getFechaOrden = (orden) =>
@@ -4284,11 +4316,11 @@ function ReportePagoTecnicos({ tecnicos = [], ordenes = [] }) {
   const totalPagado = filas.reduce((sum, row) => sum + row.totalGanado, 0);
 
   const periodos = [
-    ["hoy", "Hoy"],
-    ["semana", "Semana"],
-    ["mes", "Mes"],
-    ["ano", "Año"],
-    ["todo", "Todo"],
+    ["hoy", t("today")],
+    ["semana", t("week")],
+    ["mes", t("month")],
+    ["ano", t("year")],
+    ["todo", t("all")],
   ];
 
   const hoyNomina = new Date();
@@ -4299,7 +4331,7 @@ function ReportePagoTecnicos({ tecnicos = [], ordenes = [] }) {
   finSemanaNomina.setDate(inicioSemanaNomina.getDate() + 6);
 
   const formatoNomina = (fecha) =>
-    fecha.toLocaleDateString("en-US", {
+    fecha.toLocaleDateString(lang === "en" ? "en-US" : "es-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
@@ -4307,45 +4339,45 @@ function ReportePagoTecnicos({ tecnicos = [], ordenes = [] }) {
 
   const periodoNominaLabel =
     periodo === "semana"
-      ? `Semana consultada · ${formatoNomina(inicioSemanaNomina)} - ${formatoNomina(finSemanaNomina)}`
+      ? `${t("consultedWeek")} · ${formatoNomina(inicioSemanaNomina)} - ${formatoNomina(finSemanaNomina)}`
       : periodo === "hoy"
-        ? `Hoy · ${formatoNomina(hoyNomina)}`
+        ? `${t("consultedDay")} · ${formatoNomina(hoyNomina)}`
         : periodo === "mes"
-          ? `Mes consultado · ${hoyNomina.toLocaleDateString("en-US", { month: "long", year: "numeric" })}`
+          ? `${t("consultedMonth")} · ${hoyNomina.toLocaleDateString(lang === "en" ? "en-US" : "es-US", { month: "long", year: "numeric" })}`
           : periodo === "ano"
-            ? `Año consultado · ${hoyNomina.getFullYear()}`
-            : "Todo el historial";
+            ? `${t("consultedYear")} · ${hoyNomina.getFullYear()}`
+            : t("allHistory");
 
   return (
     <section className="space-y-3">
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-md shadow-slate-300/50">
         <div className="border-b border-blue-100 bg-gradient-to-br from-blue-50 via-indigo-50 to-white px-4 py-3">
           <p className="text-[10px] font-black uppercase tracking-[0.24em] text-blue-600">
-            Nómina operativa
+            {t("payrollOperational")}
           </p>
 
           <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 className="text-xl font-black text-slate-950">
-                Horas y pago por técnico
+                {t("technicianHoursPay")}
               </h2>
               <p className="mt-2 inline-flex rounded-full bg-blue-700 px-4 py-1.5 text-sm font-black text-white shadow-sm">
                 {periodoNominaLabel}
               </p>
               <p className="mt-0.5 text-xs font-semibold text-blue-900/60">
-                Calculado solo con horas reales de trabajo, no traslado.
+                {t("realWorkOnly")}
               </p>
             </div>
 
             <div className="flex flex-wrap gap-1.5 text-[11px] font-black">
               <span className="rounded-full bg-blue-50 px-2.5 py-1 text-blue-700 ring-1 ring-blue-100">
-                Trabajo {totalHoras.toFixed(2)} h
+                {t("work")} {totalHoras.toFixed(2)} h
               </span>
               <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-indigo-700 ring-1 ring-indigo-100">
-                Traslado {totalTraslado.toFixed(2)} h
+                {t("travel")} {totalTraslado.toFixed(2)} h
               </span>
               <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700 ring-1 ring-emerald-100">
-                Pago ${totalPagado.toFixed(2)}
+                {t("pay")} ${totalPagado.toFixed(2)}
               </span>
             </div>
           </div>
@@ -4382,13 +4414,13 @@ function ReportePagoTecnicos({ tecnicos = [], ordenes = [] }) {
                     {row.tecnico.nombre}
                   </p>
                   <p className="mt-1 text-xs font-bold text-blue-100">
-                    {row.ordenes} órdenes completadas en este período
+                    {row.ordenes} {t("completedOrdersPeriod")}
                   </p>
                 </div>
 
                 <div className="text-right">
                   <p className="text-[10px] font-black uppercase tracking-wide text-blue-100">
-                    Ganado
+                    {t("earned")}
                   </p>
                   <p className="text-lg font-black leading-tight">
                     ${row.totalGanado.toFixed(2)}
@@ -4401,7 +4433,7 @@ function ReportePagoTecnicos({ tecnicos = [], ordenes = [] }) {
               <div className="grid grid-cols-2 gap-2.5 text-xs font-black">
                 <div className="rounded-xl bg-blue-50 p-1.5 text-blue-700">
                   <p className="text-[10px] uppercase tracking-wide text-blue-500">
-                    Trabajo
+                    {t("work")}
                   </p>
                   <p className="mt-0.5 text-sm text-slate-950">
                     {row.horasTrabajo.toFixed(2)} h
@@ -4410,7 +4442,7 @@ function ReportePagoTecnicos({ tecnicos = [], ordenes = [] }) {
 
                 <div className="rounded-xl bg-indigo-50 p-1.5 text-indigo-700">
                   <p className="text-[10px] uppercase tracking-wide text-indigo-500">
-                    Traslado
+                    {t("travel")}
                   </p>
                   <p className="mt-0.5 text-sm text-slate-950">
                     {row.horasTraslado.toFixed(2)} h
@@ -4419,7 +4451,7 @@ function ReportePagoTecnicos({ tecnicos = [], ordenes = [] }) {
 
                 <div className="rounded-xl bg-slate-50 p-1.5 text-slate-700">
                   <p className="text-[10px] uppercase tracking-wide text-slate-500">
-                    Pago por hora
+                    {t("hourlyPayShort")}
                   </p>
                   <p className="mt-0.5 text-sm text-slate-950">
                     ${row.pagoHora.toFixed(2)} / h
@@ -4428,7 +4460,7 @@ function ReportePagoTecnicos({ tecnicos = [], ordenes = [] }) {
 
                 <div className="rounded-xl bg-emerald-50 p-1.5 text-emerald-700">
                   <p className="text-[10px] uppercase tracking-wide text-emerald-600">
-                    Total
+                    {t("totalPay")}
                   </p>
                   <p className="mt-0.5 text-sm text-slate-950">
                     ${row.totalGanado.toFixed(2)}
