@@ -30,6 +30,37 @@ const CATEGORIAS_HVAC = [
 
 const UNIDADES = ["pieza", "unidad", "caja", "rollo", "libra", "galón", "pie", "set"];
 
+function inventoryCategoryLabel(value, t = (key) => key) {
+  const map = {
+    "Unidades de aire acondicionado": t("airConditioningUnits"),
+    "Termostatos": t("thermostats"),
+    "Filtros": t("filters"),
+    "Capacitores": t("capacitors"),
+    "Contactores": t("contactors"),
+    "Motores": t("motors"),
+    "Refrigerante": t("refrigerant"),
+    "Ductos y ventilación": t("ductsAndVentilation"),
+    "Herramientas": t("tools"),
+    "Material eléctrico": t("electricalMaterial"),
+    "Otros": t("others"),
+  };
+  return map[value] || value;
+}
+
+function inventoryUnitLabel(value, t = (key) => key) {
+  const map = {
+    pieza: t("piece"),
+    unidad: t("unitSingle"),
+    caja: t("box"),
+    rollo: t("roll"),
+    libra: t("pound"),
+    galón: t("gallon"),
+    pie: t("foot"),
+    set: t("set"),
+  };
+  return map[value] || value;
+}
+
 function MiniMetric({ icon: Icon, label, value, tone }) {
   return (
     <div className={`flex min-w-[112px] items-center gap-2 rounded-2xl bg-gradient-to-br ${tone} px-3 py-2 text-white shadow-sm`}>
@@ -51,7 +82,7 @@ function ModernField({ label, children }) {
   );
 }
 
-function StockBadge({ bajo }) {
+function StockBadge({ bajo, t = (key) => key }) {
   return (
     <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black ${
       bajo
@@ -59,12 +90,12 @@ function StockBadge({ bajo }) {
         : "border-emerald-200 bg-emerald-50 text-emerald-700"
     }`}>
       {bajo ? <AlertTriangle size={12} /> : <CheckCircle2 size={12} />}
-      {bajo ? "Stock bajo" : "Disponible"}
+      {bajo ? t("lowStock") : t("available")}
     </span>
   );
 }
 
-function InventoryTable({ items, update, remove }) {
+function InventoryTable({ items, update, remove, t = (key) => key }) {
   const [edit, setEdit] = useState(null);
 
   const inputClass = "w-full rounded-xl border border-slate-300 bg-white p-2 text-sm font-semibold text-slate-800 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100";
@@ -75,18 +106,18 @@ function InventoryTable({ items, update, remove }) {
         <div className="min-w-[1050px]">
           <div className="grid grid-cols-[1.2fr_1.1fr_0.7fr_0.7fr_0.7fr_0.8fr_190px] gap-3 bg-slate-950 px-4 py-3 text-[11px] font-black uppercase tracking-wide text-white">
             <span>Material</span>
-            <span>Categoría</span>
-            <span>Cantidad</span>
-            <span>Unidad</span>
-            <span>Costo</span>
-            <span>Estado</span>
-            <span className="text-right">Acciones</span>
+            <span>{t("category")}</span>
+            <span>{t("quantity")}</span>
+            <span>{t("unit")}</span>
+            <span>{t("cost")}</span>
+            <span>{t("status")}</span>
+            <span className="text-right">{t("actions")}</span>
           </div>
 
           <div className="divide-y divide-slate-200">
             {items.length === 0 && (
               <div className="p-8 text-center text-sm font-semibold text-slate-500">
-                No hay materiales registrados.
+                {t("noMaterialsRegistered")}
               </div>
             )}
 
@@ -106,7 +137,7 @@ function InventoryTable({ items, update, remove }) {
                         </div>
                         <div className="min-w-0">
                           <p className="truncate font-black text-slate-950">{i.nombre || "Sin nombre"}</p>
-                          <p className="text-xs text-slate-500">Mínimo: {i.stockMinimo || 0}</p>
+                          <p className="text-xs text-slate-500">{t("minimum")}: {i.stockMinimo || 0}</p>
                         </div>
                       </div>
                     )}
@@ -115,7 +146,7 @@ function InventoryTable({ items, update, remove }) {
                   <div className="flex items-center">
                     {editing ? (
                       <select value={i.categoria || CATEGORIAS_HVAC[0]} onChange={(e) => update(i.id, "categoria", e.target.value)} className={inputClass}>
-                        {CATEGORIAS_HVAC.map((c) => <option key={c}>{c}</option>)}
+                        {CATEGORIAS_HVAC.map((c) => <option key={c} value={c}>{inventoryCategoryLabel(c, t)}</option>)}
                       </select>
                     ) : (
                       <p className="truncate rounded-full bg-slate-100 px-2 py-1 text-xs font-black text-slate-700">{i.categoria || "Sin categoría"}</p>
@@ -132,11 +163,11 @@ function InventoryTable({ items, update, remove }) {
 
                   <div className="flex items-center">
                     {editing ? (
-                      <select value={i.unidad || "pieza"} onChange={(e) => update(i.id, "unidad", e.target.value)} className={inputClass}>
-                        {UNIDADES.map((u) => <option key={u}>{u}</option>)}
+                      <select value={i.unidad ? inventoryUnitLabel(i.unidad, t) : inventoryUnitLabel("pieza", t)} onChange={(e) => update(i.id, "unidad", e.target.value)} className={inputClass}>
+                        {UNIDADES.map((u) => <option key={u} value={u}>{inventoryUnitLabel(u, t)}</option>)}
                       </select>
                     ) : (
-                      <p className="font-bold text-slate-600">{i.unidad || "pieza"}</p>
+                      <p className="font-bold text-slate-600">{i.unidad ? inventoryUnitLabel(i.unidad, t) : inventoryUnitLabel("pieza", t)}</p>
                     )}
                   </div>
 
@@ -149,7 +180,7 @@ function InventoryTable({ items, update, remove }) {
                   </div>
 
                   <div className="flex items-center">
-                    <StockBadge bajo={bajo} />
+                    <StockBadge bajo={bajo} t={t} />
                   </div>
 
                   <div className="flex items-center justify-end gap-2 whitespace-nowrap">
@@ -158,7 +189,7 @@ function InventoryTable({ items, update, remove }) {
                       className="inline-flex min-w-[82px] items-center justify-center gap-1 rounded-xl bg-blue-50 px-3 py-2 text-xs font-black text-blue-700 hover:bg-blue-100"
                     >
                       {editing ? <Save size={13} /> : <Edit3 size={13} />}
-                      {editing ? "Guardar" : "Editar"}
+                      {editing ? t("save") : t("edit")}
                     </button>
 
                     <button
@@ -238,7 +269,7 @@ export default function InventarioGeneralPage({ t, inventario, inventarioForm, s
                 <p className="mt-5 text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">{t("newMaterial")}</p>
                 <h3 className="mt-1 text-2xl font-black leading-tight">{t("addInventory")}</h3>
                 <p className="mt-2 text-sm font-medium leading-relaxed text-slate-300">
-                  Agrega materiales consumibles, controla cantidades y detecta stock bajo.
+                  {t("inventorySideDescription")}
                 </p>
               </aside>
 
@@ -253,7 +284,7 @@ export default function InventarioGeneralPage({ t, inventario, inventarioForm, s
                   <div className="lg:col-span-4">
                     <ModernField label={t("category")}>
                       <select value={inventarioForm.categoria} onChange={(e) => setInventarioForm({ ...inventarioForm, categoria: e.target.value })} className={fieldClass}>
-                        {CATEGORIAS_HVAC.map((c) => <option key={c}>{c}</option>)}
+                        {CATEGORIAS_HVAC.map((c) => <option key={c} value={c}>{inventoryCategoryLabel(c, t)}</option>)}
                       </select>
                     </ModernField>
                   </div>
@@ -267,7 +298,7 @@ export default function InventarioGeneralPage({ t, inventario, inventarioForm, s
                   <div className="lg:col-span-2">
                     <ModernField label={t("unit")}>
                       <select value={inventarioForm.unidad} onChange={(e) => setInventarioForm({ ...inventarioForm, unidad: e.target.value })} className={fieldClass}>
-                        {UNIDADES.map((u) => <option key={u}>{u}</option>)}
+                        {UNIDADES.map((u) => <option key={u} value={u}>{inventoryUnitLabel(u, t)}</option>)}
                       </select>
                     </ModernField>
                   </div>
