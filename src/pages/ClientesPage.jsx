@@ -30,8 +30,8 @@ function formatPhoneDisplay(value) {
   return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
 }
 
-function formatReportDate(value) {
-  if (!value) return "Sin historial";
+function formatReportDate(value, t = (key) => key) {
+  if (!value) return t("noHistory");
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleDateString();
 }
@@ -49,7 +49,7 @@ function ClientStatus({ activeOrders, appointments, t = (key) => key }) {
   if (activeOrders > 0) {
     return (
       <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-2 py-1 text-[10px] font-black text-blue-700">
-        Orden activa
+        {t("activeOrder")}
       </span>
     );
   }
@@ -57,14 +57,14 @@ function ClientStatus({ activeOrders, appointments, t = (key) => key }) {
   if (appointments > 0) {
     return (
       <span className="inline-flex rounded-full border border-cyan-200 bg-cyan-50 px-2 py-1 text-[10px] font-black text-cyan-700">
-        Con cita
+        {t("appointmentsLabel")}
       </span>
     );
   }
 
   return (
     <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-black text-slate-600">
-      Sin orden
+      {t("noOrder")}
     </span>
   );
 }
@@ -402,11 +402,11 @@ export default function ClientesPage({
                 </div>
 
                 <p className="mt-5 text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">
-                  Registro rápido
+                  {t("quickRegistration")}
                 </p>
 
                 <h3 className="mt-1 text-2xl font-black leading-tight">
-                  Crear nuevo cliente
+                  {t("createNewCustomer")}
                 </h3>
 
                 <p className="mt-2 text-sm font-medium leading-relaxed text-slate-300">
@@ -417,24 +417,24 @@ export default function ClientesPage({
                   <div className="flex items-center gap-3 rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
                     <Users size={18} className="text-cyan-300" />
                     <div>
-                      <p className="text-xs font-black">Contacto</p>
-                      <p className="text-[10px] text-slate-300">Nombre, teléfono y email</p>
+                      <p className="text-xs font-black">{t("contact")}</p>
+                      <p className="text-[10px] text-slate-300">{t("contactDescription")}</p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3 rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
                     <MapPinned size={18} className="text-cyan-300" />
                     <div>
-                      <p className="text-xs font-black">Ubicación</p>
-                      <p className="text-[10px] text-slate-300">Dirección del servicio</p>
+                      <p className="text-xs font-black">{t("location")}</p>
+                      <p className="text-[10px] text-slate-300">{t("locationDescription")}</p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3 rounded-2xl bg-white/10 p-3 ring-1 ring-white/10">
                     <KeyRound size={18} className="text-cyan-300" />
                     <div>
-                      <p className="text-xs font-black">Acceso</p>
-                      <p className="text-[10px] text-slate-300">Apt, edificio y código</p>
+                      <p className="text-xs font-black">{t("access")}</p>
+                      <p className="text-[10px] text-slate-300">{t("accessDescription")}</p>
                     </div>
                   </div>
                 </div>
@@ -444,10 +444,10 @@ export default function ClientesPage({
                 <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-700">
-                      Formulario moderno
+                      {t("modernForm")}
                     </p>
                     <h4 className="text-lg font-black text-slate-950">
-                      Datos del cliente
+                      {t("customerData")}
                     </h4>
                   </div>
 
@@ -456,26 +456,26 @@ export default function ClientesPage({
                     className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-slate-950 via-blue-900 to-cyan-700 px-5 py-3 text-sm font-black text-white shadow-lg shadow-slate-300 transition hover:-translate-y-0.5"
                   >
                     <Plus size={16} />
-                    Guardar cliente
+                    {t("saveCustomer")}
                   </button>
                 </div>
 
                 <div className="space-y-4">
-                  <FormSection icon={Users} title="Información principal" subtitle="Datos básicos de contacto" tone="blue">
+                  <FormSection icon={Users} title={t("mainInformation")} subtitle={t("basicContactData")} tone="blue">
                     <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
                       <div className="lg:col-span-5">
                         <ModernInput
-                          label="Nombre del cliente"
+                          label={t("customerName")}
                           icon={Users}
                           value={clienteForm.nombre}
                           onChange={(v) => setClienteForm({ ...clienteForm, nombre: v })}
-                          placeholder="Ej. Luis Martínez"
+                          placeholder={t("customerNamePlaceholder")}
                         />
                       </div>
 
                       <div className="lg:col-span-3">
                         <ModernInput
-                          label="Teléfono"
+                          label={t("phone")}
                           icon={Phone}
                           value={clienteForm.telefono}
                           inputMode="numeric"
@@ -486,14 +486,14 @@ export default function ClientesPage({
 
                       <div className="lg:col-span-4">
                         <label className="block">
-                          <span className="mb-1 block text-xs font-black uppercase tracking-wide text-slate-500">Email</span>
+                          <span className="mb-1 block text-xs font-black uppercase tracking-wide text-slate-500">{t("email")}</span>
                           <div className="relative">
                             <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                             <input
                               type="email"
                               value={clienteForm.email}
                               onChange={(e) => setClienteForm({ ...clienteForm, email: e.target.value })}
-                              placeholder="correo@cliente.com"
+                              placeholder={t("emailPlaceholder")}
                               className={`w-full rounded-2xl border bg-white p-3 pl-10 text-sm outline-none shadow-sm transition focus:ring-4 ${
                                 emailInvalid
                                   ? "border-rose-300 focus:border-rose-500 focus:ring-rose-100"
@@ -522,9 +522,9 @@ export default function ClientesPage({
                     </div>
                   </FormSection>
 
-                  <FormSection icon={MapPinned} title="Ubicación del servicio" subtitle="Dirección donde se realizará el trabajo" tone="cyan">
+                  <FormSection icon={MapPinned} title={t("serviceLocation")} subtitle={t("serviceLocationDescription")} tone="cyan">
                     <label className="block">
-                      <span className="mb-1 block text-xs font-black uppercase tracking-wide text-slate-500">Dirección completa</span>
+                      <span className="mb-1 block text-xs font-black uppercase tracking-wide text-slate-500">{t("fullAddress")}</span>
                       <div className="relative">
                         <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                         <input
@@ -532,7 +532,7 @@ export default function ClientesPage({
                           onFocus={() => setDireccionActiva(true)}
                           onBlur={() => setTimeout(() => setDireccionActiva(false), 180)}
                           onChange={(e) => buscarDireccionesGeoapify(e.target.value)}
-                          placeholder="Empieza a escribir la dirección..."
+                          placeholder={t("addressPlaceholder")}
                           autoComplete="off"
                           className="w-full rounded-2xl border border-slate-300 bg-white p-3 pl-10 text-sm outline-none shadow-sm transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100"
                         />
@@ -571,13 +571,13 @@ export default function ClientesPage({
 
                       {!direccionError && (
                         <p className="mt-2 text-xs font-semibold text-slate-500">
-                          Autocompletado con Geoapify. Escribe mínimo 3 letras y selecciona una dirección.
+                          {t("geoapifyHelp")}
                         </p>
                       )}
                     </label>
                   </FormSection>
 
-                  <FormSection icon={KeyRound} title="Detalles de acceso" subtitle="Información útil para llegar sin retrasos" tone="slate">
+                  <FormSection icon={KeyRound} title={t("accessDetails")} subtitle={t("accessDetailsDescription")} tone="slate">
                     <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
                       <ModernInput
                         label="Apt"
@@ -588,27 +588,27 @@ export default function ClientesPage({
                       />
 
                       <ModernInput
-                        label="Edificio"
+                        label={t("building")}
                         icon={Building2}
                         value={clienteForm.edificio}
                         onChange={(v) => setClienteForm({ ...clienteForm, edificio: v })}
-                        placeholder="Edificio"
+                        placeholder={t("building")}
                       />
 
                       <ModernInput
-                        label="Calle"
+                        label={t("street")}
                         icon={MapPinned}
                         value={clienteForm.calle}
                         onChange={(v) => setClienteForm({ ...clienteForm, calle: v })}
-                        placeholder="Calle"
+                        placeholder={t("street")}
                       />
 
                       <ModernInput
-                        label="Access Code"
+                        label={t("accessCode")}
                         icon={Hash}
                         value={clienteForm.codigoAcceso}
                         onChange={(v) => setClienteForm({ ...clienteForm, codigoAcceso: v })}
-                        placeholder="Código"
+                        placeholder={t("accessCode")}
                       />
                     </div>
                   </FormSection>
@@ -622,10 +622,10 @@ export default function ClientesPage({
       <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-xl shadow-slate-300/60 backdrop-blur">
         <div className="flex flex-col gap-3 border-b border-slate-200 bg-white p-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-700">Tabla compacta</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-blue-700">{t("compactTable")}</p>
             <h3 className="flex items-center gap-2 text-xl font-black text-slate-950">
               <Users size={20} />
-              Clientes registrados
+              {t("registeredCustomers")}
             </h3>
           </div>
 
@@ -635,7 +635,7 @@ export default function ClientesPage({
               <input
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
-                placeholder="Buscar cliente..."
+                placeholder={t("searchCustomerPlaceholder")}
                 className="w-full rounded-xl border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none focus:border-blue-700 focus:ring-4 focus:ring-blue-100"
               />
             </div>
@@ -645,10 +645,10 @@ export default function ClientesPage({
               onChange={(e) => setOrdenVista(e.target.value)}
               className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-bold text-slate-700 outline-none focus:border-blue-700 focus:ring-4 focus:ring-blue-100"
             >
-              <option value="recientes">Más recientes</option>
-              <option value="nombre">Nombre A-Z</option>
-              <option value="fecha">Fecha / último movimiento</option>
-              <option value="tecnico">Técnico</option>
+              <option value="recientes">{t("mostRecent")}</option>
+              <option value="nombre">{t("nameAZ")}</option>
+              <option value="fecha">{t("dateLastMovement")}</option>
+              <option value="tecnico">{t("technician")}</option>
             </select>
           </div>
         </div>
@@ -656,18 +656,18 @@ export default function ClientesPage({
         <div className="overflow-x-auto [-webkit-overflow-scrolling:touch]">
           <div className="min-w-[1240px]">
             <div className="grid grid-cols-[1.15fr_0.8fr_1.25fr_0.7fr_0.75fr_360px] gap-3 bg-slate-950 px-4 py-3 text-[11px] font-black uppercase tracking-wide text-white">
-              <span>Cliente</span>
-              <span>Teléfono</span>
-              <span>Dirección</span>
-              <span>Estado</span>
-              <span>Último</span>
-              <span className="text-right">Acciones</span>
+              <span>{t("customer")}</span>
+              <span>{t("phone")}</span>
+              <span>{t("address")}</span>
+              <span>{t("status")}</span>
+              <span>{t("last")}</span>
+              <span className="text-right">{t("actions")}</span>
             </div>
 
             <div className="divide-y divide-slate-200">
               {visibles.length === 0 && (
                 <div className="p-6 text-center text-sm font-semibold text-slate-500">
-                  No se encontraron clientes.
+                  {t("noCustomersFound")}
                 </div>
               )}
 
@@ -691,7 +691,7 @@ export default function ClientesPage({
                           </div>
                           <div className="min-w-0">
                             <p className="truncate font-black text-slate-950">{c.nombre}</p>
-                            <p className="truncate text-xs text-slate-500">{c.email || "Sin email"}</p>
+                            <p className="truncate text-xs text-slate-500">{c.email || t("noEmail")}</p>
                           </div>
                         </div>
                       )}
@@ -715,10 +715,10 @@ export default function ClientesPage({
                         <>
                           <p className="line-clamp-1 font-semibold text-slate-700">
                             <MapPin size={14} className="mr-1 inline text-blue-700" />
-                            {c.direccion || "Sin dirección"}
+                            {c.direccion || t("noAddress")}
                           </p>
                           <p className="text-xs text-slate-500">
-                            Apt {c.apartamento || "—"} · Edificio {c.edificio || "—"} · Código {c.codigoAcceso || "—"}
+                            {t("apt")} {c.apartamento || "—"} · {t("building")} {c.edificio || "—"} · {t("accessCode")} {c.codigoAcceso || "—"}
                           </p>
                         </>
                       )}
@@ -730,9 +730,9 @@ export default function ClientesPage({
 
                     <div>
                       <p className="font-bold text-slate-700">
-                        {ultimaOrden ? formatReportDate(ultimaOrden.fechaCompletada || ultimaOrden.fechaCreacion || ultimaOrden.fecha) : "Sin historial"}
+                        {ultimaOrden ? formatReportDate(ultimaOrden.fechaCompletada || ultimaOrden.fechaCreacion || ultimaOrden.fecha, t) : t("noHistory")}
                       </p>
-                      <p className="text-xs text-slate-500">Órdenes {hist.length} · Citas {citasC.length}</p>
+                      <p className="text-xs text-slate-500">{t("ordersCountLabel")} {hist.length} · {t("appointmentsCountLabel")} {citasC.length}</p>
                     </div>
 
                     <div className="flex items-center justify-end gap-2 whitespace-nowrap">
@@ -740,27 +740,27 @@ export default function ClientesPage({
                         <>
                           <button onClick={guardarEdicion} className="inline-flex min-w-[78px] items-center justify-center gap-1 rounded-xl bg-emerald-700 px-3 py-2 text-xs font-black text-white">
                             <Save size={13} />
-                            Guardar
+                            {t("save")}
                           </button>
                           <button onClick={() => { setEditandoId(null); setClienteEdit(null); }} className="min-w-[76px] rounded-xl border bg-white px-3 py-2 text-xs font-black text-slate-700">
-                            Cancelar
+                            {t("cancel")}
                           </button>
                         </>
                       ) : (
                         <button onClick={() => iniciarEdicion(c)} className="inline-flex min-w-[78px] items-center justify-center gap-1 rounded-xl bg-blue-50 px-3 py-2 text-xs font-black text-blue-700 hover:bg-blue-100">
                           <Pencil size={13} />
-                          Editar
+                          {t("edit")}
                         </button>
                       )}
 
                       <button onClick={() => abrirCrearOrdenConCliente(c)} className="inline-flex min-w-[78px] items-center justify-center gap-1 rounded-xl bg-slate-950 px-3 py-2 text-xs font-black text-white">
                         <ClipboardList size={13} />
-                        Orden
+                        {t("orderAction")}
                       </button>
 
                       <button onClick={() => abrirProgramarCitaConCliente(c)} className="inline-flex min-w-[68px] items-center justify-center gap-1 rounded-xl bg-cyan-700 px-3 py-2 text-xs font-black text-white">
                         <CalendarDays size={13} />
-                        Cita
+                        {t("appointmentAction")}
                       </button>
 
                       {c.telefono && (
