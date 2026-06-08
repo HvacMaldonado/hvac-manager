@@ -3,7 +3,7 @@ import { crearClienteSupabase, obtenerClientesSupabase } from "./services/client
 import { obtenerTecnicosSupabase, crearTecnicoSupabase, actualizarTecnicoSupabase } from "./services/tecnicosService";
 import { obtenerCitasSupabase, crearCitaSupabase } from "./services/citasService";
 import { obtenerOrdenesSupabase, crearOrdenSupabase, actualizarOrdenSupabase } from "./services/ordenesService";
-import { obtenerHerramientasSupabase, crearHerramientaSupabase, actualizarHerramientaSupabase } from "./services/herramientasService";
+import { obtenerHerramientasSupabase, crearHerramientaSupabase, actualizarHerramientaSupabase, eliminarHerramientaSupabase } from "./services/herramientasService";
 import { obtenerInventarioSupabase, crearInventarioSupabase, actualizarInventarioSupabase, eliminarInventarioSupabase } from "./services/inventarioService";
 import { obtenerMaterialesOrdenesSupabase, crearOrdenMaterialSupabase, actualizarOrdenMaterialSupabase, eliminarOrdenMaterialSupabase } from "./services/ordenMaterialesService";
 import { obtenerFirmasOrdenesSupabase, guardarFirmaOrdenSupabase } from "./services/ordenFirmasService";
@@ -2506,6 +2506,16 @@ const compartirOrden = async (orden, metodo) => {
     }
   };
 
+  const eliminarHerramienta = async (id) => {
+    try {
+      await eliminarHerramientaSupabase(id);
+      setHerramientas(herramientas.filter((h) => String(h.id) !== String(id)));
+    } catch (error) {
+      console.error("Error eliminando herramienta en Supabase:", error);
+      alert(JSON.stringify(error, null, 2));
+    }
+  };
+
   const actualizarHerramienta = async (id, campo, valor) => {
     const finalValue = campo === "cantidad" ? Number(valor) : valor;
 
@@ -2716,7 +2726,7 @@ const compartirOrden = async (orden, metodo) => {
             {adminPage === "ordenes" && <OrdenesPage t={t} ordenes={ordenesActivasAdmin} obtenerCliente={obtenerCliente} ordenProps={ordenProps} crearOrden={crearOrden} ordenForm={ordenForm} setOrdenForm={setOrdenForm} busquedaClienteOrden={busquedaClienteOrden} setBusquedaClienteOrden={setBusquedaClienteOrden} clientesFiltradosOrden={clientesFiltradosOrden} tecnicos={tecnicosActivos} />}
             {adminPage === "historial" && <HistorialPage t={t} lang={lang} ordenes={historialAdmin} obtenerCliente={obtenerCliente} ordenProps={ordenProps} />}
             {adminPage === "inventario" && <InventarioGeneralPage t={t} inventario={inventario} inventarioForm={inventarioForm} setInventarioForm={setInventarioForm} agregarInventario={agregarInventario} actualizarInventario={actualizarInventario} setInventario={setInventario} eliminarInventario={eliminarInventario} />}
-            {adminPage === "herramientas" && <HerramientasPage t={t} herramientas={herramientas} herramientaForm={herramientaForm} setHerramientaForm={setHerramientaForm} agregarHerramienta={agregarHerramienta} actualizarHerramienta={actualizarHerramienta} setHerramientas={setHerramientas} tecnicos={tecnicosActivos} obtenerTecnico={obtenerTecnico} tecnicoHerramientasSeleccionado={tecnicoHerramientasSeleccionado} setTecnicoHerramientasSeleccionado={setTecnicoHerramientasSeleccionado} />}
+            {adminPage === "herramientas" && <HerramientasPage t={t} herramientas={herramientas} herramientaForm={herramientaForm} setHerramientaForm={setHerramientaForm} agregarHerramienta={agregarHerramienta} actualizarHerramienta={actualizarHerramienta} setHerramientas={setHerramientas} tecnicos={tecnicosActivos} obtenerTecnico={obtenerTecnico} tecnicoHerramientasSeleccionado={tecnicoHerramientasSeleccionado} setTecnicoHerramientasSeleccionado={setTecnicoHerramientasSeleccionado} eliminarHerramienta={eliminarHerramienta} />}
             {adminPage === "dashboardReportes" && (
               <DashboardUnificadoPage
                 t={t}

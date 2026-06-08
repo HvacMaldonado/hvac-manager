@@ -18,6 +18,7 @@ export async function obtenerHerramientasSupabase() {
   const { data, error } = await supabase
     .from("herramientas")
     .select("*")
+    .eq("activo", true)
     .order("created_at", { ascending: true });
 
   if (error) throw error;
@@ -62,6 +63,19 @@ export async function actualizarHerramientaSupabase(id, cambios) {
   const { data, error } = await supabase
     .from("herramientas")
     .update(payload)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return mapHerramienta(data);
+}
+
+
+export async function eliminarHerramientaSupabase(id) {
+  const { data, error } = await supabase
+    .from("herramientas")
+    .update({ activo: false })
     .eq("id", id)
     .select()
     .single();

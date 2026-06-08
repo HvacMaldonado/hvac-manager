@@ -77,6 +77,7 @@ export default function HerramientasPage({
   agregarHerramienta,
   actualizarHerramienta,
   setHerramientas,
+  eliminarHerramienta,
   tecnicos,
   obtenerTecnico,
   tecnicoHerramientasSeleccionado,
@@ -358,7 +359,7 @@ export default function HerramientasPage({
                         {t("return")}
                       </button>
 
-                      <button onClick={() => setHerramientas(herramientas.filter((x) => x.id !== h.id))} className="inline-flex min-w-[42px] items-center justify-center rounded-xl bg-red-50 px-3 py-2 text-xs font-black text-red-700 hover:bg-red-100">
+                      <button onClick={() => eliminarHerramienta ? eliminarHerramienta(h.id) : setHerramientas(herramientas.filter((x) => x.id !== h.id))} className="inline-flex min-w-[42px] items-center justify-center rounded-xl bg-red-50 px-3 py-2 text-xs font-black text-red-700 hover:bg-red-100">
                         <Trash2 size={13} />
                       </button>
                     </div>
