@@ -395,6 +395,8 @@ const TEXT = {
     technicianNotes: "Notas del técnico",
     noRegisteredMaterials: "Sin materiales registrados.",
     customerSignature: "Firma del cliente",
+    noPhotosAdded: "No se agregaron imágenes a esta orden.",
+    noCustomerSignatureCaptured: "No se capturó firma del cliente.",
     generatedReportFooter: "Reporte generado desde HVAC Manager · Información interna de costos excluida.",
     reportStatus: "Estado",
     noStatus: "Sin estado",
@@ -882,6 +884,8 @@ const TEXT = {
     technicianNotes: "Technician notes",
     noRegisteredMaterials: "No materials registered.",
     customerSignature: "Customer signature",
+    noPhotosAdded: "No images were added to this order.",
+    noCustomerSignatureCaptured: "No customer signature was captured.",
     generatedReportFooter: "Report generated from HVAC Manager · Internal cost information excluded.",
     reportStatus: "Status",
     noStatus: "No status",
@@ -2203,9 +2207,9 @@ export default function App() {
     const fecha = formatReportDate(orden.fechaCompletada || orden.fechaCreacion || orden.fecha);
 
     const fotos = [
-      ["Antes", orden.fotos?.antes],
-      ["Durante", orden.fotos?.durante],
-      ["Después", orden.fotos?.despues],
+      [t("before"), orden.fotos?.antes],
+      [t("during"), orden.fotos?.durante],
+      [t("after"), orden.fotos?.despues],
     ].filter(([, src]) => src);
 
     const fotoHTML = fotos.length
@@ -2217,15 +2221,15 @@ export default function App() {
           <figcaption>${escapeHtml(label)}</figcaption>
         </figure>
       `).join("")
-      : `<div class="empty">No se agregaron imágenes a esta orden.</div>`;
+      : `${`<div class="empty">${t("noPhotosAdded")}</div>`}`;
 
     const firmaHTML = orden.firmaCliente
       ? `<div class="signature-box">
-          <img src="${orden.firmaCliente}" alt="Firma del cliente" />
-          <p>Firma del cliente</p>
+          <img src="${orden.firmaCliente}" alt="${t("customerSignature")}" />
+          <p>${t("customerSignature")}</p>
           <small>${escapeHtml(formatReportDate(orden.fechaFirmaCliente || ""))}</small>
         </div>`
-      : `<div class="empty">No se capturó firma del cliente.</div>`;
+      : `${`<div class="empty">${t("noCustomerSignatureCaptured")}</div>`}`;
 
     return `<!doctype html>
 <html>
