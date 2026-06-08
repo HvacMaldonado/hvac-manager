@@ -144,11 +144,11 @@ function InsightPanel({ t = (key) => key, completadas, canceladas, total, stockB
           <p className="mt-2 text-3xl font-black">{money(valorInventario)}</p>
           <div className="mt-4 grid grid-cols-2 gap-2">
             <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/15">
-              <p className="text-[10px] font-black uppercase text-white/60">{tx(t, "lowStock", "Stock bajo")}</p>
+              <p className="text-[10px] font-black uppercase text-white/60">{tx(t, "lowStock", "Stock bajo", "Low stock")}</p>
               <p className="text-2xl font-black">{stockBajo}</p>
             </div>
             <div className="rounded-2xl bg-white/10 p-3 ring-1 ring-white/15">
-              <p className="text-[10px] font-black uppercase text-white/60">{tx(t, "toolAlerts", "Herramientas")}</p>
+              <p className="text-[10px] font-black uppercase text-white/60">{tx(t, "toolAlerts", "Herramientas", "Tools")}</p>
               <p className="text-2xl font-black">{herramientasAlerta}</p>
             </div>
           </div>
@@ -159,7 +159,7 @@ function InsightPanel({ t = (key) => key, completadas, canceladas, total, stockB
 }
 
 
-export default function ReportesDashboardPage({ t = (key) => key, clientes, ordenes, inventario, herramientas, tecnicos, obtenerTecnico, exportarCSV }) {
+export default function ReportesDashboardPage({ t = (key) => key, lang = "es", clientes, ordenes, inventario, herramientas, tecnicos, obtenerTecnico, exportarCSV }) {
   const [busqueda, setBusqueda] = useState("");
   const [periodo, setPeriodo] = useState("todos");
 
@@ -318,10 +318,10 @@ export default function ReportesDashboardPage({ t = (key) => key, clientes, orde
         <div className="bg-slate-950 p-3 text-white">
           <div className="flex flex-col gap-2.5 xl:flex-row xl:items-center xl:justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-slate-300">{tx(t, "dashboardExecutive", "Dashboard ejecutivo")}</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-slate-300">{tx(t, "dashboardExecutive", "Dashboard ejecutivo", "Executive dashboard")}</p>
               <h2 className="mt-1 flex items-center gap-2 text-sm font-black">
                 <BarChart3 size={24} />
-                {tx(t, "dashboardReports", "Dashboard reportes")}
+                {tx(t, "dashboardReports", "Dashboard reportes", "Reports dashboard")}
               </h2>
               <p className="mt-1 text-sm text-slate-300">
                 Finanzas internas, historial mensual, consumo de materiales e inventario.
@@ -347,13 +347,13 @@ export default function ReportesDashboardPage({ t = (key) => key, clientes, orde
             <input
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              placeholder={tx(t, "searchDashboardPlaceholder", "Buscar por técnico, estado, prioridad o problema...")}
+              placeholder={tx(t, "searchDashboardPlaceholder", "Buscar por técnico, estado, prioridad o problema...", "Search by technician, status, priority, or issue...")}
               className="w-full rounded-2xl border border-slate-300 bg-white py-3 pl-10 pr-3 text-sm outline-none shadow-sm transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100"
             />
           </div>
 
           <select value={periodo} onChange={(e) => setPeriodo(e.target.value)} className="rounded-2xl border border-slate-300 bg-white px-3 py-3 text-sm font-bold text-slate-700 outline-none shadow-sm focus:border-blue-700 focus:ring-4 focus:ring-blue-100">
-            <option value="todos">{tx(t, "allMonths", "Todos los meses")}</option>
+            <option value="todos">{tx(t, "allMonths", "Todos los meses", "All months")}</option>
             {data.meses.map((m) => <option key={m} value={m}>{formatMonth(m)}</option>)}
           </select>
         </div>
@@ -361,12 +361,12 @@ export default function ReportesDashboardPage({ t = (key) => key, clientes, orde
 
       <div className="space-y-5">
         <div>
-          <p className="mb-3 text-[10px] font-black uppercase tracking-[0.28em] text-slate-500">{tx(t, "mainSummary", "Resumen principal")}</p>
+          <p className="mb-3 text-[10px] font-black uppercase tracking-[0.28em] text-slate-500">{tx(t, "mainSummary", "Resumen principal", "Main summary")}</p>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <Metric icon={ClipboardList} label={tx(t, "orders", "Órdenes")} value={data.ordenesFiltradas.length} hint={tx(t, "filteredTotal", "Total filtrado")} tone="from-slate-950 via-blue-950 to-cyan-800" />
-            <Metric icon={TrendingUp} label={tx(t, "completedJobs", "Completadas")} value={completadas} hint={tx(t, "closedJobs", "Trabajos cerrados")} tone="from-emerald-700 via-teal-700 to-cyan-700" />
-            <Metric icon={Users} label={tx(t, "customers", "Clientes")} value={clientes.length} hint={tx(t, "currentBase", "Base actual")} tone="from-blue-950 via-slate-950 to-indigo-900" />
-            <Metric icon={Package} label={tx(t, "usedMaterials", "Materiales usados")} value={money(materialesUsados)} hint={tx(t, "periodCost", "Costo del periodo")} tone="from-cyan-700 via-blue-800 to-slate-900" />
+            <Metric icon={ClipboardList} label={tx(t, "orders", "Órdenes", "Orders")} value={data.ordenesFiltradas.length} hint={tx(t, "filteredTotal", "Total filtrado", "Filtered total")} tone="from-slate-950 via-blue-950 to-cyan-800" />
+            <Metric icon={TrendingUp} label={tx(t, "completedJobs", "Completadas", "Completed")} value={completadas} hint={tx(t, "closedJobs", "Trabajos cerrados", "Closed jobs")} tone="from-emerald-700 via-teal-700 to-cyan-700" />
+            <Metric icon={Users} label={tx(t, "customers", "Clientes", "Customers")} value={clientes.length} hint={tx(t, "currentBase", "Base actual", "Current base")} tone="from-blue-950 via-slate-950 to-indigo-900" />
+            <Metric icon={Package} label={tx(t, "usedMaterials", "Materiales usados", "Used materials")} value={money(materialesUsados)} hint={tx(t, "periodCost", "Costo del periodo", "Period cost")} tone="from-cyan-700 via-blue-800 to-slate-900" />
           </div>
         </div>
 
@@ -383,19 +383,19 @@ export default function ReportesDashboardPage({ t = (key) => key, clientes, orde
         <div className="rounded-[2rem] border border-slate-200 bg-white/90 p-4 shadow-lg shadow-slate-200/70">
           <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">{tx(t, "cancellationDetails", "Detalle de cancelaciones")}</p>
-              <p className="text-sm font-bold text-slate-500">{tx(t, "internalAdminInfo", "Información interna para administración")}</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">{tx(t, "cancellationDetails", "Detalle de cancelaciones", "Cancellation details")}</p>
+              <p className="text-sm font-bold text-slate-500">{tx(t, "internalAdminInfo", "Información interna para administración", "Internal administration information")}</p>
             </div>
             <span className={`w-fit rounded-full px-3 py-1 text-xs font-black ${canceladas > 0 ? "bg-rose-50 text-rose-700" : "bg-slate-100 text-slate-500"}`}>
-              {canceladas} total
+              {canceladas} {tx(t, "totalLabel", "total")}
             </span>
           </div>
 
           <div className="grid gap-3 md:grid-cols-4">
             <SoftMetric icon={AlertTriangle} label={tx(t, "cancellations", "Cancelaciones")} value={canceladas} alert={canceladas > 0} />
-            <SoftMetric icon={AlertTriangle} label={tx(t, "byCustomer", "Por cliente")} value={canceladasCliente} alert={canceladasCliente > 0} />
-            <SoftMetric icon={AlertTriangle} label={tx(t, "byCompany", "Por empresa")} value={canceladasEmpresa} alert={canceladasEmpresa > 0} />
-            <SoftMetric icon={AlertTriangle} label={tx(t, "byTechnician", "Por técnico")} value={canceladasTecnico} alert={canceladasTecnico > 0} />
+            <SoftMetric icon={AlertTriangle} label={tx(t, "byCustomer", "Por cliente", "By customer")} value={canceladasCliente} alert={canceladasCliente > 0} />
+            <SoftMetric icon={AlertTriangle} label={tx(t, "byCompany", "Por empresa", "By company")} value={canceladasEmpresa} alert={canceladasEmpresa > 0} />
+            <SoftMetric icon={AlertTriangle} label={tx(t, "byTechnician", "Por técnico", "By technician")} value={canceladasTecnico} alert={canceladasTecnico > 0} />
           </div>
         </div>
       </div>
@@ -405,10 +405,10 @@ export default function ReportesDashboardPage({ t = (key) => key, clientes, orde
           <div className="bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-800 p-5 text-white">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-200">{tx(t, "monthlyTrend", "Tendencia mensual")}</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-200">{tx(t, "monthlyTrend", "Tendencia mensual", "Monthly trend")}</p>
                 <h3 className="mt-1 flex items-center gap-2 text-xl font-black">
                   <CalendarDays size={22} />
-                  {tx(t, "operationalHistory", "Historial operativo")}
+                  {tx(t, "operationalHistory", "Historial operativo", "Operational history")}
                 </h3>
               </div>
               <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black ring-1 ring-white/20">
@@ -437,7 +437,7 @@ export default function ReportesDashboardPage({ t = (key) => key, clientes, orde
                   </div>
 
                   <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs font-black">
-                    <div className="rounded-2xl bg-emerald-50 p-2 text-emerald-700">{tx(t, "completedJobs", "Completadas")} {m.completadas}</div>
+                    <div className="rounded-2xl bg-emerald-50 p-2 text-emerald-700">{tx(t, "completedJobs", "Completadas", "Completed")} {m.completadas}</div>
                     <div className="rounded-2xl bg-rose-50 p-2 text-rose-700">{tx(t, "cancellations", "Cancelaciones")} {m.canceladas}</div>
                     <div className="rounded-2xl bg-blue-50 p-2 text-blue-700">{tx(t, "activeOrders", "Activas")} {m.activas}</div>
                   </div>
@@ -451,14 +451,14 @@ export default function ReportesDashboardPage({ t = (key) => key, clientes, orde
           <div className="bg-gradient-to-br from-cyan-700 via-blue-800 to-slate-950 p-5 text-white">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-100">{tx(t, "consumption", "Consumo")}</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-100">{tx(t, "consumption", "Consumo", "Consumption")}</p>
                 <h3 className="mt-1 flex items-center gap-2 text-xl font-black">
                   <Package size={22} />
-                  {tx(t, "usedMaterials", "Materiales usados")}
+                  {tx(t, "usedMaterials", "Materiales usados", "Used materials")}
                 </h3>
               </div>
               <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black ring-1 ring-white/20">
-                {tx(t, "topTen", "Top 10")}
+                {tx(t, "topTen", "Top 10", "Top 10")}
               </span>
             </div>
           </div>
