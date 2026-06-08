@@ -610,19 +610,28 @@ export default function ReportesDashboardPage({ t = (key) => key, lang = "es", c
           <div className="bg-gradient-to-br from-cyan-700 via-blue-800 to-slate-950 p-5 text-white">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-100">{tx(t, "consumption", "Consumo")}</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-100">{tx(t, "inventoryDashboard", "Dashboard inventario")}</p>
                 <h3 className="mt-1 flex items-center gap-2 text-xl font-black">
                   <Package size={22} />
-                  {tx(t, "usedMaterials", "Materiales usados")}
+                  {tx(t, "premiumStageThree", "Dashboard Premium · Etapa 3")}
                 </h3>
+                <p className="mt-1 text-sm font-semibold text-white/70">
+                  {tx(t, "inventoryMaterialSummary", "Materiales más utilizados, stock bajo y valor total de inventario.")}
+                </p>
               </div>
               <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black ring-1 ring-white/20">
-                {tx(t, "topTen", "Top 10")}
+                {tx(t, "topMaterials", "Top materiales")}
               </span>
             </div>
           </div>
 
-          <div className="space-y-3 p-5">
+          <div className="space-y-4 p-5">
+            <div className="grid gap-3 md:grid-cols-3">
+              <SoftMetric icon={Package} label={tx(t, "inventoryValue", "Valor inventario")} value={money(data.valorInventario)} positive />
+              <SoftMetric icon={AlertTriangle} label={tx(t, "lowStock", "Stock bajo")} value={data.stockBajo} alert={data.stockBajo > 0} />
+              <SoftMetric icon={FileSpreadsheet} label={tx(t, "materialCost", "Costo materiales")} value={money(materialesUsados)} />
+            </div>
+
             {data.consumoMateriales.length === 0 && (
               <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm font-semibold text-slate-500">
                 {tx(t, "noMaterialsFiltered", "No hay materiales consumidos en las órdenes filtradas.")}
