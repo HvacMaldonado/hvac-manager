@@ -38,60 +38,6 @@ function money(value) {
   return `$${Number(value || 0).toFixed(2)}`;
 }
 
-function isWithinPremiumPeriod(value, periodo) {
-  if (periodo === "todos") return true;
-  if (!value) return false;
-
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return false;
-
-  const now = new Date();
-  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-
-  if (periodo === "hoy") return startDate.getTime() === startToday.getTime();
-
-  if (periodo === "semana") {
-    const day = startToday.getDay();
-    const diff = day === 0 ? 6 : day - 1;
-    const startWeek = new Date(startToday);
-    startWeek.setDate(startToday.getDate() - diff);
-    const endWeek = new Date(startWeek);
-    endWeek.setDate(startWeek.getDate() + 7);
-    return startDate >= startWeek && startDate < endWeek;
-  }
-
-  if (periodo === "mes") {
-    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
-  }
-
-  if (periodo === "anio") {
-    return d.getFullYear() === now.getFullYear();
-  }
-
-  return true;
-}
-
-function isToday(value) {
-  if (!value) return false;
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return false;
-  const now = new Date();
-  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
-}
-
-function premiumPeriodLabel(t, periodo) {
-  const labels = {
-    hoy: tx(t, "today", "Hoy"),
-    semana: tx(t, "week", "Semana"),
-    mes: tx(t, "month", "Mes"),
-    anio: tx(t, "year", "Año"),
-    todos: tx(t, "all", "Todo"),
-  };
-
-  return labels[periodo] || labels.todos;
-}
-
 function SoftMetric({ icon: Icon, label, value, alert = false, positive = false }) {
   const boxClass = alert
     ? "border-rose-200 bg-rose-50 text-rose-800"
@@ -208,13 +154,12 @@ function InsightPanel({ t = (key) => key, completadas, canceladas, total, stockB
           </div>
         </div>
       </div>
-
     </section>
   );
 }
 
 
-export default function ReportesDashboardPage({ t = (key) => key, lang = "es", citas = [], clientes, ordenes, inventario, herramientas, tecnicos, obtenerTecnico, exportarCSV }) {
+export default function ReportesDashboardPage({ t = (key) => key, lang = "es", clientes, ordenes, inventario, herramientas, tecnicos, obtenerTecnico, exportarCSV }) {
   const [busqueda, setBusqueda] = useState("");
   const [periodo, setPeriodo] = useState("todos");
 
@@ -223,8 +168,8 @@ export default function ReportesDashboardPage({ t = (key) => key, lang = "es", c
 
     const ordenesFiltradas = ordenes.filter((o) => {
       const tecnico = obtenerTecnico(o.tecnicoId);
-      const fechaOrden = o.fechaCompletada || o.fechaCreacion || o.fecha || o.created_at;
-      const matchPeriodo = isWithinPremiumPeriod(fechaOrden, periodo);
+      const key = monthKey(o.fechaCompletada || o.fechaCreacion || o.fecha);
+      const matchPeriodo = periodo === "todos" || key === periodo;
       const matchTexto = !q || [o.problema, o.estado, o.prioridad, tecnico?.nombre]
         .some((v) => String(v || "").toLowerCase().includes(q));
 
@@ -274,7 +219,7 @@ export default function ReportesDashboardPage({ t = (key) => key, lang = "es", c
       }, 0);
 
       const pagoPorHora = Number(tec.pagoPorHora || 0);
-      const pagoTotal = horasTrabajo * pagoPorHora;
+      const pagoTotal = (horasTrabajo + horasTraslado) * pagoPorHora;
 
       return {
         id: tec.id,
@@ -314,22 +259,6 @@ export default function ReportesDashboardPage({ t = (key) => key, lang = "es", c
 
     const consumoMateriales = Object.values(materiales).sort((a, b) => b.costo - a.costo);
 
-    const clienteStats = clientes.map((cliente) => {
-      const rows = ordenesFiltradas.filter((o) => String(o.clienteId) === String(cliente.id));
-      const completadasCliente = rows.filter((o) => o.estado === "Completado").length;
-
-      return {
-        id: cliente.id,
-        cliente: cliente.nombre || cliente.name || tx(t, "unnamedCustomer", "Cliente sin nombre"),
-        total: rows.length,
-        completadas: completadasCliente,
-      };
-    }).filter((c) => c.total > 0).sort((a, b) => b.total - a.total);
-
-    const clientesRecurrentes = clienteStats.filter((c) => c.total > 1).length;
-    const tecnicosMasActivos = [...tecnicoStats].sort((a, b) => b.total - a.total);
-    const tecnicosMasCompletadas = [...tecnicoStats].sort((a, b) => b.completadas - a.completadas);
-
     const valorInventario = inventario.reduce((sum, item) => sum + Number(item.cantidad || 0) * Number(item.costo || 0), 0);
     const stockBajo = inventario.filter((item) => Number(item.cantidad || 0) <= Number(item.stockMinimo || 0)).length;
     const herramientasAlerta = herramientas.filter((h) => ["Dañada", "Perdida"].includes(h.estado)).length;
@@ -341,35 +270,19 @@ export default function ReportesDashboardPage({ t = (key) => key, lang = "es", c
       tecnicoStats,
       resumenNomina,
       consumoMateriales,
-      clienteStats,
-      clientesRecurrentes,
-      tecnicosMasActivos,
-      tecnicosMasCompletadas,
       valorInventario,
       stockBajo,
       herramientasAlerta,
     };
-  }, [ordenes, inventario, herramientas, tecnicos, clientes, obtenerTecnico, busqueda, periodo]);
+  }, [ordenes, inventario, herramientas, tecnicos, obtenerTecnico, busqueda, periodo]);
 
   const completadas = data.ordenesFiltradas.filter((o) => o.estado === "Completado").length;
   const canceladas = data.ordenesFiltradas.filter((o) => o.estado === "Cancelada").length;
-  const seguimiento = data.ordenesFiltradas.filter((o) => o.estado === "Necesita seguimiento").length;
   const canceladasCliente = data.ordenesFiltradas.filter((o) => o.cancelTipo === "Cancelada por cliente").length;
   const canceladasEmpresa = data.ordenesFiltradas.filter((o) => o.cancelTipo === "Cancelada por empresa").length;
   const canceladasTecnico = data.ordenesFiltradas.filter((o) => o.cancelTipo === "Cancelada por técnico").length;
   const activas = data.ordenesFiltradas.length - completadas - canceladas;
-  const totalOperativo = Math.max(data.ordenesFiltradas.length, 1);
-  const porcentajeActivas = Math.round((activas / totalOperativo) * 100);
-  const porcentajeCompletadas = Math.round((completadas / totalOperativo) * 100);
-  const porcentajeCanceladas = Math.round((canceladas / totalOperativo) * 100);
-  const porcentajeSeguimiento = Math.round((seguimiento / totalOperativo) * 100);
   const materialesUsados = data.consumoMateriales.reduce((sum, m) => sum + Number(m.costo || 0), 0);
-  const costoInternoEstimado = materialesUsados + Number(data.resumenNomina.totalNomina || 0);
-  const ingresoReal = data.ordenesFiltradas.reduce((sum, orden) => sum + Number(orden.precioCobrado || 0), 0);
-  const gananciaReal = ingresoReal - costoInternoEstimado;
-  const ordenesUrgentes = data.ordenesFiltradas.filter((o) => ["Urgente", "Alta"].includes(o.prioridad) && !["Completado", "Cancelada"].includes(o.estado)).length;
-  const citasHoy = citas.filter((c) => isToday(c.fecha || c.fechaCita || c.created_at)).length;
-  const stockCritico = inventario.filter((item) => Number(item.cantidad || 0) <= Number(item.stockMinimo || 0)).length;
 
   const exportDashboard = () => {
     const rows = [
@@ -440,20 +353,10 @@ export default function ReportesDashboardPage({ t = (key) => key, lang = "es", c
           </div>
 
           <select value={periodo} onChange={(e) => setPeriodo(e.target.value)} className="rounded-2xl border border-slate-300 bg-white px-3 py-3 text-sm font-bold text-slate-700 outline-none shadow-sm focus:border-blue-700 focus:ring-4 focus:ring-blue-100">
-            <option value="hoy">{tx(t, "today", "Hoy")}</option>
-            <option value="semana">{tx(t, "week", "Semana")}</option>
-            <option value="mes">{tx(t, "month", "Mes")}</option>
-            <option value="anio">{tx(t, "year", "Año")}</option>
-            <option value="todos">{tx(t, "all", "Todo")}</option>
+            <option value="todos">{tx(t, "allMonths", "Todos los meses")}</option>
+            {data.meses.map((m) => <option key={m} value={m}>{formatMonth(m)}</option>)}
           </select>
         </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Metric icon={AlertTriangle} label={tx(t, "urgentOrders", "Órdenes urgentes")} value={ordenesUrgentes} hint={tx(t, "needsAttention", "Requieren atención")} tone="from-rose-800 via-red-700 to-orange-700" />
-        <Metric icon={CalendarDays} label={tx(t, "appointmentsToday", "Citas hoy")} value={citasHoy} hint={tx(t, "todaySchedule", "Agenda del día")} tone="from-blue-950 via-blue-800 to-cyan-700" />
-        <Metric icon={Package} label={tx(t, "criticalStock", "Stock crítico")} value={stockCritico} hint={tx(t, "reviewInventory", "Revisar inventario")} tone="from-amber-700 via-orange-700 to-slate-900" />
-        <Metric icon={TrendingUp} label={tx(t, "periodPayroll", "Nómina periodo")} value={money(data.resumenNomina.totalNomina)} hint={premiumPeriodLabel(t, periodo)} tone="from-emerald-700 via-teal-700 to-cyan-700" />
       </div>
 
       <div className="space-y-5">
@@ -478,127 +381,24 @@ export default function ReportesDashboardPage({ t = (key) => key, lang = "es", c
           money={money}
         />
 
-
-        <section className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/95 shadow-xl shadow-slate-300/50 backdrop-blur">
-          <div className="bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-800 p-5 text-white">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-200">
-                  {tx(t, "technicianPayroll", "Horas y pago por técnico")}
-                </p>
-                <h3 className="mt-1 flex items-center gap-2 text-xl font-black">
-                  <UserCog size={22} />
-                  {tx(t, "premiumStageOne", "Dashboard Premium · Etapa 1")}
-                </h3>
-                <p className="mt-1 text-sm font-semibold text-white/70">
-                  {tx(t, "paidHoursOnly", "Calculado solo con horas reales de trabajo, no traslado.")}
-                </p>
-              </div>
-
-              <span className="w-fit rounded-full bg-white/10 px-4 py-2 text-xs font-black ring-1 ring-white/20">
-                {tx(t, "period", "Periodo")}: {premiumPeriodLabel(t, periodo)}
-              </span>
+        <div className="rounded-[2rem] border border-slate-200 bg-white/90 p-4 shadow-lg shadow-slate-200/70">
+          <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">{tx(t, "cancellationDetails", "Detalle de cancelaciones")}</p>
+              <p className="text-sm font-bold text-slate-500">{tx(t, "internalAdminInfo", "Información interna para administración")}</p>
             </div>
+            <span className={`w-fit rounded-full px-3 py-1 text-xs font-black ${canceladas > 0 ? "bg-rose-50 text-rose-700" : "bg-slate-100 text-slate-500"}`}>
+              {canceladas} {tx(t, "totalLabel", "total")}
+            </span>
           </div>
 
-          <div className="space-y-4 p-5">
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              <SoftMetric icon={CalendarDays} label={tx(t, "workedHours", "Horas trabajadas")} value={Number(data.resumenNomina.totalHorasTrabajo || 0).toFixed(2)} positive />
-              <SoftMetric icon={TrendingUp} label={tx(t, "totalPayroll", "Pago total")} value={money(data.resumenNomina.totalNomina)} positive />
-              <SoftMetric icon={UserCog} label={tx(t, "mostHours", "Más horas")} value={data.resumenNomina.tecnicoMasHoras?.tecnico || "-"} />
-              <SoftMetric icon={ClipboardList} label={tx(t, "highestPay", "Mayor pago")} value={data.resumenNomina.tecnicoMayorPago?.tecnico || "-"} />
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {data.tecnicoStats.map((tec) => (
-                <div key={tec.id} className="rounded-[1.75rem] border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 shadow-lg shadow-slate-200/70">
-                  <div className="mb-4 flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-lg font-black text-slate-950">{tec.tecnico}</p>
-                      <p className="text-xs font-bold text-slate-500">{money(tec.pagoPorHora)} / hr</p>
-                    </div>
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
-                      <UserCog size={20} />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="rounded-2xl bg-slate-100 p-3">
-                      <p className="text-[10px] font-black uppercase tracking-wide text-slate-500">{tx(t, "hours", "Horas")}</p>
-                      <p className="mt-1 text-2xl font-black text-slate-950">{Number(tec.horasTrabajo || 0).toFixed(2)}</p>
-                    </div>
-                    <div className="rounded-2xl bg-emerald-50 p-3">
-                      <p className="text-[10px] font-black uppercase tracking-wide text-emerald-700">{tx(t, "pay", "Pago")}</p>
-                      <p className="mt-1 text-2xl font-black text-emerald-700">{money(tec.pagoTotal)}</p>
-                    </div>
-                  </div>
-
-                  <p className="mt-3 text-xs font-semibold text-slate-500">
-                    {tx(t, "travelNotPaid", "Traslado no pagado")}: {Number(tec.horasTraslado || 0).toFixed(2)} h
-                  </p>
-                </div>
-              ))}
-            </div>
+          <div className="grid gap-3 md:grid-cols-4">
+            <SoftMetric icon={AlertTriangle} label={tx(t, "cancellations", "Cancelaciones")} value={canceladas} alert={canceladas > 0} />
+            <SoftMetric icon={AlertTriangle} label={tx(t, "byCustomer", "Por cliente")} value={canceladasCliente} alert={canceladasCliente > 0} />
+            <SoftMetric icon={AlertTriangle} label={tx(t, "byCompany", "Por empresa")} value={canceladasEmpresa} alert={canceladasEmpresa > 0} />
+            <SoftMetric icon={AlertTriangle} label={tx(t, "byTechnician", "Por técnico")} value={canceladasTecnico} alert={canceladasTecnico > 0} />
           </div>
-        </section>
-
-        <section className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/95 shadow-xl shadow-slate-300/50 backdrop-blur">
-          <div className="bg-gradient-to-br from-blue-950 via-slate-950 to-indigo-900 p-5 text-white">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-blue-200">
-                  {tx(t, "operationalDashboard", "Dashboard operativo")}
-                </p>
-                <h3 className="mt-1 flex items-center gap-2 text-xl font-black">
-                  <ClipboardList size={22} />
-                  {tx(t, "premiumStageTwo", "Dashboard Premium · Etapa 2")}
-                </h3>
-                <p className="mt-1 text-sm font-semibold text-white/70">
-                  {tx(t, "ordersByStatus", "Resumen de órdenes por estado operativo.")}
-                </p>
-              </div>
-
-              <span className="w-fit rounded-full bg-white/10 px-4 py-2 text-xs font-black ring-1 ring-white/20">
-                {data.ordenesFiltradas.length} {tx(t, "ordersLabel", "órdenes")}
-              </span>
-            </div>
-          </div>
-
-          <div className="space-y-4 p-5">
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              <Metric icon={ClipboardList} label={tx(t, "activeOrders", "Órdenes activas")} value={activas} hint={`${porcentajeActivas}% ${tx(t, "ofTotal", "del total")}`} tone="from-blue-950 via-blue-800 to-cyan-700" />
-              <Metric icon={TrendingUp} label={tx(t, "completedJobs", "Completadas")} value={completadas} hint={`${porcentajeCompletadas}% ${tx(t, "ofTotal", "del total")}`} tone="from-emerald-700 via-teal-700 to-cyan-700" />
-              <Metric icon={AlertTriangle} label={tx(t, "cancellations", "Canceladas")} value={canceladas} hint={`${porcentajeCanceladas}% ${tx(t, "ofTotal", "del total")}`} tone="from-rose-800 via-red-700 to-orange-700" />
-              <Metric icon={Wrench} label={tx(t, "needsFollowUp", "Necesita seguimiento")} value={seguimiento} hint={`${porcentajeSeguimiento}% ${tx(t, "ofTotal", "del total")}`} tone="from-amber-700 via-orange-700 to-slate-900" />
-            </div>
-
-            <div className="grid gap-3 md:grid-cols-4">
-              <SoftMetric icon={ClipboardList} label={tx(t, "activePercent", "Activas")} value={`${porcentajeActivas}%`} />
-              <SoftMetric icon={TrendingUp} label={tx(t, "completedPercent", "Completadas")} value={`${porcentajeCompletadas}%`} positive />
-              <SoftMetric icon={AlertTriangle} label={tx(t, "canceledPercent", "Canceladas")} value={`${porcentajeCanceladas}%`} alert={canceladas > 0} />
-              <SoftMetric icon={Wrench} label={tx(t, "followUpPercent", "Seguimiento")} value={`${porcentajeSeguimiento}%`} alert={seguimiento > 0} />
-            </div>
-
-            <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
-              <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">{tx(t, "cancellationDetails", "Detalle de cancelaciones")}</p>
-                  <p className="text-sm font-bold text-slate-500">{tx(t, "internalAdminInfo", "Información interna para administración")}</p>
-                </div>
-                <span className={`w-fit rounded-full px-3 py-1 text-xs font-black ${canceladas > 0 ? "bg-rose-100 text-rose-700" : "bg-white text-slate-500"}`}>
-                  {canceladas} {tx(t, "totalLabel", "total")}
-                </span>
-              </div>
-
-              <div className="grid gap-3 md:grid-cols-3">
-                <SoftMetric icon={AlertTriangle} label={tx(t, "byCustomer", "Por cliente")} value={canceladasCliente} alert={canceladasCliente > 0} />
-                <SoftMetric icon={AlertTriangle} label={tx(t, "byCompany", "Por empresa")} value={canceladasEmpresa} alert={canceladasEmpresa > 0} />
-                <SoftMetric icon={AlertTriangle} label={tx(t, "byTechnician", "Por técnico")} value={canceladasTecnico} alert={canceladasTecnico > 0} />
-              </div>
-            </div>
-          </div>
-        </section>
-
+        </div>
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
@@ -652,28 +452,19 @@ export default function ReportesDashboardPage({ t = (key) => key, lang = "es", c
           <div className="bg-gradient-to-br from-cyan-700 via-blue-800 to-slate-950 p-5 text-white">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-100">{tx(t, "inventoryDashboard", "Dashboard inventario")}</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-100">{tx(t, "consumption", "Consumo")}</p>
                 <h3 className="mt-1 flex items-center gap-2 text-xl font-black">
                   <Package size={22} />
-                  {tx(t, "premiumStageThree", "Dashboard Premium · Etapa 3")}
+                  {tx(t, "usedMaterials", "Materiales usados")}
                 </h3>
-                <p className="mt-1 text-sm font-semibold text-white/70">
-                  {tx(t, "inventoryMaterialSummary", "Materiales más utilizados, stock bajo y valor total de inventario.")}
-                </p>
               </div>
               <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-black ring-1 ring-white/20">
-                {tx(t, "topMaterials", "Top materiales")}
+                {tx(t, "topTen", "Top 10")}
               </span>
             </div>
           </div>
 
-          <div className="space-y-4 p-5">
-            <div className="grid gap-3 md:grid-cols-3">
-              <SoftMetric icon={Package} label={tx(t, "inventoryValue", "Valor inventario")} value={money(data.valorInventario)} positive />
-              <SoftMetric icon={AlertTriangle} label={tx(t, "lowStock", "Stock bajo")} value={data.stockBajo} alert={data.stockBajo > 0} />
-              <SoftMetric icon={FileSpreadsheet} label={tx(t, "materialCost", "Costo materiales")} value={money(materialesUsados)} />
-            </div>
-
+          <div className="space-y-3 p-5">
             {data.consumoMateriales.length === 0 && (
               <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm font-semibold text-slate-500">
                 {tx(t, "noMaterialsFiltered", "No hay materiales consumidos en las órdenes filtradas.")}
@@ -707,94 +498,6 @@ export default function ReportesDashboardPage({ t = (key) => key, lang = "es", c
           </div>
         </section>
       </div>
-
-      <section className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/95 shadow-xl shadow-slate-300/50 backdrop-blur">
-        <div className="bg-gradient-to-br from-slate-950 via-indigo-950 to-blue-900 p-5 text-white">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-indigo-200">
-                {tx(t, "profitabilityDashboard", "Clientes, técnicos y costos")}
-              </p>
-              <h3 className="mt-1 flex items-center gap-2 text-xl font-black">
-                <TrendingUp size={22} />
-                {tx(t, "premiumStageFour", "Dashboard Premium · Etapa 4")}
-              </h3>
-              <p className="mt-1 text-sm font-semibold text-white/70">
-                {tx(t, "realProfitabilityNote", "Rentabilidad real calculada con precio cobrado, materiales y nómina del periodo.")}
-              </p>
-            </div>
-
-            <span className="w-fit rounded-full bg-white/10 px-4 py-2 text-xs font-black ring-1 ring-white/20">
-              {tx(t, "period", "Periodo")}: {premiumPeriodLabel(t, periodo)}
-            </span>
-          </div>
-        </div>
-
-        <div className="space-y-4 p-5">
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <SoftMetric icon={Users} label={tx(t, "recurringCustomers", "Clientes recurrentes")} value={data.clientesRecurrentes} positive />
-            <SoftMetric icon={UserCog} label={tx(t, "mostActiveTechnician", "Técnico más activo")} value={data.tecnicosMasActivos[0]?.tecnico || "-"} />
-            <SoftMetric icon={Package} label={tx(t, "income", "Ingresos")} value={money(ingresoReal)} positive />
-            <SoftMetric icon={FileSpreadsheet} label={tx(t, "realProfit", "Ganancia real")} value={money(gananciaReal)} alert={gananciaReal < 0} positive={gananciaReal >= 0} />
-          </div>
-
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-[1.75rem] border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 shadow-lg shadow-slate-200/70">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">{tx(t, "topCustomers", "Top clientes")}</p>
-                  <h4 className="text-lg font-black text-slate-950">{tx(t, "recurringCustomers", "Clientes recurrentes")}</h4>
-                </div>
-                <Users size={22} className="text-blue-700" />
-              </div>
-
-              <div className="space-y-3">
-                {data.clienteStats.slice(0, 5).map((cliente, index) => (
-                  <div key={cliente.id} className="rounded-2xl border border-slate-200 bg-white p-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-black text-slate-950">{index + 1}. {cliente.cliente}</p>
-                        <p className="text-xs font-semibold text-slate-500">{cliente.completadas} {tx(t, "completedJobs", "completadas")}</p>
-                      </div>
-                      <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">{cliente.total}</span>
-                    </div>
-                  </div>
-                ))}
-
-                {data.clienteStats.length === 0 && (
-                  <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-center text-sm font-semibold text-slate-500">
-                    {tx(t, "noCustomersInPeriod", "No hay clientes con órdenes en este periodo.")}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="rounded-[1.75rem] border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 shadow-lg shadow-slate-200/70">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">{tx(t, "topTechnicians", "Top técnicos")}</p>
-                  <h4 className="text-lg font-black text-slate-950">{tx(t, "technicianActivity", "Actividad técnica")}</h4>
-                </div>
-                <UserCog size={22} className="text-blue-700" />
-              </div>
-
-              <div className="space-y-3">
-                {data.tecnicosMasActivos.slice(0, 5).map((tec, index) => (
-                  <div key={tec.id} className="rounded-2xl border border-slate-200 bg-white p-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-black text-slate-950">{index + 1}. {tec.tecnico}</p>
-                        <p className="text-xs font-semibold text-slate-500">{tec.completadas} {tx(t, "completedJobs", "completadas")} · {tec.canceladas} {tx(t, "cancellations", "canceladas")}</p>
-                      </div>
-                      <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">{tec.total}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
     </section>
   );
 }

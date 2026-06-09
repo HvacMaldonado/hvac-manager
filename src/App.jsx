@@ -141,6 +141,8 @@ const TEXT = {
     techPanel: "Panel del Técnico",
     logout: "Cerrar sesión",
     changePassword: "Cambiar contraseña",
+    chargedPrice: "Precio cobrado",
+    chargedPriceDescription: "Monto cobrado al cliente para calcular rentabilidad.",
     customers: "Clientes",
     technicians: "Técnicos",
     appointments: "Citas",
@@ -629,6 +631,8 @@ const TEXT = {
     techPanel: "Technician Panel",
     logout: "Log out",
     changePassword: "Change password",
+    chargedPrice: "Charged price",
+    chargedPriceDescription: "Amount charged to the customer to calculate profitability.",
     customers: "Customers",
     technicians: "Technicians",
     appointments: "Appointments",
@@ -2649,8 +2653,30 @@ const compartirOrden = async (orden, metodo) => {
         <div className="w-full px-3 2xl:px-8 py-2.5 2xl:py-4 flex flex-col 2xl:flex-row 2xl:items-center justify-center 2xl:justify-between gap-2.5 2xl:gap-4">
           <div><p className="text-[10px] 2xl:text-xs uppercase tracking-[0.24em] 2xl:tracking-[0.3em] text-slate-300 font-black">{t("app")}</p><h1 className="text-lg 2xl:text-lg font-black tracking-tight text-white">{session.role === "admin" ? t("adminPanel") : `${t("techPanel")}: ${session.nombre}`}</h1></div>
           <div className="flex flex-col sm:flex-row sm:items-center justify-center gap-2 2xl:gap-3 xl:ml-auto">
-            <button onClick={() => setLang(lang === "es" ? "en" : "es")} className="flex items-center justify-center justify-center gap-1.5 2xl:gap-2 rounded-xl 2xl:rounded-2xl min-w-[140px] 2xl:min-w-[170px] bg-white px-3 2xl:px-5 py-2 2xl:py-3 text-xs 2xl:text-base text-slate-700 font-black border shadow-sm"><Languages {...iconProps} />{t("translate")}</button>
-            {session.role === "admin" && <button onClick={() => setAdminPage("configuracion")} className="flex items-center justify-center justify-center gap-1.5 2xl:gap-2 rounded-xl 2xl:rounded-2xl min-w-[150px] 2xl:min-w-[190px] bg-slate-950 px-3 2xl:px-5 py-2 2xl:py-3 text-xs 2xl:text-base text-white font-black shadow-lg shadow-slate-300/40 transition hover:-translate-y-0.5"><ShieldCheck {...iconProps} />{t("changePassword")}</button>}
+            <button
+              title={t("translate")}
+              onClick={() => setLang(lang === "es" ? "en" : "es")}
+              className={`h-12 w-12 flex items-center justify-center rounded-2xl border transition-all duration-200 ${
+                lang === "en"
+                  ? "bg-cyan-500 text-white border-cyan-400 shadow-lg shadow-cyan-500/40"
+                  : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              <Languages size={22} />
+            </button>
+            {session.role === "admin" && (
+              <button
+                title={t("changePassword")}
+                onClick={() => setAdminPage("configuracion")}
+                className={`h-12 w-12 flex items-center justify-center rounded-2xl border transition-all duration-200 ${
+                  adminPage === "configuracion"
+                    ? "bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/40"
+                    : "bg-slate-950 text-white border-slate-800 hover:bg-slate-800"
+                }`}
+              >
+                <ShieldCheck size={22} />
+              </button>
+            )}
             <TopInfo now={now} />
             <button onClick={cerrarSesion} className="flex items-center justify-center justify-center gap-1.5 2xl:gap-2 rounded-xl 2xl:rounded-2xl min-w-[150px] 2xl:min-w-[190px] bg-slate-950 px-3 2xl:px-5 py-2 2xl:py-3 text-xs 2xl:text-base text-white font-black shadow-lg shadow-slate-300/40 transition hover:-translate-y-0.5"><LogOut {...iconProps} />{t("logout")}</button>
           </div>
