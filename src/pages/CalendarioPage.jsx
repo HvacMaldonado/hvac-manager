@@ -434,7 +434,16 @@ export default function CalendarioPage({
             const totalTecnico = citasTecnico + ordenesTecnico;
 
             return (
-              <div key={tec.id} className={`group relative min-h-[118px] overflow-hidden rounded-[1.75rem] border p-4 shadow-lg shadow-slate-200/70 ring-1 ring-white/80 transition duration-300 hover:-translate-y-1 hover:shadow-2xl ${theme.event}`}>
+              <button
+                key={tec.id}
+                type="button"
+                onClick={() => setTecnicoFiltro(String(tecnicoFiltro) === String(tec.id) ? "todos" : String(tec.id))}
+                className={`group relative min-h-[92px] w-full overflow-hidden rounded-[1.5rem] border p-3 text-left shadow-md shadow-slate-200/60 ring-1 transition duration-300 hover:-translate-y-1 hover:shadow-xl ${
+                  String(tecnicoFiltro) === String(tec.id)
+                    ? "border-blue-400 ring-4 ring-blue-300"
+                    : "ring-white/80"
+                } ${theme.event}`}
+              >
                 <div className={`absolute left-0 top-0 h-full w-2 ${theme.dot}`} />
                 <div className="absolute -right-10 -top-12 h-32 w-32 rounded-full bg-white/50 blur-3xl transition group-hover:bg-white/70" />
 
@@ -465,7 +474,7 @@ export default function CalendarioPage({
                     </div>
                   </div>
                 </div>
-              </div>
+              </button>
             );
           })}
 

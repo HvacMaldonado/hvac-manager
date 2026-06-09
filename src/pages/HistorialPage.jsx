@@ -95,6 +95,7 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
   const [detalleOrden, setDetalleOrden] = useState(null);
   const [estadoFiltro, setEstadoFiltro] = useState("todos");
   const [ordenFecha, setOrdenFecha] = useState("recientes");
+  const [vistaHistorial, setVistaHistorial] = useState("compacta");
 
   const {
     obtenerTecnico,
@@ -229,9 +230,32 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
               <p className="text-[11px] font-black uppercase tracking-[0.25em] text-slate-300">{t("orderRecords")}</p>
               <h3 className="text-lg font-black">{t("completedAndCancelled")}</h3>
             </div>
-            <span className="w-fit rounded-full bg-white/10 px-3 py-1 text-xs font-black ring-1 ring-white/20">
-              {historialFiltrado.length} {t("records")}
-            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex rounded-2xl bg-white/10 p-1 ring-1 ring-white/20">
+                <button
+                  type="button"
+                  onClick={() => setVistaHistorial("compacta")}
+                  className={`rounded-xl px-3 py-1.5 text-xs font-black transition ${
+                    vistaHistorial === "compacta" ? "bg-cyan-300 text-slate-950" : "text-white/80 hover:bg-white/10"
+                  }`}
+                >
+                  {t("compact") || "Compacta"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setVistaHistorial("detallada")}
+                  className={`rounded-xl px-3 py-1.5 text-xs font-black transition ${
+                    vistaHistorial === "detallada" ? "bg-cyan-300 text-slate-950" : "text-white/80 hover:bg-white/10"
+                  }`}
+                >
+                  {t("detailed") || "Detallada"}
+                </button>
+              </div>
+
+              <span className="w-fit rounded-full bg-white/10 px-3 py-1 text-xs font-black ring-1 ring-white/20">
+                {historialFiltrado.length} {t("records")}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -242,7 +266,64 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
             </div>
           )}
 
-          {historialFiltrado.map((orden) => {
+          {vistaHistorial === "compacta" && historialFiltrado.length > 0 && (
+            <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-lg shadow-slate-200/70">
+              <div className="overflow-x-auto [-webkit-overflow-scrolling:touch]">
+                <div className="min-w-[980px]">
+                  <div className="grid grid-cols-[1.25fr_0.75fr_0.9fr_0.75fr_0.65fr_280px] gap-3 bg-slate-950 px-4 py-3 text-[10px] font-black uppercase tracking-wide text-white">
+                    <span>{t("customer")}</span>
+                    <span>{t("status")}</span>
+                    <span>{t("technician")}</span>
+                    <span>{t("date")}</span>
+                    <span>{t("photos")}</span>
+                    <span className="text-right">{t("actions")}</span>
+                  </div>
+
+                  <div className="divide-y divide-slate-200">
+                    {historialFiltrado.map((orden) => {
+                      const cliente = obtenerCliente(orden.clienteId);
+                      const tecnico = obtenerTecnico?.(orden.tecnicoId);
+                      const fotosCount = ["antes", "durante", "despues"].filter((k) => orden.fotos?.[k]).length;
+                      const fecha = formatReportDate(orden.fechaCompletada || orden.fechaCreacion || orden.fecha);
+
+                      return (
+                        <article key={`compact-${orden.id}`} className="grid grid-cols-[1.25fr_0.75fr_0.9fr_0.75fr_0.65fr_280px] items-center gap-3 px-4 py-3 text-sm transition hover:bg-blue-50/70">
+                          <div className="min-w-0">
+                            <p className="truncate font-black text-slate-950">{cliente?.nombre || t("deletedCustomer")}</p>
+                            <p className="truncate text-xs font-semibold text-slate-500">{orden.problema || t("workOrderFallback")}</p>
+                          </div>
+
+                          <span className={`w-fit rounded-full border px-2.5 py-1 text-[11px] font-black ${statusClass(orden.estado)}`}>
+                            {statusLabel(orden.estado)}
+                          </span>
+
+                          <p className="truncate font-bold text-slate-700">{tecnico?.nombre || t("noTechnician")}</p>
+
+                          <p className="truncate font-bold text-slate-600">{fecha}</p>
+
+                          <button
+                            type="button"
+                            onClick={() => setEvidenciaOrden(orden)}
+                            className="w-fit rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-700 transition hover:bg-blue-100"
+                          >
+                            {fotosCount}/3
+                          </button>
+
+                          <div className="flex justify-end items-stretch gap-3">
+                            <ActionButton icon={Eye} label="" onClick={() => setDetalleOrden(orden)} className="min-w-[70px] px-4 bg-slate-950 text-white hover:bg-slate-800" />
+                            <ActionButton icon={Printer} label="" onClick={() => compartirOrden?.(orden, "imprimir")} className="min-w-[70px] px-4 bg-cyan-100 text-cyan-800 hover:bg-cyan-200" />
+                            <ActionButton icon={Share2} label="" onClick={() => compartirOrden?.(orden, "mensaje")} className="min-w-[70px] px-4 bg-blue-50 text-blue-700 hover:bg-blue-100" />
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {vistaHistorial === "detallada" && historialFiltrado.map((orden) => {
             const cliente = obtenerCliente(orden.clienteId);
             const tecnico = obtenerTecnico?.(orden.tecnicoId);
             const fotosCount = ["antes", "durante", "despues"].filter((k) => orden.fotos?.[k]).length;

@@ -90,14 +90,14 @@ export default function HerramientasPage({
   const tecnicoSeleccionado = obtenerTecnico(tecnicoHerramientasSeleccionado);
 
   const herramientasFiltradas = useMemo(() => {
+    if (!tecnicoHerramientasSeleccionado) return [];
+
     const q = busqueda.toLowerCase().trim();
 
     return herramientas.filter((h) => {
       const tecnico = obtenerTecnico(h.tecnicoId);
 
-      const matchTecnico = tecnicoHerramientasSeleccionado
-        ? String(h.tecnicoId) === String(tecnicoHerramientasSeleccionado)
-        : true;
+      const matchTecnico = String(h.tecnicoId) === String(tecnicoHerramientasSeleccionado);
 
       const matchEstado = estadoFiltro === "todos" || String(h.estado || "Disponible") === estadoFiltro;
 
