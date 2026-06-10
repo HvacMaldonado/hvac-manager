@@ -3747,6 +3747,17 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
     .filter((cita) => getKey(cita) === hoy && cita.estado !== "Convertida en orden")
     .sort((a, b) => normalizarHora(a.horaProgramada || a.hora).localeCompare(normalizarHora(b.horaProgramada || b.hora)));
 
+  const citasVencidas = citas
+    .filter((cita) => {
+      const key = getKey(cita);
+      return key && key < hoy && cita.estado !== "Convertida en orden";
+    })
+    .sort((a, b) => {
+      const fechaCompare = getKey(a).localeCompare(getKey(b));
+      if (fechaCompare !== 0) return fechaCompare;
+      return normalizarHora(a.horaProgramada || a.hora).localeCompare(normalizarHora(b.horaProgramada || b.hora));
+    });
+
   const AgendaCitaCard = ({ cita }) => {
     const cliente = obtenerCliente(cita.clienteId);
     const direccion = cliente?.direccion || "";
@@ -3970,7 +3981,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
         )}
       </div>
 
-      {ordenesVencidas.length > 0 && (
+      {ordenesVencidas.length + citasVencidas.length > 0 && (
         <div className="rounded-3xl border border-amber-200 bg-white p-4 shadow-lg shadow-amber-100/60">
           <div className="mb-4 flex items-end justify-between gap-3">
             <div>
@@ -3983,13 +3994,17 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
             </div>
 
             <span className="rounded-2xl bg-amber-600 px-4 py-2 text-sm font-black text-white">
-              {ordenesVencidas.length}
+              {ordenesVencidas.length + citasVencidas.length}
             </span>
           </div>
 
           <div className="space-y-3">
             {ordenesVencidas.map((orden) => (
-              <AgendaOrderCard key={orden.id} orden={orden} vencida />
+              <AgendaOrderCard key={`orden-vencida-${orden.id}`} orden={orden} vencida />
+            ))}
+
+            {citasVencidas.map((cita) => (
+              <AgendaCitaCard key={`cita-vencida-${cita.id}`} cita={cita} />
             ))}
           </div>
         </div>
