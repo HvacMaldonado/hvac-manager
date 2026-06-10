@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { crearClienteSupabase, obtenerClientesSupabase } from "./services/clientesService";
 import { obtenerTecnicosSupabase, crearTecnicoSupabase, actualizarTecnicoSupabase } from "./services/tecnicosService";
-import { obtenerCitasSupabase, crearCitaSupabase } from "./services/citasService";
+import { obtenerCitasSupabase, crearCitaSupabase, actualizarCitaSupabase } from "./services/citasService";
 import { obtenerOrdenesSupabase, crearOrdenSupabase, actualizarOrdenSupabase } from "./services/ordenesService";
 import { obtenerHerramientasSupabase, crearHerramientaSupabase, actualizarHerramientaSupabase, eliminarHerramientaSupabase } from "./services/herramientasService";
 import { obtenerInventarioSupabase, crearInventarioSupabase, actualizarInventarioSupabase, eliminarInventarioSupabase } from "./services/inventarioService";
@@ -1710,6 +1710,12 @@ export default function App() {
 
     try {
       const nuevaOrden = await crearOrdenSupabase(nuevaOrdenBase);
+
+      await actualizarCitaSupabase(cita.id, {
+        estado: "Convertida en orden",
+        ordenId: nuevaOrden.id,
+        fechaConversion: fecha.toISOString(),
+      });
 
       setOrdenes([...ordenes, nuevaOrden]);
 
