@@ -3743,6 +3743,88 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
       return ordenarPorHora(a, b);
     });
 
+  const citasHoy = citas
+    .filter((cita) => getKey(cita) === hoy && cita.estado !== "Convertida en orden")
+    .sort((a, b) => normalizarHora(a.horaProgramada || a.hora).localeCompare(normalizarHora(b.horaProgramada || b.hora)));
+
+  const AgendaCitaCard = ({ cita }) => {
+    const cliente = obtenerCliente(cita.clienteId);
+    const direccion = cliente?.direccion || "";
+    const telefono = cliente?.telefono || "";
+    const hora = formatTechTime(cita.horaProgramada || cita.hora || "");
+    const fecha = getKey(cita);
+
+    return (
+      <div className="grid w-full gap-3 rounded-[1.75rem] border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 p-4 text-left shadow-md shadow-violet-100/70 transition hover:-translate-y-0.5 hover:shadow-xl sm:grid-cols-[120px_minmax(0,1fr)]">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-800 via-purple-700 to-fuchsia-600 px-4 py-5 text-white shadow-xl shadow-violet-900/20 ring-1 ring-violet-300/20">
+          <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-white/15 blur-2xl" />
+          <div className="relative text-center">
+            <p className="text-[9px] font-black uppercase tracking-[0.28em] text-white/65">
+              Cita
+            </p>
+            <p className="mt-1 text-[2.15rem] font-black leading-none tracking-[-0.06em] tabular-nums">
+              {hora}
+            </p>
+          </div>
+        </div>
+
+        <div className="relative z-10 min-w-0">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="min-w-0">
+              <h3 className="truncate text-2xl font-black text-slate-950">
+                {cliente?.nombre || "Cliente eliminado"}
+              </h3>
+
+              <p className="mt-2 line-clamp-2 text-base font-black leading-snug text-slate-800">
+                {cita.motivo || "Cita programada"}
+              </p>
+            </div>
+
+            <span className="shrink-0 rounded-full border border-violet-200 bg-violet-100 px-3 py-1 text-xs font-black text-violet-700">
+              Cita
+            </span>
+          </div>
+
+          <p className="mt-3 line-clamp-1 text-sm font-bold text-slate-600">
+            📍 {direccion || "Sin dirección"}
+          </p>
+
+          <p className="mt-1 text-xs font-bold text-slate-500">
+            📅 {fecha ? formatReportDate(fecha) : "Sin fecha"}
+          </p>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            {telefono && (
+              <a
+                href={ordenProps?.urlTelefono?.(telefono)}
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex h-12 min-w-[116px] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 px-4 text-sm font-black text-white shadow-lg shadow-emerald-200 transition hover:-translate-y-0.5"
+                title="Llamar al cliente"
+              >
+                <Phone size={17} strokeWidth={2.7} />
+                Llamar
+              </a>
+            )}
+
+            {direccion && (
+              <a
+                href={ordenProps?.urlAppleMaps?.(direccion)}
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex h-12 min-w-[126px] items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 text-sm font-black text-white shadow-lg shadow-slate-300 transition hover:-translate-y-0.5"
+                title="Abrir dirección"
+              >
+                <Navigation size={17} strokeWidth={2.7} />
+                Dirección
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const AgendaOrderCard = ({ orden, vencida = false }) => {
     const cliente = obtenerCliente(orden.clienteId);
     const direccion = cliente?.direccion || "";
@@ -3864,21 +3946,25 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
           </div>
 
           <span className="rounded-2xl bg-slate-950 px-4 py-2 text-sm font-black text-white">
-            {ordenesHoy.length}
+            {ordenesHoy.length + citasHoy.length}
           </span>
         </div>
 
-        {ordenesHoy.length === 0 ? (
+        {ordenesHoy.length + citasHoy.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
-            <p className="text-lg font-black text-slate-950">No tienes órdenes para hoy.</p>
+            <p className="text-lg font-black text-slate-950">No tienes órdenes ni citas para hoy.</p>
             <p className="mt-1 text-sm font-semibold text-slate-500">
-              Las órdenes asignadas aparecerán aquí ordenadas por hora.
+              Las órdenes y citas asignadas aparecerán aquí ordenadas por hora.
             </p>
           </div>
         ) : (
           <div className="space-y-3">
             {ordenesHoy.map((orden) => (
-              <AgendaOrderCard key={orden.id} orden={orden} />
+              <AgendaOrderCard key={`orden-${orden.id}`} orden={orden} />
+            ))}
+
+            {citasHoy.map((cita) => (
+              <AgendaCitaCard key={`cita-${cita.id}`} cita={cita} />
             ))}
           </div>
         )}
