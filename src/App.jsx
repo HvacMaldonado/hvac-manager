@@ -2987,6 +2987,7 @@ const compartirOrden = async (orden, metodo) => {
                     setOrdenAgendaAbiertaId(ordenId);
                     setTecnicoVista("ordenes");
                   }}
+                  onConvertirCita={convertirCitaEnOrden}
                 />
               )}
 
@@ -3686,7 +3687,7 @@ function TecnicoCitaGroup({ title, subtitle, icon: Icon, tone, citas, obtenerCli
 
 
 
-function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, ordenProps, onAbrirOrden }) {
+function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, ordenProps, onAbrirOrden, onConvertirCita }) {
   const hoy = todayDateKey();
 
   const getKey = (item) =>
@@ -3766,7 +3767,15 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
     const fecha = getKey(cita);
 
     return (
-      <div className="grid w-full gap-3 rounded-[1.75rem] border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 p-4 text-left shadow-md shadow-violet-100/70 transition hover:-translate-y-0.5 hover:shadow-xl sm:grid-cols-[120px_minmax(0,1fr)]">
+      <button
+        type="button"
+        onClick={() => {
+          if (window.confirm("¿Convertir esta cita en orden para trabajarla?")) {
+            onConvertirCita?.(cita);
+          }
+        }}
+        className="grid w-full gap-3 rounded-[1.75rem] border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 p-4 text-left shadow-md shadow-violet-100/70 transition hover:-translate-y-0.5 hover:shadow-xl sm:grid-cols-[120px_minmax(0,1fr)]"
+      >
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-800 via-purple-700 to-fuchsia-600 px-4 py-5 text-white shadow-xl shadow-violet-900/20 ring-1 ring-violet-300/20">
           <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-white/15 blur-2xl" />
           <div className="relative text-center">
@@ -3832,7 +3841,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
             )}
           </div>
         </div>
-      </div>
+      </button>
     );
   };
 
