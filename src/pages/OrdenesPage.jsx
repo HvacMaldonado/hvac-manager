@@ -297,20 +297,6 @@ export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, cr
                 <PriorityChips value={ordenForm.prioridad} onChange={(p) => setOrdenForm({ ...ordenForm, prioridad: p })} t={t} />
               </FormSection>
 
-              <FormSection icon={ClipboardList} title={t("chargedPrice") || "Precio cobrado"} subtitle={t("chargedPriceDescription") || "Monto cobrado al cliente para calcular rentabilidad real."} tone="cyan">
-                <ModernField label={t("chargedPrice") || "Precio cobrado"} icon={ClipboardList}>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={ordenForm.precioCobrado || ""}
-                    onChange={(e) => setOrdenForm({ ...ordenForm, precioCobrado: e.target.value })}
-                    placeholder="0.00"
-                    className={inputClass}
-                  />
-                </ModernField>
-              </FormSection>
-
 
               <button
                 onClick={crearOrden}
