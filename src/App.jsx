@@ -3851,22 +3851,6 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
           </p>
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => onConvertirCita?.(cita)}
-              className="inline-flex h-11 min-w-[170px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-700 to-fuchsia-600 px-4 text-xs font-black text-white shadow-md shadow-violet-200 transition hover:-translate-y-0.5"
-            >
-              Crear orden de trabajo
-            </button>
-
-            <button
-              type="button"
-              onClick={() => onCerrarCita?.(cita)}
-              className="inline-flex h-11 min-w-[120px] items-center justify-center gap-2 rounded-xl border border-violet-200 bg-white px-4 text-xs font-black text-violet-700 shadow-sm transition hover:-translate-y-0.5"
-            >
-              Cerrar cita
-            </button>
-
             {telefono && (
               <a
                 href={ordenProps?.urlTelefono?.(telefono)}
@@ -3876,6 +3860,18 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
               >
                 <Phone size={17} strokeWidth={2.7} />
                 Llamar
+              </a>
+            )}
+
+            {telefono && (
+              <a
+                href={`sms:${telefono}`}
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex h-11 min-w-[100px] items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-xs font-black text-white shadow-md shadow-blue-200 transition hover:-translate-y-0.5"
+                title="Enviar mensaje"
+              >
+                <MessageCircle size={17} strokeWidth={2.7} />
+                Mensaje
               </a>
             )}
 
@@ -3892,6 +3888,22 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
                 Dirección
               </a>
             )}
+
+            <button
+              type="button"
+              onClick={() => onCerrarCita?.(cita)}
+              className="inline-flex h-11 min-w-[120px] items-center justify-center gap-2 rounded-xl border border-violet-200 bg-white px-4 text-xs font-black text-violet-700 shadow-sm transition hover:-translate-y-0.5"
+            >
+              Cerrar cita
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onConvertirCita?.(cita)}
+              className="inline-flex h-11 min-w-[170px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-700 to-fuchsia-600 px-4 text-xs font-black text-white shadow-md shadow-violet-200 transition hover:-translate-y-0.5"
+            >
+              Crear orden
+            </button>
           </div>
         </div>
       </div>
