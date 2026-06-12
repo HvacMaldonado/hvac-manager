@@ -3789,8 +3789,18 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
       return ordenarPorHora(a, b);
     });
 
-  const citaYaTieneOrden = (cita) =>
-    ordenes.some((orden) => {
+  const citaYaTieneOrden = (cita) => {
+    let ordenesRespaldo = [];
+
+    try {
+      ordenesRespaldo = JSON.parse(localStorage.getItem("ordenes") || "[]");
+    } catch {
+      ordenesRespaldo = [];
+    }
+
+    const ordenesParaComparar = [...ordenes, ...ordenesRespaldo];
+
+    return ordenesParaComparar.some((orden) => {
       const mismaCita = String(orden.origenCitaId || "") === String(cita.id);
 
       const mismosDatos =
@@ -3801,6 +3811,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
 
       return mismaCita || mismosDatos;
     });
+  };
 
   const citaVisibleAgenda = (cita) =>
     !["Convertida en orden", "Finalizada"].includes(cita.estado) &&
