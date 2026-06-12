@@ -3789,14 +3789,20 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
       return ordenarPorHora(a, b);
     });
 
+  const citaYaTieneOrden = (cita) =>
+    ordenes.some((orden) => String(orden.origenCitaId || "") === String(cita.id));
+
+  const citaVisibleAgenda = (cita) =>
+    !["Convertida en orden", "Finalizada"].includes(cita.estado) && !citaYaTieneOrden(cita);
+
   const citasHoy = citas
-    .filter((cita) => getKey(cita) === hoy && !["Convertida en orden", "Finalizada"].includes(cita.estado))
+    .filter((cita) => getKey(cita) === hoy && citaVisibleAgenda(cita))
     .sort((a, b) => normalizarHora(a.horaProgramada || a.hora).localeCompare(normalizarHora(b.horaProgramada || b.hora)));
 
   const citasVencidas = citas
     .filter((cita) => {
       const key = getKey(cita);
-      return key && key < hoy && !["Convertida en orden", "Finalizada"].includes(cita.estado);
+      return key && key < hoy && citaVisibleAgenda(cita);
     })
     .sort((a, b) => {
       const fechaCompare = getKey(a).localeCompare(getKey(b));
