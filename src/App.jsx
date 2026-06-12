@@ -3850,11 +3850,11 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
             📅 {fecha ? formatReportDate(fecha) : "Sin fecha"}
           </p>
 
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4 flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => onConvertirCita?.(cita)}
-              className="inline-flex h-12 min-w-[180px] flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-700 to-fuchsia-600 px-4 text-sm font-black text-white shadow-lg shadow-violet-200 transition hover:-translate-y-0.5"
+              className="inline-flex h-11 min-w-[170px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-700 to-fuchsia-600 px-4 text-xs font-black text-white shadow-md shadow-violet-200 transition hover:-translate-y-0.5"
             >
               Crear orden de trabajo
             </button>
@@ -3862,7 +3862,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
             <button
               type="button"
               onClick={() => onCerrarCita?.(cita)}
-              className="inline-flex h-12 min-w-[130px] items-center justify-center gap-2 rounded-2xl border border-violet-200 bg-white px-4 text-sm font-black text-violet-700 shadow-sm transition hover:-translate-y-0.5"
+              className="inline-flex h-11 min-w-[120px] items-center justify-center gap-2 rounded-xl border border-violet-200 bg-white px-4 text-xs font-black text-violet-700 shadow-sm transition hover:-translate-y-0.5"
             >
               Cerrar cita
             </button>
@@ -3871,7 +3871,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
               <a
                 href={ordenProps?.urlTelefono?.(telefono)}
                 onClick={(e) => e.stopPropagation()}
-                className="inline-flex h-12 min-w-[116px] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 px-4 text-sm font-black text-white shadow-lg shadow-emerald-200 transition hover:-translate-y-0.5"
+                className="inline-flex h-11 min-w-[100px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 px-4 text-xs font-black text-white shadow-md shadow-emerald-200 transition hover:-translate-y-0.5"
                 title="Llamar al cliente"
               >
                 <Phone size={17} strokeWidth={2.7} />
@@ -3885,7 +3885,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
                 target="_blank"
                 rel="noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="inline-flex h-12 min-w-[126px] items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 text-sm font-black text-white shadow-lg shadow-slate-300 transition hover:-translate-y-0.5"
+                className="inline-flex h-11 min-w-[105px] items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-xs font-black text-white shadow-md shadow-slate-300 transition hover:-translate-y-0.5"
                 title="Abrir dirección"
               >
                 <Navigation size={17} strokeWidth={2.7} />
@@ -3961,12 +3961,12 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
             📍 {direccion || "Sin dirección"}
           </p>
 
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4 flex flex-wrap items-center gap-2">
             {telefono && (
               <a
                 href={ordenProps?.urlTelefono?.(telefono)}
                 onClick={(e) => e.stopPropagation()}
-                className="inline-flex h-12 min-w-[116px] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 px-4 text-sm font-black text-white shadow-lg shadow-emerald-200 transition hover:-translate-y-0.5"
+                className="inline-flex h-11 min-w-[100px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 px-4 text-xs font-black text-white shadow-md shadow-emerald-200 transition hover:-translate-y-0.5"
                 title="Llamar al cliente"
               >
                 <Phone size={17} strokeWidth={2.7} />
@@ -3992,14 +3992,14 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
                 target="_blank"
                 rel="noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="inline-flex h-12 min-w-[126px] items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 text-sm font-black text-white shadow-lg shadow-slate-300 transition hover:-translate-y-0.5"
+                className="inline-flex h-11 min-w-[105px] items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-xs font-black text-white shadow-md shadow-slate-300 transition hover:-translate-y-0.5"
                 title="Abrir dirección"
               >
                 <Navigation size={17} strokeWidth={2.7} />
                 Dirección
               </a>
             )}
-            <span className="ml-auto inline-flex h-12 min-w-[170px] flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-700 to-cyan-500 px-4 text-sm font-black text-white shadow-lg shadow-blue-200">
+            <span className="inline-flex h-11 min-w-[150px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-700 to-cyan-500 px-4 text-xs font-black text-white shadow-md shadow-blue-200">
               Trabajar orden
             </span>
           </div>
