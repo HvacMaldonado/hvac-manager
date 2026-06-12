@@ -3812,30 +3812,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
     const fecha = getKey(cita);
 
     return (
-      <button
-        type="button"
-        onClick={() => {
-          const accion = window.prompt(
-            "¿Qué deseas hacer con esta cita?\n\n1 = Convertir en orden\n2 = Cerrar cita sin orden\n\nEscribe 1 o 2:",
-            "1"
-          );
-
-          if (accion === null) return;
-
-          if (String(accion).trim() === "1") {
-            onConvertirCita?.(cita);
-            return;
-          }
-
-          if (String(accion).trim() === "2") {
-            onCerrarCita?.(cita);
-            return;
-          }
-
-          alert("Opción inválida. Escribe 1 o 2.");
-        }}
-        className="grid w-full gap-3 rounded-[1.75rem] border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 p-4 text-left shadow-md shadow-violet-100/70 transition hover:-translate-y-0.5 hover:shadow-xl sm:grid-cols-[120px_minmax(0,1fr)]"
-      >
+      <div className="grid w-full gap-3 rounded-[1.75rem] border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 p-4 text-left shadow-md shadow-violet-100/70 transition hover:-translate-y-0.5 hover:shadow-xl sm:grid-cols-[120px_minmax(0,1fr)]">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-800 via-purple-700 to-fuchsia-600 px-4 py-5 text-white shadow-xl shadow-violet-900/20 ring-1 ring-violet-300/20">
           <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-white/15 blur-2xl" />
           <div className="relative text-center">
@@ -3874,6 +3851,22 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
           </p>
 
           <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => onConvertirCita?.(cita)}
+              className="inline-flex h-12 min-w-[180px] flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-700 to-fuchsia-600 px-4 text-sm font-black text-white shadow-lg shadow-violet-200 transition hover:-translate-y-0.5"
+            >
+              Crear orden de trabajo
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onCerrarCita?.(cita)}
+              className="inline-flex h-12 min-w-[130px] items-center justify-center gap-2 rounded-2xl border border-violet-200 bg-white px-4 text-sm font-black text-violet-700 shadow-sm transition hover:-translate-y-0.5"
+            >
+              Cerrar cita
+            </button>
+
             {telefono && (
               <a
                 href={ordenProps?.urlTelefono?.(telefono)}
@@ -3901,7 +3894,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
             )}
           </div>
         </div>
-      </button>
+      </div>
     );
   };
 
@@ -4006,6 +3999,9 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
                 Dirección
               </a>
             )}
+            <span className="ml-auto inline-flex h-12 min-w-[170px] flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-700 to-cyan-500 px-4 text-sm font-black text-white shadow-lg shadow-blue-200">
+              Trabajar orden
+            </span>
           </div>
         </div>
       </button>
