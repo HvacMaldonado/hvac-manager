@@ -3790,7 +3790,17 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
     });
 
   const citaYaTieneOrden = (cita) =>
-    ordenes.some((orden) => String(orden.origenCitaId || "") === String(cita.id));
+    ordenes.some((orden) => {
+      const mismaCita = String(orden.origenCitaId || "") === String(cita.id);
+
+      const mismosDatos =
+        String(orden.clienteId || "") === String(cita.clienteId || "") &&
+        String(orden.tecnicoId || "") === String(cita.tecnicoId || "") &&
+        toDateKey(orden.fechaProgramada || orden.fecha || "") === toDateKey(cita.fecha || cita.fechaProgramada || "") &&
+        String(orden.horaProgramada || orden.hora || "").slice(0, 5) === String(cita.hora || cita.horaProgramada || "").slice(0, 5);
+
+      return mismaCita || mismosDatos;
+    });
 
   const citaVisibleAgenda = (cita) =>
     !["Convertida en orden", "Finalizada"].includes(cita.estado) && !citaYaTieneOrden(cita);
