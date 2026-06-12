@@ -3810,6 +3810,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
     const telefono = cliente?.telefono || "";
     const hora = formatTechTime(cita.horaProgramada || cita.hora || "");
     const fecha = getKey(cita);
+    const convertirCita = onConvertirCita || ordenProps?.convertirCitaEnOrden;
 
     return (
       <div className="grid w-full gap-3 rounded-[1.75rem] border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 p-4 text-left shadow-md shadow-violet-100/70 transition hover:-translate-y-0.5 hover:shadow-xl sm:grid-cols-[120px_minmax(0,1fr)]">
@@ -3891,15 +3892,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
 
             <button
               type="button"
-              onClick={() => onCerrarCita?.(cita)}
-              className="inline-flex h-11 min-w-[120px] items-center justify-center gap-2 rounded-xl border border-violet-200 bg-white px-4 text-xs font-black text-violet-700 shadow-sm transition hover:-translate-y-0.5"
-            >
-              Cerrar cita
-            </button>
-
-            <button
-              type="button"
-              onClick={() => onConvertirCita?.(cita)}
+              onClick={() => convertirCita?.(cita)}
               className="inline-flex h-11 min-w-[170px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-700 to-fuchsia-600 px-4 text-xs font-black text-white shadow-md shadow-violet-200 transition hover:-translate-y-0.5"
             >
               Crear orden
@@ -4406,15 +4399,6 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
                     <p className="line-clamp-2 text-xl font-black leading-snug text-white">
                       {orden.problema || "Sin problema reportado"}
                     </p>
-
-                    <button
-                      type="button"
-                      onClick={() => abrirTraductorTexto(orden.problema)}
-                      className="inline-flex w-fit shrink-0 items-center gap-2 rounded-2xl bg-white/15 px-3 py-2 text-xs font-black text-cyan-100 ring-1 ring-white/15 transition hover:bg-white/20"
-                    >
-                      <Languages size={16} />
-                      Traducir
-                    </button>
                   </div>
                 </div>
               </div>
