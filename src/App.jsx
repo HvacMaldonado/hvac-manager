@@ -3803,7 +3803,9 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
     });
 
   const citaVisibleAgenda = (cita) =>
-    !["Convertida en orden", "Finalizada"].includes(cita.estado) && !citaYaTieneOrden(cita);
+    !["Convertida en orden", "Finalizada"].includes(cita.estado) &&
+    !cita.ordenId &&
+    !citaYaTieneOrden(cita);
 
   const citasHoy = citas
     .filter((cita) => getKey(cita) === hoy && citaVisibleAgenda(cita))
