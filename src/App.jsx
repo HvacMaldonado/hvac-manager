@@ -4160,6 +4160,7 @@ function TecnicoOrdenesPanel({ ordenes, citas = [], obtenerCliente, ordenProps }
         citas={citas}
         obtenerCliente={obtenerCliente}
         ordenProps={ordenProps}
+        onConvertirCita={ordenProps?.convertirCitaEnOrden}
       />
 
       {ordenes.length === 0 && citas.length === 0 && (
