@@ -1738,6 +1738,44 @@ export default function App() {
     }
   };
 
+  const cerrarCitaSinOrden = async (cita) => {
+    if (!cita) return;
+
+    const motivo = window.prompt(
+      "Motivo para cerrar la cita sin orden:\n\nEjemplos: Diagnóstico realizado, cotización entregada, cliente canceló, no hubo acceso.",
+      "Diagnóstico realizado"
+    );
+
+    if (motivo === null) return;
+
+    const finalMotivo = String(motivo || "").trim() || "Cita cerrada sin orden";
+
+    try {
+      const citaActualizada = await actualizarCitaSupabase(cita.id, {
+        estado: "Finalizada",
+        motivo: cita.motivo || "Cita programada",
+        historialReprogramaciones: [
+          ...(cita.historialReprogramaciones || []),
+          {
+            tipo: "Cierre sin orden",
+            motivo: finalMotivo,
+            fechaCambio: new Date().toISOString(),
+          },
+        ],
+      });
+
+      setCitas(citas.map((item) => (
+        String(item.id) === String(cita.id) ? citaActualizada : item
+      )));
+
+      setMensaje("Cita cerrada sin crear orden.");
+    } catch (error) {
+      console.error("Error cerrando cita:", error);
+      alert(JSON.stringify(error, null, 2));
+      setMensaje("No se pudo cerrar la cita.");
+    }
+  };
+
   const reprogramarCita = (citaId, data) => {
     if (!data?.fecha || !data?.hora || !String(data?.motivo || "").trim()) {
       alert("Fecha, hora y motivo son obligatorios para reprogramar.");
@@ -2853,7 +2891,7 @@ const compartirOrden = async (orden, metodo) => {
                                 cita.fechaProgramada,
                                 cita.fechaCreacion,
                               ].map(toDateKey).filter(Boolean).includes(hoy) &&
-                              cita.estado !== "Convertida en orden";
+                              !["Convertida en orden", "Finalizada"].includes(cita.estado);
                             }).length
                           }
                         </p>
@@ -2916,7 +2954,7 @@ const compartirOrden = async (orden, metodo) => {
                               cita.fechaProgramada,
                               cita.fechaCreacion,
                             ].map(toDateKey).filter(Boolean).includes(hoy) &&
-                            cita.estado !== "Convertida en orden";
+                            !["Convertida en orden", "Finalizada"].includes(cita.estado);
                           }).length
                         }
                       </span>
@@ -2994,6 +3032,7 @@ const compartirOrden = async (orden, metodo) => {
                     setTecnicoVista("ordenes");
                   }}
                   onConvertirCita={convertirCitaEnOrden}
+                  onCerrarCita={cerrarCitaSinOrden}
                 />
               )}
 
@@ -3642,7 +3681,7 @@ function groupTechnicianCitas(citas = []) {
     sinFecha: [],
   };
 
-  citas.filter((cita) => cita.estado !== "Convertida en orden").forEach((cita) => {
+  citas.filter((cita) => !["Convertida en orden", "Finalizada"].includes(cita.estado)).forEach((cita) => {
     const key = getCitaDateKey(cita);
 
     if (!key) groups.sinFecha.push(cita);
@@ -3693,7 +3732,7 @@ function TecnicoCitaGroup({ title, subtitle, icon: Icon, tone, citas, obtenerCli
 
 
 
-function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, ordenProps, onAbrirOrden, onConvertirCita }) {
+function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, ordenProps, onAbrirOrden, onConvertirCita, onCerrarCita }) {
   const hoy = todayDateKey();
 
   const getKey = (item) =>
@@ -3751,13 +3790,13 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
     });
 
   const citasHoy = citas
-    .filter((cita) => getKey(cita) === hoy && cita.estado !== "Convertida en orden")
+    .filter((cita) => getKey(cita) === hoy && !["Convertida en orden", "Finalizada"].includes(cita.estado))
     .sort((a, b) => normalizarHora(a.horaProgramada || a.hora).localeCompare(normalizarHora(b.horaProgramada || b.hora)));
 
   const citasVencidas = citas
     .filter((cita) => {
       const key = getKey(cita);
-      return key && key < hoy && cita.estado !== "Convertida en orden";
+      return key && key < hoy && !["Convertida en orden", "Finalizada"].includes(cita.estado);
     })
     .sort((a, b) => {
       const fechaCompare = getKey(a).localeCompare(getKey(b));
@@ -3776,9 +3815,24 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
       <button
         type="button"
         onClick={() => {
-          if (window.confirm("¿Convertir esta cita en orden para trabajarla?")) {
+          const accion = window.prompt(
+            "¿Qué deseas hacer con esta cita?\n\n1 = Convertir en orden\n2 = Cerrar cita sin orden\n\nEscribe 1 o 2:",
+            "1"
+          );
+
+          if (accion === null) return;
+
+          if (String(accion).trim() === "1") {
             onConvertirCita?.(cita);
+            return;
           }
+
+          if (String(accion).trim() === "2") {
+            onCerrarCita?.(cita);
+            return;
+          }
+
+          alert("Opción inválida. Escribe 1 o 2.");
         }}
         className="grid w-full gap-3 rounded-[1.75rem] border border-violet-200 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 p-4 text-left shadow-md shadow-violet-100/70 transition hover:-translate-y-0.5 hover:shadow-xl sm:grid-cols-[120px_minmax(0,1fr)]"
       >
