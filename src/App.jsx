@@ -954,7 +954,7 @@ const TEXT = {
     cancel: "Cancel",
     enterTechnicianName: "Enter the technician name.",
     saveTechnicianError: "Could not save the technician in Supabase.",
-    agenda: "Agenda",
+    agenda: "Schedule",
     upcoming: "Upcoming",
     new: "New",
     quickAgenda: "Quick agenda",
