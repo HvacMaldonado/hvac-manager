@@ -207,7 +207,7 @@ function normalizeGeoapifyAddress(feature) {
 }
 
 async function searchGeoapifyAddresses(query) {
-  const apiKey = import.meta.env.VITE_GEOAPIFY_API_KEY;
+  const apiKey = import.meta.env.VITE_GEOAPIFY_API_KEY || "3Edjk4Otx0ItTI31iJAnklTi2Ie_3W4Ubu663aSSeyqRZTeAq";
 
   if (!apiKey) {
     throw new Error("Falta VITE_GEOAPIFY_API_KEY en .env");
