@@ -3033,6 +3033,7 @@ const compartirOrden = async (orden, metodo) => {
                   }}
                   onConvertirCita={convertirCitaEnOrden}
                   onCerrarCita={cerrarCitaSinOrden}
+                  t={t}
                 />
               )}
 
@@ -3732,7 +3733,7 @@ function TecnicoCitaGroup({ title, subtitle, icon: Icon, tone, citas, obtenerCli
 
 
 
-function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, ordenProps, onAbrirOrden, onConvertirCita, onCerrarCita }) {
+function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, ordenProps, onAbrirOrden, onConvertirCita, onCerrarCita, t }) {
   const hoy = todayDateKey();
 
   const getKey = (item) =>
