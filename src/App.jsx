@@ -2864,7 +2864,7 @@ const compartirOrden = async (orden, metodo) => {
 
                       <div>
                         <p className="text-[9px] font-black uppercase tracking-[0.28em] text-slate-300">
-                          Panel del técnico
+                          {t("techPanel")}
                         </p>
                         <h2 className="mt-0.5 text-base font-black leading-tight">
                           {session.nombre}
@@ -2895,17 +2895,17 @@ const compartirOrden = async (orden, metodo) => {
                             }).length
                           }
                         </p>
-                        <p className="text-[8px] font-black uppercase tracking-wide text-cyan-100">Hoy</p>
+                        <p className="text-[8px] font-black uppercase tracking-wide text-cyan-100">{t("today")}</p>
                       </div>
 
                       <div className="rounded-2xl bg-white/10 px-3 py-2 ring-1 ring-white/15">
                         <p className="text-lg font-black">{ordenesActivasTecnico.length}</p>
-                        <p className="text-[8px] font-black uppercase tracking-wide text-blue-100">Activas</p>
+                        <p className="text-[8px] font-black uppercase tracking-wide text-blue-100">{t("activeOrders")}</p>
                       </div>
 
                       <div className="rounded-2xl bg-white/10 px-3 py-2 ring-1 ring-white/15">
                         <p className="text-lg font-black">{historialTecnico.length}</p>
-                        <p className="text-[8px] font-black uppercase tracking-wide text-emerald-100">Historial</p>
+                        <p className="text-[8px] font-black uppercase tracking-wide text-emerald-100">{t("history")}</p>
                       </div>
                     </div>
                   </div>
@@ -2930,7 +2930,7 @@ const compartirOrden = async (orden, metodo) => {
                           <CalendarDays size={18} />
                         </span>
                         <div>
-                          <p className="text-sm font-black">Agenda</p>
+                          <p className="text-sm font-black">{t("agenda")}</p>
                           <p className={tecnicoVista === "agenda" ? "text-[10px] font-bold text-slate-300" : "text-[10px] font-bold text-slate-500"}>
                             Hoy
                           </p>
@@ -2979,7 +2979,7 @@ const compartirOrden = async (orden, metodo) => {
                           <ClipboardList size={18} />
                         </span>
                         <div>
-                          <p className="text-sm font-black">Órdenes</p>
+                          <p className="text-sm font-black">{t("orders")}</p>
                           <p className={tecnicoVista === "ordenes" ? "text-[10px] font-bold text-slate-300" : "text-[10px] font-bold text-slate-500"}>
                             Activas
                           </p>
@@ -3008,7 +3008,7 @@ const compartirOrden = async (orden, metodo) => {
                           <History size={18} />
                         </span>
                         <div>
-                          <p className="text-sm font-black">Historial</p>
+                          <p className="text-sm font-black">{t("history")}</p>
                           <p className={tecnicoVista === "historial" ? "text-[10px] font-bold text-slate-300" : "text-[10px] font-bold text-slate-500"}>
                             Cerradas
                           </p>
