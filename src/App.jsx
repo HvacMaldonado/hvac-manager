@@ -2990,7 +2990,7 @@ const compartirOrden = async (orden, metodo) => {
                         <div>
                           <p className="text-sm font-black">{t("agenda")}</p>
                           <p className={tecnicoVista === "agenda" ? "text-[10px] font-bold text-slate-300" : "text-[10px] font-bold text-slate-500"}>
-                            Hoy
+                            {t("today")}
                           </p>
                         </div>
                       </div>
@@ -3039,7 +3039,7 @@ const compartirOrden = async (orden, metodo) => {
                         <div>
                           <p className="text-sm font-black">{t("orders")}</p>
                           <p className={tecnicoVista === "ordenes" ? "text-[10px] font-bold text-slate-300" : "text-[10px] font-bold text-slate-500"}>
-                            Activas
+                            {t("activeOrders")}
                           </p>
                         </div>
                       </div>
@@ -3068,7 +3068,7 @@ const compartirOrden = async (orden, metodo) => {
                         <div>
                           <p className="text-sm font-black">{t("history")}</p>
                           <p className={tecnicoVista === "historial" ? "text-[10px] font-bold text-slate-300" : "text-[10px] font-bold text-slate-500"}>
-                            Cerradas
+                            {t("closedLabel")}
                           </p>
                         </div>
                       </div>
