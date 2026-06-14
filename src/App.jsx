@@ -650,6 +650,8 @@ const TEXT = {
     customRange: "Personalizado",
     fromDate: "Desde",
     toDate: "Hasta",
+    activeRange: "Rango activo",
+    clearRange: "Limpiar rango",
     deletedCustomer: "Cliente eliminado",
     noReportedProblem: "Sin problema reportado",
     noTechnician: "Sin técnico",
@@ -1219,6 +1221,8 @@ const TEXT = {
     customRange: "Custom",
     fromDate: "From",
     toDate: "To",
+    activeRange: "Active range",
+    clearRange: "Clear range",
     deletedCustomer: "Deleted customer",
     noReportedProblem: "No reported problem",
     noTechnician: "No technician",
@@ -5243,11 +5247,20 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
   const getFechaOrden = (orden) => orden.fechaCompletada || orden.fechaCancelacion || orden.fechaCreacion || orden.fecha || "";
 
   const estaEnPeriodo = (orden) => {
-    if (periodo === "todo") return true;
-
     const raw = getFechaOrden(orden);
     const fecha = new Date(raw);
     if (Number.isNaN(fecha.getTime())) return false;
+
+    if (periodo === "personalizado") {
+      const desde = fechaDesde ? new Date(fechaDesde + "T00:00:00") : null;
+      const hasta = fechaHasta ? new Date(fechaHasta + "T23:59:59") : null;
+
+      if (desde && fecha < desde) return false;
+      if (hasta && fecha > hasta) return false;
+      return true;
+    }
+
+    if (periodo === "todo") return true;
 
     const ahora = new Date();
 
@@ -5348,6 +5361,7 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
               ["ano", t("year")],
               ["todo", t("all")],
               ["personalizado", t("customRange")],
+              ["personalizado", t("customRange")],
             ].map(([id, label]) => (
               <button
                 key={id}
@@ -5385,6 +5399,49 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
                   className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 p-2 text-sm font-bold text-slate-700 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
                 />
               </label>
+            </div>
+          )}
+
+          {periodo === "personalizado" && (
+            <div className="rounded-2xl border border-emerald-100 bg-white p-3 shadow-sm">
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs font-black uppercase tracking-wide text-emerald-700">
+                  {t("activeRange")}
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFechaDesde("");
+                    setFechaHasta("");
+                  }}
+                  className="rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600 transition hover:bg-slate-200"
+                >
+                  {t("clearRange")}
+                </button>
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-2">
+                <label className="text-xs font-black uppercase tracking-wide text-slate-500">
+                  {t("fromDate")}
+                  <input
+                    type="date"
+                    value={fechaDesde}
+                    onChange={(e) => setFechaDesde(e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 p-2 text-sm font-bold text-slate-700 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+                  />
+                </label>
+
+                <label className="text-xs font-black uppercase tracking-wide text-slate-500">
+                  {t("toDate")}
+                  <input
+                    type="date"
+                    value={fechaHasta}
+                    onChange={(e) => setFechaHasta(e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 p-2 text-sm font-bold text-slate-700 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+                  />
+                </label>
+              </div>
             </div>
           )}
 
