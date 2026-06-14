@@ -647,6 +647,9 @@ const TEXT = {
     reasonLabel: "Motivo",
     noReasonRegistered: "Sin motivo registrado",
     noteLabel: "Nota",
+    customRange: "Personalizado",
+    fromDate: "Desde",
+    toDate: "Hasta",
     deletedCustomer: "Cliente eliminado",
     noReportedProblem: "Sin problema reportado",
     noTechnician: "Sin técnico",
@@ -1213,6 +1216,9 @@ const TEXT = {
     reasonLabel: "Reason",
     noReasonRegistered: "No reason registered",
     noteLabel: "Note",
+    customRange: "Custom",
+    fromDate: "From",
+    toDate: "To",
     deletedCustomer: "Deleted customer",
     noReportedProblem: "No reported problem",
     noTechnician: "No technician",
@@ -4985,11 +4991,20 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
     "";
 
   const estaEnPeriodo = (orden) => {
-    if (periodo === "todo") return true;
-
     const raw = getFechaOrden(orden);
     const fecha = new Date(raw);
     if (Number.isNaN(fecha.getTime())) return false;
+
+    if (periodo === "personalizado") {
+      const desde = fechaDesde ? new Date(fechaDesde + "T00:00:00") : null;
+      const hasta = fechaHasta ? new Date(fechaHasta + "T23:59:59") : null;
+
+      if (desde && fecha < desde) return false;
+      if (hasta && fecha > hasta) return false;
+      return true;
+    }
+
+    if (periodo === "todo") return true;
 
     const ahora = new Date();
 
@@ -5222,6 +5237,8 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
   const [filtro, setFiltro] = useState("todas");
   const [periodo, setPeriodo] = useState("todo");
   const [busqueda, setBusqueda] = useState("");
+  const [fechaDesde, setFechaDesde] = useState("");
+  const [fechaHasta, setFechaHasta] = useState("");
 
   const getFechaOrden = (orden) => orden.fechaCompletada || orden.fechaCancelacion || orden.fechaCreacion || orden.fecha || "";
 
@@ -5330,6 +5347,7 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
               ["mes", t("month")],
               ["ano", t("year")],
               ["todo", t("all")],
+              ["personalizado", t("customRange")],
             ].map(([id, label]) => (
               <button
                 key={id}
@@ -5345,6 +5363,30 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
               </button>
             ))}
           </div>
+
+          {periodo === "personalizado" && (
+            <div className="grid gap-2 rounded-2xl border border-emerald-100 bg-white p-3 sm:grid-cols-2">
+              <label className="text-xs font-black uppercase tracking-wide text-slate-500">
+                {t("fromDate")}
+                <input
+                  type="date"
+                  value={fechaDesde}
+                  onChange={(e) => setFechaDesde(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 p-2 text-sm font-bold text-slate-700 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+                />
+              </label>
+
+              <label className="text-xs font-black uppercase tracking-wide text-slate-500">
+                {t("toDate")}
+                <input
+                  type="date"
+                  value={fechaHasta}
+                  onChange={(e) => setFechaHasta(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 p-2 text-sm font-bold text-slate-700 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+                />
+              </label>
+            </div>
+          )}
 
           <div className="flex gap-2 overflow-x-auto">
             {tabs.map((tab) => (
