@@ -5428,46 +5428,33 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
           </div>
 
           {periodo === "personalizado" && (
-            <div className="grid gap-2 rounded-2xl border border-emerald-100 bg-white p-3 sm:grid-cols-2">
-              <label className="text-xs font-black uppercase tracking-wide text-slate-500">
-                {t("fromDate")}
-                <input
-                  type="date"
-                  value={fechaDesde}
-                  onChange={(e) => setFechaDesde(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 p-2 text-sm font-bold text-slate-700 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
-                />
-              </label>
-
-              <label className="text-xs font-black uppercase tracking-wide text-slate-500">
-                {t("toDate")}
-                <input
-                  type="date"
-                  value={fechaHasta}
-                  onChange={(e) => setFechaHasta(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 p-2 text-sm font-bold text-slate-700 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
-                />
-              </label>
-            </div>
-          )}
-
-          {periodo === "personalizado" && (
             <div className="rounded-2xl border border-emerald-100 bg-white p-3 shadow-sm">
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs font-black uppercase tracking-wide text-emerald-700">
                   {t("activeRange")}
                 </p>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFechaDesde("");
-                    setFechaHasta("");
-                  }}
-                  className="rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600 transition hover:bg-slate-200"
-                >
-                  {t("clearRange")}
-                </button>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={exportarHistorialCsv}
+                    disabled={ordenesFiltradas.length === 0}
+                    className="rounded-xl bg-emerald-700 px-3 py-1.5 text-xs font-black text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+                  >
+                    {t("exportCsv")}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFechaDesde("");
+                      setFechaHasta("");
+                    }}
+                    className="rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600 transition hover:bg-slate-200"
+                  >
+                    {t("clearRange")}
+                  </button>
+                </div>
               </div>
 
               <div className="grid gap-2 sm:grid-cols-2">
