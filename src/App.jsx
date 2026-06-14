@@ -4620,9 +4620,9 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
                   {t("photos")}
                 </p>
                 <div className="grid gap-3 md:grid-cols-3">
-                  <FotoUploader titulo={t("before")} imagen={orden.fotos?.antes} onChange={(archivo) => subirFoto(orden.id, "antes", archivo)} />
-                  <FotoUploader titulo={t("during")} imagen={orden.fotos?.durante} onChange={(archivo) => subirFoto(orden.id, "durante", archivo)} />
-                  <FotoUploader titulo={t("after")} imagen={orden.fotos?.despues} onChange={(archivo) => subirFoto(orden.id, "despues", archivo)} />
+                  <FotoUploader titulo={t("before")} imagen={orden.fotos?.antes} onChange={(archivo) => subirFoto(orden.id, "antes", archivo)} t={t} />
+                  <FotoUploader titulo={t("during")} imagen={orden.fotos?.durante} onChange={(archivo) => subirFoto(orden.id, "durante", archivo)} t={t} />
+                  <FotoUploader titulo={t("after")} imagen={orden.fotos?.despues} onChange={(archivo) => subirFoto(orden.id, "despues", archivo)} t={t} />
                 </div>
               </div>
 
@@ -4786,7 +4786,7 @@ function Materiales({ orden, inventario, agregarMaterialAOrden, actualizarMateri
   );
 }
 
-function FotoUploader({ titulo, imagen, onChange }) {
+function FotoUploader({ titulo, imagen, onChange, t }) {
   return (
     <div className="rounded-[1.5rem] border border-cyan-200 bg-gradient-to-br from-blue-50 via-white to-cyan-50 p-4 text-sm shadow-lg shadow-cyan-100/60">
       <p className="mb-3 text-base font-black text-slate-950">{titulo}</p>
