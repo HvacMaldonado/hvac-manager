@@ -620,6 +620,29 @@ const TEXT = {
     appointment: "Cita",
     overdue: "Vencida",
     workOrder: "Orden",
+    clearAgenda: "Agenda clara",
+    allOrders: "Todas las órdenes",
+    unattended: "No atendidas",
+    ordersToday: "Órdenes hoy",
+    appointmentsToday: "Citas hoy",
+    activeLabel: "Activas",
+    appointmentsLabelShort: "Citas",
+    noAssignedActiveWork: "No tienes órdenes ni citas activas asignadas.",
+    unattendedVisitPending: "No atendidas / visita pendiente",
+    previousActiveOrders: "Órdenes anteriores que siguen activas",
+    ordersForToday: "Órdenes para hoy",
+    mainWorkDay: "Trabajo principal del día",
+    scheduledAppointmentsToday: "Citas programadas para hoy",
+    separateAppointmentsAgenda: "Agenda de citas separada de órdenes",
+    overdueAppointments: "Citas atrasadas",
+    previousAppointmentsNeedFollowUp: "Citas anteriores que requieren seguimiento",
+    upcomingOrders: "Próximas órdenes",
+    scheduledWorkLater: "Trabajo programado para después",
+    upcomingAppointments: "Próximas citas",
+    futureAppointments: "Citas futuras",
+    undatedOrders: "Órdenes sin fecha",
+    undatedAppointments: "Citas sin fecha",
+    needsAdminReview: "Requieren revisión administrativa",
     sundayShort: "Dom",
     mondayShort: "Lun",
     tuesdayShort: "Mar",
@@ -1125,6 +1148,29 @@ const TEXT = {
     appointment: "Appointment",
     overdue: "Overdue",
     workOrder: "Work order",
+    clearAgenda: "Clear agenda",
+    allOrders: "All orders",
+    unattended: "Unattended",
+    ordersToday: "Orders today",
+    appointmentsToday: "Appointments today",
+    activeLabel: "Active",
+    appointmentsLabelShort: "Appointments",
+    noAssignedActiveWork: "You have no active assigned orders or appointments.",
+    unattendedVisitPending: "Unattended / pending visit",
+    previousActiveOrders: "Previous orders that are still active",
+    ordersForToday: "Orders for today",
+    mainWorkDay: "Main work for the day",
+    scheduledAppointmentsToday: "Scheduled appointments today",
+    separateAppointmentsAgenda: "Appointments agenda separated from work orders",
+    overdueAppointments: "Overdue appointments",
+    previousAppointmentsNeedFollowUp: "Previous appointments that need follow-up",
+    upcomingOrders: "Upcoming orders",
+    scheduledWorkLater: "Work scheduled for later",
+    upcomingAppointments: "Upcoming appointments",
+    futureAppointments: "Future appointments",
+    undatedOrders: "Undated orders",
+    undatedAppointments: "Undated appointments",
+    needsAdminReview: "Needs administrative review",
     sundayShort: "Sun",
     mondayShort: "Mon",
     tuesdayShort: "Tue",
@@ -4155,19 +4201,19 @@ function TecnicoOrdenesPanel({ ordenes, citas = [], obtenerCliente, ordenProps }
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <div className="rounded-2xl bg-white/10 px-3 py-2 text-center ring-1 ring-white/20">
                 <p className="text-lg font-black">{totalNoAtendidas}</p>
-                <p className="text-[9px] font-black uppercase tracking-wide text-rose-200">No atendidas</p>
+                <p className="text-[9px] font-black uppercase tracking-wide text-rose-200">{t("unattended")}</p>
               </div>
               <div className="rounded-2xl bg-white/10 px-3 py-2 text-center ring-1 ring-white/20">
                 <p className="text-lg font-black">{totalHoy}</p>
-                <p className="text-[9px] font-black uppercase tracking-wide text-slate-300">Órdenes hoy</p>
+                <p className="text-[9px] font-black uppercase tracking-wide text-slate-300">{t("ordersToday")}</p>
               </div>
               <div className="rounded-2xl bg-white/10 px-3 py-2 text-center ring-1 ring-white/20">
                 <p className="text-lg font-black">{totalCitasHoy}</p>
-                <p className="text-[9px] font-black uppercase tracking-wide text-slate-300">Citas hoy</p>
+                <p className="text-[9px] font-black uppercase tracking-wide text-slate-300">{t("appointmentsToday")}</p>
               </div>
               <div className="rounded-2xl bg-white/10 px-3 py-2 text-center ring-1 ring-white/20">
                 <p className="text-lg font-black">{totalProximas}</p>
-                <p className="text-[9px] font-black uppercase tracking-wide text-blue-200">Próximas</p>
+                <p className="text-[9px] font-black uppercase tracking-wide text-blue-200">{t("upcoming")}</p>
               </div>
             </div>
           </div>
@@ -4175,9 +4221,9 @@ function TecnicoOrdenesPanel({ ordenes, citas = [], obtenerCliente, ordenProps }
 
         <div className="flex flex-wrap items-center justify-center justify-between gap-3 bg-white p-3">
           <div className="text-sm font-semibold text-slate-500">
-            Activas: <span className="font-black text-slate-950">{ordenes.length}</span>
+            {t("activeLabel")}: <span className="font-black text-slate-950">{ordenes.length}</span>
             <span className="mx-2 text-slate-300">·</span>
-            Citas: <span className="font-black text-slate-950">{totalCitas}</span>
+            {t("appointmentsLabelShort")}: <span className="font-black text-slate-950">{totalCitas}</span>
           </div>
 
           <div className="flex rounded-2xl border border-slate-200 bg-slate-100 p-1">
@@ -4203,6 +4249,7 @@ function TecnicoOrdenesPanel({ ordenes, citas = [], obtenerCliente, ordenProps }
         obtenerCliente={obtenerCliente}
         ordenProps={ordenProps}
         onConvertirCita={ordenProps?.convertirCitaEnOrden}
+        t={ordenProps?.t}
       />
 
       {ordenes.length === 0 && citas.length === 0 && (
@@ -4216,8 +4263,8 @@ function TecnicoOrdenesPanel({ ordenes, citas = [], obtenerCliente, ordenProps }
       ) : (
         <>
           <TecnicoOrderGroup
-            title="No atendidas / visita pendiente"
-            subtitle="Órdenes anteriores que siguen activas"
+            title={t("unattendedVisitPending")}
+            subtitle={t("previousActiveOrders")}
             icon={AlertTriangle}
             tone="bg-gradient-to-r from-rose-900 via-red-800 to-orange-700"
             ordenes={grupos.atrasadas}
@@ -4226,8 +4273,8 @@ function TecnicoOrdenesPanel({ ordenes, citas = [], obtenerCliente, ordenProps }
           />
 
           <TecnicoOrderGroup
-            title="Órdenes para hoy"
-            subtitle="Trabajo principal del día"
+            title={t("ordersForToday")}
+            subtitle={t("mainWorkDay")}
             icon={CalendarDays}
             tone="bg-gradient-to-r from-blue-900 via-cyan-800 to-teal-700"
             ordenes={grupos.hoy}
@@ -4236,8 +4283,8 @@ function TecnicoOrdenesPanel({ ordenes, citas = [], obtenerCliente, ordenProps }
           />
 
           <TecnicoCitaGroup
-            title="Citas programadas para hoy"
-            subtitle="Agenda de citas separada de órdenes"
+            title={t("scheduledAppointmentsToday")}
+            subtitle={t("separateAppointmentsAgenda")}
             icon={CalendarDays}
             tone="bg-gradient-to-r from-cyan-900 via-sky-800 to-blue-700"
             citas={citasGrupos.hoy}
@@ -4246,8 +4293,8 @@ function TecnicoOrdenesPanel({ ordenes, citas = [], obtenerCliente, ordenProps }
           />
 
           <TecnicoCitaGroup
-            title="Citas atrasadas"
-            subtitle="Citas anteriores que requieren seguimiento"
+            title={t("overdueAppointments")}
+            subtitle={t("previousAppointmentsNeedFollowUp")}
             icon={AlertTriangle}
             tone="bg-gradient-to-r from-amber-900 via-orange-800 to-red-700"
             citas={citasGrupos.atrasadas}
@@ -4256,8 +4303,8 @@ function TecnicoOrdenesPanel({ ordenes, citas = [], obtenerCliente, ordenProps }
           />
 
           <TecnicoOrderGroup
-            title="Próximas órdenes"
-            subtitle="Trabajo programado para después"
+            title={t("upcomingOrders")}
+            subtitle={t("scheduledWorkLater")}
             icon={Clock3}
             tone="bg-gradient-to-r from-slate-950 via-slate-800 to-indigo-900"
             ordenes={grupos.proximas}
@@ -4266,8 +4313,8 @@ function TecnicoOrdenesPanel({ ordenes, citas = [], obtenerCliente, ordenProps }
           />
 
           <TecnicoCitaGroup
-            title="Próximas citas"
-            subtitle="Citas futuras"
+            title={t("upcomingAppointments")}
+            subtitle={t("futureAppointments")}
             icon={Clock3}
             tone="bg-gradient-to-r from-indigo-950 via-blue-900 to-cyan-700"
             citas={citasGrupos.proximas}
@@ -4276,8 +4323,8 @@ function TecnicoOrdenesPanel({ ordenes, citas = [], obtenerCliente, ordenProps }
           />
 
           <TecnicoOrderGroup
-            title="Órdenes sin fecha"
-            subtitle="Requieren revisión administrativa"
+            title={t("undatedOrders")}
+            subtitle={t("needsAdminReview")}
             icon={ClipboardList}
             tone="bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600"
             ordenes={grupos.sinFecha}
@@ -4286,8 +4333,8 @@ function TecnicoOrdenesPanel({ ordenes, citas = [], obtenerCliente, ordenProps }
           />
 
           <TecnicoCitaGroup
-            title="Citas sin fecha"
-            subtitle="Requieren revisión administrativa"
+            title={t("undatedAppointments")}
+            subtitle={t("needsAdminReview")}
             icon={ClipboardList}
             tone="bg-gradient-to-r from-slate-700 via-slate-600 to-slate-500"
             citas={citasGrupos.sinFecha}
