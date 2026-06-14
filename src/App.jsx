@@ -459,6 +459,11 @@ const TEXT = {
     enterTechnicianName: "Ingresa el nombre del técnico.",
     saveTechnicianError: "No se pudo guardar el técnico en Supabase.",
     agenda: "Agenda",
+    todayOrders: "Órdenes de hoy",
+    noOrdersToday: "No tienes órdenes ni citas para hoy.",
+    assignedOrdersAppearHere: "Las órdenes y citas asignadas aparecerán aquí ordenadas por hora.",
+    previousPending: "Pendientes anteriores",
+    overdueOrders: "Órdenes vencidas",
     upcoming: "Próximas",
     new: "Nueva",
     quickAgenda: "Agenda rápida",
@@ -955,6 +960,11 @@ const TEXT = {
     enterTechnicianName: "Enter the technician name.",
     saveTechnicianError: "Could not save the technician in Supabase.",
     agenda: "Schedule",
+    todayOrders: "Today's orders",
+    noOrdersToday: "You have no orders or appointments today.",
+    assignedOrdersAppearHere: "Assigned orders and appointments will appear here ordered by time.",
+    previousPending: "Previous pending",
+    overdueOrders: "Overdue orders",
     upcoming: "Upcoming",
     new: "New",
     quickAgenda: "Quick agenda",
@@ -4049,10 +4059,10 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
         <div className="mb-4 flex items-end justify-between gap-3">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-600">
-              Agenda
+              {t("agenda")}
             </p>
             <h2 className="text-2xl font-black text-slate-950">
-              Órdenes de hoy
+              {t("todayOrders")}
             </h2>
           </div>
 
@@ -4065,7 +4075,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
           <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
             <p className="text-lg font-black text-slate-950">{t("noOrdersToday")}</p>
             <p className="mt-1 text-sm font-semibold text-slate-500">
-              Las órdenes y citas asignadas aparecerán aquí ordenadas por hora.
+              {t("assignedOrdersAppearHere")}
             </p>
           </div>
         ) : (
@@ -4086,10 +4096,10 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
           <div className="mb-4 flex items-end justify-between gap-3">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.25em] text-amber-600">
-                Pendientes anteriores
+                {t("previousPending")}
               </p>
               <h2 className="text-2xl font-black text-slate-950">
-                Órdenes vencidas
+                {t("overdueOrders")}
               </h2>
             </div>
 
