@@ -3902,7 +3902,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
                 title={t("call")}
               >
                 <Phone size={17} strokeWidth={2.7} />
-                Llamar
+                {t("call")}
               </a>
             )}
 
@@ -3914,7 +3914,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
                 title={t("message")}
               >
                 <MessageCircle size={17} strokeWidth={2.7} />
-                Mensaje
+                {t("message")}
               </a>
             )}
 
@@ -3928,7 +3928,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
                 title={t("address")}
               >
                 <Navigation size={17} strokeWidth={2.7} />
-                Dirección
+                {t("address")}
               </a>
             )}
 
@@ -4017,7 +4017,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
                 title={t("call")}
               >
                 <Phone size={17} strokeWidth={2.7} />
-                Llamar
+                {t("call")}
               </a>
             )}
 
@@ -4029,7 +4029,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
                 title={t("message")}
               >
                 <MessageCircle size={17} strokeWidth={2.7} />
-                Mensaje
+                {t("message")}
               </a>
             )}
 
@@ -4043,11 +4043,11 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
                 title={t("address")}
               >
                 <Navigation size={17} strokeWidth={2.7} />
-                Dirección
+                {t("address")}
               </a>
             )}
             <span className="inline-flex h-11 min-w-[150px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-700 to-cyan-500 px-4 text-xs font-black text-white shadow-md shadow-blue-200">
-              Trabajar orden
+              {t("workOrder")}
             </span>
           </div>
         </div>
