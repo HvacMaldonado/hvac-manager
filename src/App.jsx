@@ -618,6 +618,7 @@ const TEXT = {
     map: "Mapa",
     noAddress: "Sin dirección",
     appointment: "Cita",
+    overdue: "Vencida",
     workOrder: "Orden",
     sundayShort: "Dom",
     mondayShort: "Lun",
@@ -1122,6 +1123,7 @@ const TEXT = {
     map: "Map",
     noAddress: "No address",
     appointment: "Appointment",
+    overdue: "Overdue",
     workOrder: "Work order",
     sundayShort: "Sun",
     mondayShort: "Mon",
@@ -3888,7 +3890,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
           </p>
 
           <p className="mt-1 text-xs font-bold text-slate-500">
-            📅 {fecha ? formatReportDate(fecha) : "Sin fecha"}
+            📅 {fecha ? formatReportDate(fecha) : t("noDate")}
           </p>
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -3897,7 +3899,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
                 href={ordenProps?.urlTelefono?.(telefono)}
                 onClick={(e) => e.stopPropagation()}
                 className="inline-flex h-11 min-w-[100px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 px-4 text-xs font-black text-white shadow-md shadow-emerald-200 transition hover:-translate-y-0.5"
-                title="Llamar al cliente"
+                title={t("call")}
               >
                 <Phone size={17} strokeWidth={2.7} />
                 Llamar
@@ -3909,7 +3911,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
                 href={`sms:${telefono}`}
                 onClick={(e) => e.stopPropagation()}
                 className="inline-flex h-11 min-w-[100px] items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-xs font-black text-white shadow-md shadow-blue-200 transition hover:-translate-y-0.5"
-                title="Enviar mensaje"
+                title={t("message")}
               >
                 <MessageCircle size={17} strokeWidth={2.7} />
                 Mensaje
@@ -3923,7 +3925,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
                 rel="noreferrer"
                 onClick={(e) => e.stopPropagation()}
                 className="inline-flex h-11 min-w-[105px] items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-xs font-black text-white shadow-md shadow-slate-300 transition hover:-translate-y-0.5"
-                title="Abrir dirección"
+                title={t("address")}
               >
                 <Navigation size={17} strokeWidth={2.7} />
                 Dirección
@@ -3972,14 +3974,14 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
           <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-white/15 blur-2xl" />
           <div className="relative text-center">
             <p className="text-[9px] font-black uppercase tracking-[0.28em] text-white/65">
-              {vencida ? "Vencida" : "Hora"}
+              {vencida ? t("overdue") : t("time")}
             </p>
             <p className="mt-1 text-[2.15rem] font-black leading-none tracking-[-0.06em] tabular-nums">
               {hora}
             </p>
             {vencida && (
               <p className="mt-2 text-[10px] font-black uppercase tracking-wide text-white/75">
-                {fecha ? formatReportDate(fecha) : "Sin fecha"}
+                {fecha ? formatReportDate(fecha) : t("noDate")}
               </p>
             )}
           </div>
@@ -3998,7 +4000,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
             </div>
 
             <span className={`shrink-0 rounded-full border px-3 py-1 text-xs font-black ${ordenProps?.colorPrioridad?.(orden.prioridad) || "bg-blue-50 text-blue-700 border-blue-200"}`}>
-              {orden.prioridad || "Media"}
+              {t((orden.prioridad || "Media").toLowerCase())}
             </span>
           </div>
 
@@ -4012,7 +4014,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
                 href={ordenProps?.urlTelefono?.(telefono)}
                 onClick={(e) => e.stopPropagation()}
                 className="inline-flex h-11 min-w-[100px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 px-4 text-xs font-black text-white shadow-md shadow-emerald-200 transition hover:-translate-y-0.5"
-                title="Llamar al cliente"
+                title={t("call")}
               >
                 <Phone size={17} strokeWidth={2.7} />
                 Llamar
@@ -4024,7 +4026,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
                 href={`sms:${telefono}`}
                 onClick={(e) => e.stopPropagation()}
                 className="inline-flex h-12 min-w-[116px] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 text-sm font-black text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5"
-                title="Enviar mensaje"
+                title={t("message")}
               >
                 <MessageCircle size={17} strokeWidth={2.7} />
                 Mensaje
@@ -4038,7 +4040,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
                 rel="noreferrer"
                 onClick={(e) => e.stopPropagation()}
                 className="inline-flex h-11 min-w-[105px] items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-xs font-black text-white shadow-md shadow-slate-300 transition hover:-translate-y-0.5"
-                title="Abrir dirección"
+                title={t("address")}
               >
                 <Navigation size={17} strokeWidth={2.7} />
                 Dirección
