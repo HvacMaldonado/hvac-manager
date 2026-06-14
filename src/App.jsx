@@ -652,6 +652,7 @@ const TEXT = {
     toDate: "Hasta",
     activeRange: "Rango activo",
     clearRange: "Limpiar rango",
+    exportCsv: "Exportar CSV",
     deletedCustomer: "Cliente eliminado",
     noReportedProblem: "Sin problema reportado",
     noTechnician: "Sin técnico",
@@ -1223,6 +1224,7 @@ const TEXT = {
     toDate: "To",
     activeRange: "Active range",
     clearRange: "Clear range",
+    exportCsv: "Export CSV",
     deletedCustomer: "Deleted customer",
     noReportedProblem: "No reported problem",
     noTechnician: "No technician",
@@ -5320,6 +5322,54 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
       return String(fb).localeCompare(String(fa));
     });
 
+  const exportarHistorialCsv = () => {
+    if (ordenesFiltradas.length === 0) return;
+
+    const filas = ordenesFiltradas.map((orden) => {
+      const cliente = obtenerCliente(orden.clienteId);
+      const fecha = orden.fechaCompletada || orden.fechaCancelacion || orden.fechaCreacion || orden.fecha || "";
+
+      return {
+        id: orden.id,
+        date: fecha ? formatReportDate(fecha) : "",
+        status: orden.estado || "",
+        customer: cliente?.nombre || "",
+        phone: cliente?.telefono || "",
+        address: cliente?.direccion || "",
+        problem: orden.problema || "",
+        hours: orden.duracionHoras || "0.00",
+        cancelReason: orden.cancelReason || "",
+        notes: orden.notasTecnico || "",
+      };
+    });
+
+    const headers = ["ID", "Date", "Status", "Customer", "Phone", "Address", "Problem", "Hours", "Cancel reason", "Notes"];
+    const escapeCsv = (value) => `"${String(value ?? "").replaceAll('"', '""')}"`;
+    const csv = [
+      headers.join(","),
+      ...filas.map((fila) => [
+        fila.id,
+        fila.date,
+        fila.status,
+        fila.customer,
+        fila.phone,
+        fila.address,
+        fila.problem,
+        fila.hours,
+        fila.cancelReason,
+        fila.notes,
+      ].map(escapeCsv).join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `technician-history-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const tabs = [
     { id: "todas", label: t("all"), count: ordenesPorPeriodo.length },
     { id: "completadas", label: t("completedPlural"), count: completadas.length },
@@ -5360,7 +5410,6 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
               ["mes", t("month")],
               ["ano", t("year")],
               ["todo", t("all")],
-              ["personalizado", t("customRange")],
               ["personalizado", t("customRange")],
             ].map(([id, label]) => (
               <button
