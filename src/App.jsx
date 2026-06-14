@@ -3171,6 +3171,7 @@ const compartirOrden = async (orden, metodo) => {
                   ordenes={historialTecnico}
                   obtenerCliente={obtenerCliente}
                   ordenProps={ordenProps}
+                  t={t}
                 />
               )}
             </>
@@ -5203,7 +5204,7 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
 }
 
 
-function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps }) {
+function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps, t }) {
   const [filtro, setFiltro] = useState("todas");
   const [periodo, setPeriodo] = useState("todo");
   const [busqueda, setBusqueda] = useState("");
