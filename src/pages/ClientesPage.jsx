@@ -210,7 +210,7 @@ async function searchGeoapifyAddresses(query) {
   const geoapifyEnvKey = import.meta.env.VITE_GEOAPIFY_API_KEY;
   const apiKey = geoapifyEnvKey && !String(geoapifyEnvKey).startsWith("http")
     ? geoapifyEnvKey
-    : "3Edjk4Otx0ItTI31iJAnklTi2Ie_3W4Ubu663aSSeyqRZTeAq";
+    : "7dc45d6efb344f928a1fdacb7e510509";
 
   if (!apiKey) {
     throw new Error("Falta VITE_GEOAPIFY_API_KEY en .env");
@@ -303,7 +303,7 @@ export default function ClientesPage({
     } catch (error) {
       console.warn("Geoapify error:", error);
       setDireccionSugerencias([]);
-      setDireccionError("Geoapify no está activo. Revisa VITE_GEOAPIFY_API_KEY en .env.");
+      setDireccionError("No se pudo buscar la dirección. Revisa la conexión o la API Key de Geoapify.");
     } finally {
       setDireccionCargando(false);
     }
