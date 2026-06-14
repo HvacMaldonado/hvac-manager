@@ -640,6 +640,13 @@ const TEXT = {
     noMaterialAdded: "No se ha agregado material.",
     noPhoto: "Sin foto",
     selectPhoto: "Seleccionar foto",
+    technicianHistoryTitle: "Historial del técnico",
+    technicianHistoryDescription: "Órdenes completadas y canceladas.",
+    searchTechnicianHistoryPlaceholder: "Buscar por cliente, teléfono, problema o motivo...",
+    noOrdersInFilter: "No hay órdenes en este filtro.",
+    reasonLabel: "Motivo",
+    noReasonRegistered: "Sin motivo registrado",
+    noteLabel: "Nota",
     deletedCustomer: "Cliente eliminado",
     noReportedProblem: "Sin problema reportado",
     noTechnician: "Sin técnico",
@@ -1199,6 +1206,13 @@ const TEXT = {
     noMaterialAdded: "No material has been added.",
     noPhoto: "No photo",
     selectPhoto: "Choose photo",
+    technicianHistoryTitle: "Technician history",
+    technicianHistoryDescription: "Completed and cancelled orders.",
+    searchTechnicianHistoryPlaceholder: "Search by customer, phone, problem, or reason...",
+    noOrdersInFilter: "No orders in this filter.",
+    reasonLabel: "Reason",
+    noReasonRegistered: "No reason registered",
+    noteLabel: "Note",
     deletedCustomer: "Deleted customer",
     noReportedProblem: "No reported problem",
     noTechnician: "No technician",
@@ -5277,9 +5291,9 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
     });
 
   const tabs = [
-    { id: "todas", label: "Todas", count: ordenesPorPeriodo.length },
-    { id: "completadas", label: "Completadas", count: completadas.length },
-    { id: "canceladas", label: "Canceladas", count: canceladas.length },
+    { id: "todas", label: t("all"), count: ordenesPorPeriodo.length },
+    { id: "completadas", label: t("completedPlural"), count: completadas.length },
+    { id: "canceladas", label: t("cancelledPlural"), count: canceladas.length },
   ];
 
   return (
@@ -5287,14 +5301,14 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-md shadow-slate-300/50">
         <div className="bg-slate-950 px-5 py-3 text-white">
           <p className="text-[10px] font-black uppercase tracking-[0.28em] text-emerald-300">
-            Historial del técnico
+            {t("technicianHistoryTitle")}
           </p>
           <h2 className="mt-1 flex items-center justify-center gap-2 text-lg font-black">
             <History size={22} />
-            Historial
+            {t("history")}
           </h2>
           <p className="mt-1 text-xs font-semibold text-slate-300">
-            Órdenes completadas y canceladas.
+            {t("technicianHistoryDescription")}
           </p>
         </div>
 
@@ -5304,18 +5318,18 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
             <input
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              placeholder="Buscar por cliente, teléfono, problema o motivo..."
+              placeholder={t("searchTechnicianHistoryPlaceholder")}
               className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-11 pr-4 text-sm font-semibold outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
             />
           </div>
 
           <div className="flex gap-2 overflow-x-auto">
             {[
-              ["hoy", "Hoy"],
-              ["semana", "Semana"],
-              ["mes", "Mes"],
-              ["ano", "Año"],
-              ["todo", "Todo"],
+              ["hoy", t("today")],
+              ["semana", t("week")],
+              ["mes", t("month")],
+              ["ano", t("year")],
+              ["todo", t("all")],
             ].map(([id, label]) => (
               <button
                 key={id}
@@ -5353,7 +5367,7 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
 
       {ordenesFiltradas.length === 0 ? (
         <div className="rounded-2xl border border-slate-200 bg-white/95 p-5 text-center text-sm font-semibold text-slate-500 shadow-md shadow-slate-300/50">
-          No hay órdenes en este filtro.
+          {t("noOrdersInFilter")}
         </div>
       ) : (
         <div className="grid gap-3">
@@ -5381,7 +5395,7 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
 
                 <div className="grid gap-3 p-3 sm:grid-cols-[68px_24px_minmax(0,1fr)] sm:items-start">
                   <div className="text-sm font-black text-slate-700 sm:pt-4">
-                    {fecha ? formatReportDate(fecha) : "Sin fecha"}
+                    {fecha ? formatReportDate(fecha) : t("noDate")}
                   </div>
 
                   <div className="relative hidden justify-center sm:flex sm:pt-5">
@@ -5393,7 +5407,7 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
                       <div className="pointer-events-none relative z-10 min-w-0">
                         <div className="flex flex-wrap items-center justify-center gap-1.5">
                           <span className={`rounded-full px-2.5 py-1 text-[10px] font-black ${badgeClass}`}>
-                            {completada ? "Completada" : "Cancelada"}
+                            {completada ? t("completed") : t("cancelled")}
                           </span>
 
                           <span className="rounded-full bg-white/80 px-2.5 py-1 text-[10px] font-black text-slate-700 ring-1 ring-slate-200">
@@ -5438,13 +5452,13 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
 
                         {!completada && (
                           <div className="mt-2 rounded-xl border border-rose-200 bg-white/70 p-2 text-xs font-bold text-rose-800">
-                            Motivo: {orden.cancelReason || "Sin motivo registrado"}
+                            {t("reasonLabel")}: {orden.cancelReason || t("noReasonRegistered")}
                           </div>
                         )}
 
                         {orden.notasTecnico && (
                           <div className="mt-2 rounded-xl border border-blue-200 bg-white/70 p-2 text-xs font-bold text-blue-900">
-                            Nota: {orden.notasTecnico}
+                            {t("noteLabel")}: {orden.notasTecnico}
                           </div>
                         )}
                       </div>
@@ -5468,7 +5482,7 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
                             className="flex items-center justify-center gap-1.5 rounded-2xl bg-slate-950 shadow-lg shadow-slate-300 transition hover:-translate-y-0.5 px-4 py-3 text-sm font-black text-white"
                           >
                             <Navigation size={14} />
-                            Mapa
+                            {t("map")}
                           </a>
                         )}
 
@@ -5478,7 +5492,7 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
                             className="flex items-center justify-center gap-1.5 rounded-2xl bg-blue-600 shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 px-4 py-3 text-sm font-black text-white"
                           >
                             <Printer size={14} />
-                            Imprimir
+                            {t("print")}
                           </button>
                         )}
                       </div>
