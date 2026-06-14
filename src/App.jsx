@@ -4528,7 +4528,16 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
 
                 <div className="flex flex-wrap gap-2 sm:justify-end">
                   <span className={`rounded-full border px-3 py-1.5 text-xs font-black ${colorEstado(orden.estado)}`}>
-                    {t(statusKey(orden.estado))}
+                    {({
+                      "Pendiente": t("pending"),
+                      "Asignada": t("assigned"),
+                      "En ruta": t("onRoute"),
+                      "En sitio": t("onSite"),
+                      "En proceso": t("inProgress"),
+                      "Completado": t("completed"),
+                      "Cancelada": t("cancelled"),
+                      "Necesita seguimiento": t("needsFollowUp"),
+                    }[orden.estado] || orden.estado)}
                   </span>
 
                   <span className={`rounded-full border px-3 py-1.5 text-xs font-black ${colorPrioridad(orden.prioridad)}`}>
