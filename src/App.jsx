@@ -620,6 +620,9 @@ const TEXT = {
     appointment: "Cita",
     overdue: "Vencida",
     workOrder: "Orden",
+    technicianAgenda: "Agenda del técnico",
+    assignedWork: "Trabajo asignado",
+    assignedWorkDescription: "Separado por órdenes no atendidas, trabajo de hoy, citas programadas y próximas visitas.",
     clearAgenda: "Agenda clara",
     allOrders: "Todas las órdenes",
     unattended: "No atendidas",
@@ -629,6 +632,31 @@ const TEXT = {
     closedLabel: "Cerradas",
     appointmentsLabelShort: "Citas",
     noAssignedActiveWork: "No tienes órdenes ni citas activas asignadas.",
+    hideWork: "Ocultar trabajo",
+    viewWork: "Ver trabajo",
+    closeLabel: "Cierre",
+    notClosed: "Sin cerrar",
+    materialUsed: "Material usado",
+    noMaterialAdded: "No se ha agregado material.",
+    deletedCustomer: "Cliente eliminado",
+    noReportedProblem: "Sin problema reportado",
+    noTechnician: "Sin técnico",
+    noDate: "Sin fecha",
+    call: "Llamar",
+    route: "Ruta",
+    followUpLabel: "Seguimiento",
+    priorityLabel: "Prioridad",
+    dateLabel: "Fecha",
+    startLabel: "Inicio",
+    notStarted: "Sin iniciar",
+    workLabel: "Trabajo",
+    travelLabel: "Traslado",
+    workDetailsPlaceholder: "Detalles del trabajo realizado...",
+    goToCustomer: "Salir al cliente",
+    arrivedOnSite: "Llegué al sitio",
+    startWork: "Comenzar trabajo",
+    finishWork: "Finalizar trabajo",
+    requiresFollowUp: "Requiere seguimiento",
     unattendedVisitPending: "No atendidas / visita pendiente",
     previousActiveOrders: "Órdenes anteriores que siguen activas",
     ordersForToday: "Órdenes para hoy",
@@ -1149,6 +1177,9 @@ const TEXT = {
     appointment: "Appointment",
     overdue: "Overdue",
     workOrder: "Work order",
+    technicianAgenda: "Technician agenda",
+    assignedWork: "Assigned work",
+    assignedWorkDescription: "Separated by unattended orders, today\'s work, scheduled appointments, and upcoming visits.",
     clearAgenda: "Clear agenda",
     allOrders: "All orders",
     unattended: "Unattended",
@@ -1158,6 +1189,31 @@ const TEXT = {
     closedLabel: "Closed",
     appointmentsLabelShort: "Appointments",
     noAssignedActiveWork: "You have no active assigned orders or appointments.",
+    hideWork: "Hide work",
+    viewWork: "View work",
+    closeLabel: "Closing",
+    notClosed: "Not closed",
+    materialUsed: "Material used",
+    noMaterialAdded: "No material has been added.",
+    deletedCustomer: "Deleted customer",
+    noReportedProblem: "No reported problem",
+    noTechnician: "No technician",
+    noDate: "No date",
+    call: "Call",
+    route: "Route",
+    followUpLabel: "Follow-up",
+    priorityLabel: "Priority",
+    dateLabel: "Date",
+    startLabel: "Start",
+    notStarted: "Not started",
+    workLabel: "Work",
+    travelLabel: "Travel",
+    workDetailsPlaceholder: "Details of the work performed...",
+    goToCustomer: "Go to customer",
+    arrivedOnSite: "Arrived on site",
+    startWork: "Start work",
+    finishWork: "Finish work",
+    requiresFollowUp: "Requires follow-up",
     unattendedVisitPending: "Unattended / pending visit",
     previousActiveOrders: "Previous orders that are still active",
     ordersForToday: "Orders for today",
@@ -2340,7 +2396,7 @@ export default function App() {
       `Nombre: ${tec?.nombre || "Sin técnico"}`,
       "",
       "SOLICITUD",
-      `${orden.problema || "Sin problema reportado"}`,
+      `${orden.problema || t("noReportedProblem")}`,
       "",
       "DETALLE DEL SERVICIO",
       `${orden.notasTecnico || "Sin notas del técnico"}`,
@@ -3454,7 +3510,7 @@ function ReprogramCitaModal({ open, cita, cliente, onClose, onConfirm }) {
 
         <main className="space-y-4 bg-[radial-gradient(circle_at_top_right,_#22d3ee33,_transparent_28%),linear-gradient(135deg,_#eff6ff_0%,_#ecfeff_55%,_#f8fafc_100%)] p-5">
           <div className="rounded-2xl border border-cyan-200 bg-white p-4 shadow-sm">
-            <p className="text-sm font-black text-slate-950">{cliente?.nombre || "Cliente eliminado"}</p>
+            <p className="text-sm font-black text-slate-950">{cliente?.nombre || t("deletedCustomer")}</p>
             <p className="mt-1 text-sm font-semibold text-slate-600">{cita.motivo || "Cita programada"}</p>
             <p className="mt-2 text-xs font-bold text-slate-500">
               Fecha actual: {cita.fecha || "Sin fecha"} · Hora actual: {cita.hora || "Sin hora"}
@@ -3650,10 +3706,10 @@ function CancelOrderModal({ open, orden, cliente, tecnico, onClose, onConfirm, s
 
         <main className="space-y-4 bg-[radial-gradient(circle_at_top_right,_#fb718533,_transparent_28%),linear-gradient(135deg,_#fff7ed_0%,_#fff1f2_55%,_#f8fafc_100%)] p-5">
           <div className="rounded-2xl border border-rose-200 bg-white p-4 shadow-sm">
-            <p className="text-sm font-black text-slate-950">{cliente?.nombre || "Cliente eliminado"}</p>
-            <p className="mt-1 text-sm font-semibold text-slate-600">{orden.problema || "Sin problema reportado"}</p>
+            <p className="text-sm font-black text-slate-950">{cliente?.nombre || t("deletedCustomer")}</p>
+            <p className="mt-1 text-sm font-semibold text-slate-600">{orden.problema || t("noReportedProblem")}</p>
             <p className="mt-2 text-xs font-bold text-slate-500">
-              Técnico: {tecnico?.nombre || "Sin técnico"} · Orden #{orden.id}
+              Técnico: {tecnico?.nombre || t("noTechnician")} · Orden #{orden.id}
             </p>
           </div>
 
@@ -3920,7 +3976,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0">
               <h3 className="truncate text-2xl font-black text-slate-950">
-                {cliente?.nombre || "Cliente eliminado"}
+                {cliente?.nombre || t("deletedCustomer")}
               </h3>
 
               <p className="mt-2 line-clamp-2 text-base font-black leading-snug text-slate-800">
@@ -4039,11 +4095,11 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="pointer-events-none relative z-10 min-w-0">
               <h3 className="truncate text-2xl font-black text-slate-950">
-                {cliente?.nombre || "Cliente eliminado"}
+                {cliente?.nombre || t("deletedCustomer")}
               </h3>
 
               <p className="mt-2 line-clamp-2 text-base font-black leading-snug text-slate-800">
-                {orden.problema || "Sin problema reportado"}
+                {orden.problema || t("noReportedProblem")}
               </p>
             </div>
 
@@ -4190,13 +4246,13 @@ function TecnicoOrdenesPanel({ ordenes, citas = [], obtenerCliente, ordenProps }
         <div className="bg-slate-950 px-5 py-3 text-white">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center justify-center xl:justify-between">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-slate-300">Agenda del técnico</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-slate-300">{t("technicianAgenda")}</p>
               <h2 className="mt-1 flex items-center justify-center gap-2 text-lg font-black">
                 <ClipboardList size={24} />
-                Trabajo asignado
+                {t("assignedWork")}
               </h2>
               <p className="mt-1 text-sm text-slate-300">
-                Separado por órdenes no atendidas, trabajo de hoy, citas programadas y próximas visitas.
+                {t("assignedWorkDescription")}
               </p>
             </div>
 
@@ -4233,13 +4289,13 @@ function TecnicoOrdenesPanel({ ordenes, citas = [], obtenerCliente, ordenProps }
               onClick={() => setVista("agenda")}
               className={`rounded-xl px-3 py-2 text-xs font-black transition ${vista === "agenda" ? "bg-slate-950 text-white shadow" : "text-slate-600 hover:bg-white"}`}
             >
-              Agenda clara
+              {t("clearAgenda")}
             </button>
             <button
               onClick={() => setVista("todas")}
               className={`rounded-xl px-3 py-2 text-xs font-black transition ${vista === "todas" ? "bg-slate-950 text-white shadow" : "text-slate-600 hover:bg-white"}`}
             >
-              Todas las órdenes
+              {t("allOrders")}
             </button>
           </div>
         </div>
@@ -4256,7 +4312,7 @@ function TecnicoOrdenesPanel({ ordenes, citas = [], obtenerCliente, ordenProps }
 
       {ordenes.length === 0 && citas.length === 0 && (
         <div className="rounded-2xl border border-slate-200 bg-white/95 p-8 text-center text-sm font-semibold text-slate-500 shadow-md shadow-slate-300/50">
-          No tienes órdenes ni citas activas asignadas.
+          {t("noAssignedActiveWork")}
         </div>
       )}
 
@@ -4446,7 +4502,7 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
   if (compacta) {
     return (
       <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-        <p className="font-black text-slate-950">{cliente?.nombre || "Cliente eliminado"}</p>
+        <p className="font-black text-slate-950">{cliente?.nombre || t("deletedCustomer")}</p>
         <p className="text-xs font-semibold text-slate-600">{orden.problema}</p>
       </div>
     );
@@ -4483,13 +4539,13 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
 
               <div>
                 <h3 className="truncate text-4xl font-black tracking-tight text-white">
-                  {cliente?.nombre || "Cliente eliminado"}
+                  {cliente?.nombre || t("deletedCustomer")}
                 </h3>
 
                 <div className="mt-3 rounded-3xl bg-white/10 p-4 ring-1 ring-white/10">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <p className="line-clamp-2 text-xl font-black leading-snug text-white">
-                      {orden.problema || "Sin problema reportado"}
+                      {orden.problema || t("noReportedProblem")}
                     </p>
                   </div>
                 </div>
@@ -4499,17 +4555,17 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
                 <div className="rounded-2xl bg-white/10 px-4 py-3 ring-1 ring-white/10">
                   <p className="flex items-center gap-2 text-lg font-black text-cyan-50">
                     <MapPin size={20} />
-                    {direccion || "Sin dirección"}
+                    {direccion || t("noAddress")}
                   </p>
                 </div>
 
                 <div className="rounded-2xl bg-white/10 px-4 py-3 ring-1 ring-white/10">
                   <p className="flex items-center gap-2 text-sm font-black text-cyan-50">
                     <User size={17} />
-                    {tecnico?.nombre || "Sin técnico"}
+                    {tecnico?.nombre || t("noTechnician")}
                     <span className="mx-1 text-white/30">·</span>
                     <Calendar size={17} />
-                    {fechaTexto ? formatReportDate(fechaTexto) : "Sin fecha"}
+                    {fechaTexto ? formatReportDate(fechaTexto) : t("noDate")}
                   </p>
                 </div>
               </div>
@@ -4518,20 +4574,20 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
                 {telefono && (
                   <a href={urlTelefono(telefono)} className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-base font-black text-white shadow-lg shadow-emerald-900/20 transition hover:-translate-y-0.5">
                     <Phone size={20} />
-                    Llamar
+                    {t("call")}
                   </a>
                 )}
 
                 {direccion && (
                   <a href={urlAppleMaps(direccion)} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-base font-black text-slate-950 shadow-lg transition hover:-translate-y-0.5">
                     <Navigation size={20} />
-                    Ruta
+                    {t("route")}
                   </a>
                 )}
 
                 <button onClick={() => setVerDetalles(!verDetalles)} className="flex min-w-[220px] flex-1 items-center justify-center gap-3 rounded-[1.35rem] bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-4 text-lg font-black text-white shadow-xl shadow-cyan-900/25 transition hover:-translate-y-0.5">
                   <ClipboardCheck size={24} strokeWidth={2.7} />
-                  {verDetalles ? "Ocultar trabajo" : "Ver trabajo"}
+                  {verDetalles ? t("hideWork") : t("viewWork")}
                 </button>
               </div>
             </div>
@@ -4539,19 +4595,19 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
 
           {orden.estado === "Necesita seguimiento" && orden.seguimientoMotivo && (
             <div className="m-4 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-900 shadow-sm">
-              Seguimiento: {orden.seguimientoMotivo}
+              {t("followUpLabel")}: {orden.seguimientoMotivo}
             </div>
           )}
 
           {verDetalles && (
             <div className="m-4 space-y-4 rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-inner shadow-slate-100">
               <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-3 xl:grid-cols-6">
-                <Info icon={ShieldAlert} titulo="Prioridad" valor={orden.prioridad} extra={colorPrioridad(orden.prioridad)} />
-                <Info icon={Calendar} titulo="Fecha" valor={orden.fecha} />
-                <Info icon={PlayCircle} titulo="Inicio" valor={orden.horaInicio ? new Date(orden.horaInicio).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true }) : "Sin iniciar"} />
-                <Info icon={CheckCircle2} titulo="Cierre" valor={orden.horaCierre ? new Date(orden.horaCierre).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true }) : "Sin cerrar"} />
-                <Info icon={Gauge} titulo="Trabajo" valor={`${orden.duracionHoras || "0.00"} h`} />
-                <Info icon={Route} titulo="Traslado" valor={`${orden.duracionTraslado || "0.00"} h`} />
+                <Info icon={ShieldAlert} titulo={t("priorityLabel")} valor={orden.prioridad} extra={colorPrioridad(orden.prioridad)} />
+                <Info icon={Calendar} titulo={t("dateLabel")} valor={orden.fecha} />
+                <Info icon={PlayCircle} titulo={t("startLabel")} valor={orden.horaInicio ? new Date(orden.horaInicio).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true }) : t("notStarted")} />
+                <Info icon={CheckCircle2} titulo={t("closeLabel")} valor={orden.horaCierre ? new Date(orden.horaCierre).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true }) : t("notClosed")} />
+                <Info icon={Gauge} titulo={t("workLabel")} valor={`${orden.duracionHoras || "0.00"} h`} />
+                <Info icon={Route} titulo={t("travelLabel")} valor={`${orden.duracionTraslado || "0.00"} h`} />
               </div>
 
               <Materiales orden={orden} inventario={inventario} agregarMaterialAOrden={agregarMaterialAOrden} actualizarMaterialOrden={actualizarMaterialOrden} eliminarMaterialOrden={eliminarMaterialOrden} />
@@ -4562,9 +4618,9 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
                   {t("photos")}
                 </p>
                 <div className="grid gap-3 md:grid-cols-3">
-                  <FotoUploader titulo="Antes" imagen={orden.fotos?.antes} onChange={(archivo) => subirFoto(orden.id, "antes", archivo)} />
-                  <FotoUploader titulo="Durante" imagen={orden.fotos?.durante} onChange={(archivo) => subirFoto(orden.id, "durante", archivo)} />
-                  <FotoUploader titulo="Después" imagen={orden.fotos?.despues} onChange={(archivo) => subirFoto(orden.id, "despues", archivo)} />
+                  <FotoUploader titulo={t("before")} imagen={orden.fotos?.antes} onChange={(archivo) => subirFoto(orden.id, "antes", archivo)} />
+                  <FotoUploader titulo={t("during")} imagen={orden.fotos?.durante} onChange={(archivo) => subirFoto(orden.id, "durante", archivo)} />
+                  <FotoUploader titulo={t("after")} imagen={orden.fotos?.despues} onChange={(archivo) => subirFoto(orden.id, "despues", archivo)} />
                 </div>
               </div>
 
@@ -4576,7 +4632,7 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
               <textarea
                 value={orden.notasTecnico || ""}
                 onChange={(e) => guardarNotaTecnico(orden.id, e.target.value)}
-                placeholder="Detalles del trabajo realizado..."
+                placeholder={t("workDetailsPlaceholder")}
                 className="min-h-24 w-full rounded-2xl border border-cyan-200 bg-gradient-to-br from-blue-50 to-cyan-50 p-3 text-sm font-semibold outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
               />
 
@@ -4584,21 +4640,21 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
                 {orden.estado === "Asignada" && (
                   <button onClick={() => marcarEnRuta(orden.id)} className="flex items-center justify-center gap-1.5 rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5">
                     <Navigation {...iconProps} />
-                    Salir al cliente
+                    {t("goToCustomer")}
                   </button>
                 )}
 
                 {orden.estado === "En ruta" && (
                   <button onClick={() => marcarLlegada(orden.id)} className="flex items-center justify-center gap-1.5 rounded-2xl bg-indigo-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-indigo-200 transition hover:-translate-y-0.5">
                     <MapPin {...iconProps} />
-                    Llegué al sitio
+                    {t("arrivedOnSite")}
                   </button>
                 )}
 
                 {(orden.estado === "En sitio" || orden.estado === "Necesita seguimiento") && (
                   <button onClick={() => iniciarTrabajo(orden.id)} className="flex items-center justify-center gap-1.5 rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5">
                     <Wrench {...iconProps} />
-                    Comenzar trabajo
+                    {t("startWork")}
                   </button>
                 )}
 
@@ -4606,12 +4662,12 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
                   <>
                     <button onClick={() => completarOrden(orden.id)} className="flex items-center justify-center gap-1.5 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-emerald-200 transition hover:-translate-y-0.5">
                       <CheckCircle2 {...iconProps} />
-                      Finalizar trabajo
+                      {t("finishWork")}
                     </button>
 
                     <button onClick={() => marcarNecesitaSeguimiento(orden.id)} className="flex items-center justify-center gap-1.5 rounded-2xl bg-amber-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-amber-200 transition hover:-translate-y-0.5">
                       <AlertTriangle {...iconProps} />
-                      Requiere seguimiento
+                      {t("requiresFollowUp")}
                     </button>
                   </>
                 )}
@@ -4619,7 +4675,7 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
                 {orden.estado !== "Completado" && orden.estado !== "Cancelada" && (
                   <button onClick={() => cancelarOrden(orden)} className="flex items-center justify-center gap-1.5 rounded-2xl bg-rose-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-rose-200 transition hover:-translate-y-0.5">
                     <Ban {...iconProps} />
-                    Cancelar
+                    {t("cancel")}
                   </button>
                 )}
               </div>
@@ -4669,7 +4725,7 @@ function Materiales({ orden, inventario, agregarMaterialAOrden, actualizarMateri
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="flex items-center gap-2 text-xl font-black text-slate-950">
           <Boxes {...iconProps} />
-          Material usado
+          {t("materialUsed")}
         </p>
 
         <button
@@ -4677,13 +4733,13 @@ function Materiales({ orden, inventario, agregarMaterialAOrden, actualizarMateri
           className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-3 text-sm font-black text-white shadow-lg shadow-purple-200 transition hover:-translate-y-0.5"
         >
           <Plus {...iconProps} />
-          Agregar material
+          {t("addMaterial")}
         </button>
       </div>
 
       {(orden.materialesUsados || []).length === 0 && (
         <p className="rounded-2xl border border-dashed border-purple-200 bg-white/80 p-4 text-sm font-bold text-slate-500">
-          No se ha agregado material.
+          {t("noMaterialAdded")}
         </p>
       )}
 
@@ -5335,11 +5391,11 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps 
                         </div>
 
                         <h3 className="mt-2 truncate text-2xl font-black tracking-tight text-slate-950">
-                          {cliente?.nombre || "Cliente eliminado"}
+                          {cliente?.nombre || t("deletedCustomer")}
                         </h3>
 
                         <p className="mt-2 line-clamp-2 rounded-2xl bg-white/80 px-3 py-2 text-sm font-black leading-relaxed text-slate-800 shadow-sm">
-                          {orden.problema || "Sin problema reportado"}
+                          {orden.problema || t("noReportedProblem")}
                         </p>
 
                         <div className="mt-2 grid gap-1 text-[11px] font-semibold text-slate-500 sm:grid-cols-2">
@@ -5383,7 +5439,7 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps 
                             className="flex items-center justify-center gap-1.5 rounded-2xl bg-emerald-600 shadow-lg shadow-emerald-200 transition hover:-translate-y-0.5 px-4 py-3 text-sm font-black text-white"
                           >
                             <Phone size={14} />
-                            Llamar
+                            {t("call")}
                           </a>
                         )}
 
