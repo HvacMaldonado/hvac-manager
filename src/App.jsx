@@ -4108,7 +4108,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
             </div>
 
             <span className={`shrink-0 rounded-full border px-3 py-1 text-xs font-black ${ordenProps?.colorPrioridad?.(orden.prioridad) || "bg-blue-50 text-blue-700 border-blue-200"}`}>
-              {t((orden.prioridad || "Media").toLowerCase())}
+              {t({ Baja: "low", Media: "medium", Alta: "high", Urgente: "urgent" }[orden.prioridad] || "medium")}
             </span>
           </div>
 
@@ -4541,7 +4541,7 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
                   </span>
 
                   <span className={`rounded-full border px-3 py-1.5 text-xs font-black ${colorPrioridad(orden.prioridad)}`}>
-                    {t((orden.prioridad || "Media").toLowerCase())}
+                    {t({ Baja: "low", Media: "medium", Alta: "high", Urgente: "urgent" }[orden.prioridad] || "medium")}
                   </span>
 
                   <span className="rounded-full bg-white/90 px-3 py-1.5 text-xs font-black text-slate-700 ring-1 ring-white/40">
@@ -4615,7 +4615,7 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
           {verDetalles && (
             <div className="m-4 space-y-4 rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-inner shadow-slate-100">
               <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-3 xl:grid-cols-6">
-                <Info icon={ShieldAlert} titulo={t("priorityLabel")} valor={t((orden.prioridad || "Media").toLowerCase())} extra={colorPrioridad(orden.prioridad)} />
+                <Info icon={ShieldAlert} titulo={t("priorityLabel")} valor={t({ Baja: "low", Media: "medium", Alta: "high", Urgente: "urgent" }[orden.prioridad] || "medium")} extra={colorPrioridad(orden.prioridad)} />
                 <Info icon={Calendar} titulo={t("dateLabel")} valor={orden.fecha} />
                 <Info icon={PlayCircle} titulo={t("startLabel")} valor={orden.horaInicio ? new Date(orden.horaInicio).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true }) : t("notStarted")} />
                 <Info icon={CheckCircle2} titulo={t("closeLabel")} valor={orden.horaCierre ? new Date(orden.horaCierre).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true }) : t("notClosed")} />
