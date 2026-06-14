@@ -4610,7 +4610,7 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
                 <Info icon={Route} titulo={t("travelLabel")} valor={`${orden.duracionTraslado || "0.00"} h`} />
               </div>
 
-              <Materiales orden={orden} inventario={inventario} agregarMaterialAOrden={agregarMaterialAOrden} actualizarMaterialOrden={actualizarMaterialOrden} eliminarMaterialOrden={eliminarMaterialOrden} />
+              <Materiales orden={orden} inventario={inventario} agregarMaterialAOrden={agregarMaterialAOrden} actualizarMaterialOrden={actualizarMaterialOrden} eliminarMaterialOrden={eliminarMaterialOrden} t={t} />
 
               <div className="rounded-[1.5rem] border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-cyan-50 p-4 shadow-sm">
                 <p className="mb-3 flex items-center gap-2 text-base font-black text-slate-950">
@@ -4709,7 +4709,7 @@ function Info({ titulo, valor, extra = "bg-white", icon: Icon = FileText }) {
   );
 }
 
-function Materiales({ orden, inventario, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden }) {
+function Materiales({ orden, inventario, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, t }) {
   const ordenTieneUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(orden?.id || ""));
 
   if (!ordenTieneUUID) {
