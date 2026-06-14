@@ -639,6 +639,7 @@ const TEXT = {
     materialUsed: "Material usado",
     noMaterialAdded: "No se ha agregado material.",
     noPhoto: "Sin foto",
+    selectPhoto: "Seleccionar foto",
     deletedCustomer: "Cliente eliminado",
     noReportedProblem: "Sin problema reportado",
     noTechnician: "Sin técnico",
@@ -1197,6 +1198,7 @@ const TEXT = {
     materialUsed: "Material used",
     noMaterialAdded: "No material has been added.",
     noPhoto: "No photo",
+    selectPhoto: "Choose photo",
     deletedCustomer: "Deleted customer",
     noReportedProblem: "No reported problem",
     noTechnician: "No technician",
@@ -4803,12 +4805,15 @@ function FotoUploader({ titulo, imagen, onChange, t }) {
         </div>
       )}
 
-      <input
-        type="file"
-        accept="image/*"
-        onChange={(e) => onChange(e.target.files[0])}
-        className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2 text-xs font-bold text-slate-600"
-      />
+      <label className="flex cursor-pointer items-center justify-center rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs font-black text-slate-700 transition hover:bg-white">
+        {t("selectPhoto")}
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => onChange(e.target.files[0])}
+          className="hidden"
+        />
+      </label>
     </div>
   );
 }
