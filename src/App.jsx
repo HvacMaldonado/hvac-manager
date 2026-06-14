@@ -3874,7 +3874,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
           </div>
 
           <p className="mt-3 line-clamp-1 text-sm font-bold text-slate-600">
-            📍 {direccion || "Sin dirección"}
+            📍 {direccion || t("noAddress")}
           </p>
 
           <p className="mt-1 text-xs font-bold text-slate-500">
@@ -3993,7 +3993,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
           </div>
 
           <p className="mt-3 line-clamp-1 text-sm font-bold text-slate-600">
-            📍 {direccion || "Sin dirección"}
+            📍 {direccion || t("noAddress")}
           </p>
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -4063,7 +4063,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
 
         {ordenesHoy.length + citasHoy.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
-            <p className="text-lg font-black text-slate-950">No tienes órdenes ni citas para hoy.</p>
+            <p className="text-lg font-black text-slate-950">{t("noOrdersToday")}</p>
             <p className="mt-1 text-sm font-semibold text-slate-500">
               Las órdenes y citas asignadas aparecerán aquí ordenadas por hora.
             </p>
