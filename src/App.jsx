@@ -4591,23 +4591,77 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
                 </div>
               </div>
 
-              <div className="grid gap-3 lg:grid-cols-[1.3fr_.7fr]">
-                <div className="rounded-2xl bg-white/10 px-4 py-3 ring-1 ring-white/10">
-                  <p className="flex items-center gap-2 text-lg font-black text-cyan-50">
-                    <MapPin size={20} />
-                    {direccion || t("noAddress")}
-                  </p>
+              <div className="space-y-3">
+
+                <div className="grid gap-3 lg:grid-cols-[1.3fr_.7fr]">
+                  <div className="rounded-2xl bg-white/10 px-4 py-3 ring-1 ring-white/10">
+                    <p className="flex items-center gap-2 text-lg font-black text-cyan-50">
+                      <MapPin size={20} />
+                      {direccion || t("noAddress")}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl bg-white/10 px-4 py-3 ring-1 ring-white/10">
+                    <p className="flex items-center gap-2 text-sm font-black text-cyan-50">
+                      <User size={17} />
+                      {tecnico?.nombre || t("noTechnician")}
+                      <span className="mx-1 text-white/30">·</span>
+                      <Calendar size={17} />
+                      {fechaTexto ? formatReportDate(fechaTexto) : t("noDate")}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="rounded-2xl bg-white/10 px-4 py-3 ring-1 ring-white/10">
-                  <p className="flex items-center gap-2 text-sm font-black text-cyan-50">
-                    <User size={17} />
-                    {tecnico?.nombre || t("noTechnician")}
-                    <span className="mx-1 text-white/30">·</span>
-                    <Calendar size={17} />
-                    {fechaTexto ? formatReportDate(fechaTexto) : t("noDate")}
+                <div className="rounded-2xl bg-white/10 p-4 ring-1 ring-white/10">
+                  <p className="mb-3 text-xs font-black uppercase tracking-[0.25em] text-cyan-200">
+                    {t("accessDetails")}
                   </p>
+
+                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+
+                    <div className="rounded-xl bg-white/10 p-3">
+                      <p className="text-[10px] font-black uppercase text-cyan-200">
+                        {t("apt")}
+                      </p>
+
+                      <p className="text-sm font-bold text-white">
+                        {cliente?.apartamento || "—"}
+                      </p>
+                    </div>
+
+                    <div className="rounded-xl bg-white/10 p-3">
+                      <p className="text-[10px] font-black uppercase text-cyan-200">
+                        {t("building")}
+                      </p>
+
+                      <p className="text-sm font-bold text-white">
+                        {cliente?.edificio || "—"}
+                      </p>
+                    </div>
+
+                    <div className="rounded-xl bg-white/10 p-3">
+                      <p className="text-[10px] font-black uppercase text-cyan-200">
+                        {t("street")}
+                      </p>
+
+                      <p className="text-sm font-bold text-white">
+                        {cliente?.calle || "—"}
+                      </p>
+                    </div>
+
+                    <div className="rounded-xl bg-white/10 p-3">
+                      <p className="text-[10px] font-black uppercase text-cyan-200">
+                        {t("accessCode")}
+                      </p>
+
+                      <p className="text-sm font-bold text-white">
+                        {cliente?.codigoAcceso || "—"}
+                      </p>
+                    </div>
+
+                  </div>
                 </div>
+
               </div>
 
               <div className="flex flex-wrap gap-3 pt-1">
