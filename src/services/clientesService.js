@@ -48,3 +48,26 @@ export async function crearClienteSupabase(cliente) {
 
   return clienteCreado;
 }
+
+
+export async function crearDireccionClienteSupabase(clienteId, direccion) {
+  const { data, error } = await supabase
+    .from("cliente_direcciones")
+    .insert({
+      cliente_id: clienteId,
+      etiqueta: direccion.etiqueta || "Ubicación",
+      direccion: direccion.direccion || "",
+      apartamento: direccion.apartamento || "",
+      edificio: direccion.edificio || "",
+      codigo_acceso: direccion.codigoAcceso || "",
+      notas: direccion.notas || "",
+      principal: Boolean(direccion.principal),
+      activo: true,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return data;
+}

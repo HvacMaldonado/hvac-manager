@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import { crearDireccionClienteSupabase } from "../services/clientesService";
+
 import {
   Building2,
   CalendarDays,
@@ -261,6 +263,16 @@ export default function ClientesPage({
   const [direccionSugerencias, setDireccionSugerencias] = useState([]);
   const [direccionCargando, setDireccionCargando] = useState(false);
   const [direccionError, setDireccionError] = useState("");
+  const [ubicacionClienteId, setUbicacionClienteId] = useState(null);
+  const [ubicacionForm, setUbicacionForm] = useState({
+    etiqueta: "",
+    direccion: "",
+    apartamento: "",
+    edificio: "",
+    codigoAcceso: "",
+    notas: "",
+  });
+  const [guardandoUbicacion, setGuardandoUbicacion] = useState(false);
 
   const emailSuggestion = getEmailSuggestion(clienteForm.email);
   const emailInvalid = Boolean(clienteForm.email) && !isValidEmail(clienteForm.email);
@@ -658,7 +670,7 @@ export default function ClientesPage({
 
         <div className="overflow-x-auto [-webkit-overflow-scrolling:touch]">
           <div className="min-w-[1500px]">
-            <div className="grid grid-cols-[1.1fr_0.75fr_1.25fr_0.65fr_0.8fr_560px] gap-3 bg-slate-950 px-4 py-3 text-[11px] font-black uppercase tracking-wide text-white">
+            <div className="grid grid-cols-[1.1fr_0.75fr_1.25fr_0.65fr_0.8fr_700px] gap-3 bg-slate-950 px-4 py-3 text-[11px] font-black uppercase tracking-wide text-white">
               <span>{t("customer")}</span>
               <span>{t("phone")}</span>
               <span>{t("address")}</span>
@@ -683,7 +695,8 @@ export default function ClientesPage({
                 const ultimaOrden = hist[hist.length - 1];
 
                 return (
-                  <article key={c.id} className="grid grid-cols-[1.1fr_0.75fr_1.25fr_0.65fr_0.8fr_560px] gap-3 px-4 py-3 text-sm transition hover:bg-blue-50/50">
+                  <>
+                  <article key={c.id} className="grid grid-cols-[1.1fr_0.75fr_1.25fr_0.65fr_0.8fr_700px] gap-3 px-4 py-3 text-sm transition hover:bg-blue-50/50">
                     <div className="min-w-0">
                       {isEdit ? (
                         <EditInput value={data.nombre} onChange={(v) => setClienteEdit({ ...clienteEdit, nombre: v })} />
@@ -756,6 +769,14 @@ export default function ClientesPage({
                         </button>
                       )}
 
+                      <button
+                        onClick={() => setUbicacionClienteId(ubicacionClienteId === c.id ? null : c.id)}
+                        className="inline-flex min-w-[125px] items-center justify-center gap-1 rounded-xl bg-indigo-50 px-3 py-2 text-xs font-black text-indigo-700 hover:bg-indigo-100"
+                      >
+                        <MapPinned size={13} />
+                        {t("locations")}
+                      </button>
+
                       <button onClick={() => abrirCrearOrdenConCliente(c)} className="inline-flex min-w-[120px] items-center justify-center gap-1 rounded-xl bg-slate-950 px-3 py-2 text-xs font-black text-white">
                         <ClipboardList size={13} />
                         {t("orderAction")}
@@ -798,6 +819,69 @@ export default function ClientesPage({
                       </button>
                     </div>
                   </article>
+                  {ubicacionClienteId === c.id && (
+                    <div className="col-span-full border-t border-blue-100 bg-indigo-50/60 px-6 py-4">
+                      <div className="rounded-3xl border border-indigo-100 bg-white p-4 shadow-md shadow-indigo-100/60">
+                        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-500">
+                              {t("locations")}
+                            </p>
+                            <h4 className="text-lg font-black text-slate-950">
+                              {c.nombre}
+                            </h4>
+                          </div>
+
+                          <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-black text-indigo-700">
+                            {(c.cliente_direcciones || []).length} {t("locations")}
+                          </span>
+                        </div>
+
+                        {(c.cliente_direcciones || []).length === 0 ? (
+                          <div className="rounded-2xl border border-dashed border-indigo-200 bg-indigo-50 p-4 text-sm font-bold text-indigo-700">
+                            {t("noAddress")}
+                          </div>
+                        ) : (
+                          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                            {(c.cliente_direcciones || []).map((d) => (
+                              <div key={d.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+                                <div className="mb-2 flex items-center justify-between gap-2">
+                                  <p className="font-black text-slate-950">
+                                    {d.etiqueta || t("address")}
+                                  </p>
+                                  {d.principal && (
+                                    <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-black text-emerald-700">
+                                      Principal
+                                    </span>
+                                  )}
+                                </div>
+
+                                <p className="line-clamp-2 text-sm font-bold text-slate-700">
+                                  <MapPin size={14} className="mr-1 inline text-blue-700" />
+                                  {d.direccion || t("noAddress")}
+                                </p>
+
+                                <p className="mt-2 text-xs font-semibold text-slate-500">
+                                  {t("apt")} {d.apartamento || "—"} · {t("building")} {d.edificio || "—"}
+                                </p>
+
+                                <p className="mt-1 text-xs font-semibold text-slate-500">
+                                  {t("accessCode")} {d.codigo_acceso || "—"}
+                                </p>
+
+                                {d.notas && (
+                                  <p className="mt-2 rounded-xl bg-white p-2 text-xs font-bold text-slate-600">
+                                    {d.notas}
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  </>
                 );
               })}
             </div>
