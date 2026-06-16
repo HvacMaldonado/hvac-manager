@@ -299,6 +299,14 @@ const TEXT = {
     noLocations: "Sin ubicaciones",
     locationSingular: "ubicación",
     locationPlural: "ubicaciones",
+    selectedFromSchedule: "Orden seleccionada desde Agenda",
+    workOrderReady: "Trabajar orden",
+    workOrderReadyDescription: "Esta orden fue abierta desde la agenda por hora. Ya está lista para trabajar.",
+    noActiveOrders: "No hay órdenes activas.",
+    workDay: "Día de trabajo",
+    noScheduledDate: "Sin fecha programada",
+    orderSingular: "orden",
+    orderPlural: "órdenes",
     basicContactData: "Datos básicos de contacto",
     serviceLocation: "Ubicación del servicio",
     serviceLocationDescription: "Dirección donde se realizará el trabajo",
@@ -885,6 +893,14 @@ const TEXT = {
     noLocations: "No locations",
     locationSingular: "location",
     locationPlural: "locations",
+    selectedFromSchedule: "Order selected from Schedule",
+    workOrderReady: "Work order",
+    workOrderReadyDescription: "This order was opened from the time schedule. It is ready to work.",
+    noActiveOrders: "No active orders.",
+    workDay: "Work day",
+    noScheduledDate: "No scheduled date",
+    orderSingular: "order",
+    orderPlural: "orders",
     basicContactData: "Basic contact details",
     serviceLocation: "Service location",
     serviceLocationDescription: "Address where the work will be performed",
@@ -3265,6 +3281,8 @@ const compartirOrden = async (orden, metodo) => {
 
               {tecnicoVista === "ordenes" && (
                 <OrdenesGrid
+                  t={t}
+                  lang={lang}
                   ordenes={ordenesActivasTecnico}
                   obtenerCliente={obtenerCliente}
                   ordenProps={ordenProps}
@@ -4428,7 +4446,7 @@ function TecnicoOrdenesPanel({ ordenes, citas = [], obtenerCliente, ordenProps }
       )}
 
       {vista === "todas" ? (
-        <OrdenesGrid ordenes={[...ordenes].sort(sortTechnicianOrders)} obtenerCliente={obtenerCliente} ordenProps={ordenProps} />
+        <OrdenesGrid t={t} lang={lang} ordenes={[...ordenes].sort(sortTechnicianOrders)} obtenerCliente={obtenerCliente} ordenProps={ordenProps} />
       ) : (
         <>
           <TecnicoOrderGroup
@@ -4516,33 +4534,62 @@ function TecnicoOrdenesPanel({ ordenes, citas = [], obtenerCliente, ordenProps }
   );
 }
 
-function OrdenesGrid({ ordenes, obtenerCliente, ordenProps, ordenInicialAbiertaId = null }) {
+function OrdenesGrid({ ordenes, obtenerCliente, ordenProps, ordenInicialAbiertaId = null, t, lang = "es" }) {
+  const tr = typeof t === "function" ? t : (typeof ordenProps?.t === "function" ? ordenProps.t : (key) => key);
+  const fechaOrdenKey = (orden) =>
+    toDateKey(orden.fechaProgramada || orden.fecha || orden.fechaCreacion) || "9999-99-99";
+
+  const horaOrdenKey = (orden) => orden.horaProgramada || orden.hora || "99:99";
+
   const ordenesOrdenadas = [...ordenes].sort((a, b) => {
     if (ordenInicialAbiertaId && String(a.id) === String(ordenInicialAbiertaId)) return -1;
     if (ordenInicialAbiertaId && String(b.id) === String(ordenInicialAbiertaId)) return 1;
 
-    const aKey = `${toDateKey(a.fechaProgramada || a.fecha || a.fechaCreacion) || "9999-99-99"} ${a.horaProgramada || "99:99"}`;
-    const bKey = `${toDateKey(b.fechaProgramada || b.fecha || b.fechaCreacion) || "9999-99-99"} ${b.horaProgramada || "99:99"}`;
+    const aKey = `${fechaOrdenKey(a)} ${horaOrdenKey(a)}`;
+    const bKey = `${fechaOrdenKey(b)} ${horaOrdenKey(b)}`;
     return aKey.localeCompare(bKey);
   });
+
+  const ordenesPorDia = ordenesOrdenadas.reduce((grupos, orden) => {
+    const key = fechaOrdenKey(orden);
+    if (!grupos[key]) grupos[key] = [];
+    grupos[key].push(orden);
+    return grupos;
+  }, {});
+
+  const diasOrdenados = Object.keys(ordenesPorDia).sort();
+
+  const formatDiaTitulo = (key) => {
+    if (!key || key === "9999-99-99") return tr("noScheduledDate");
+
+    const [year, month, day] = key.split("-").map(Number);
+    const fecha = new Date(year, month - 1, day);
+
+    return fecha.toLocaleDateString(lang === "en" ? "en-US" : "es-US", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  };
 
   const ordenAbierta = ordenInicialAbiertaId
     ? ordenesOrdenadas.find((orden) => String(orden.id) === String(ordenInicialAbiertaId))
     : null;
 
   return (
-    <div className="grid w-full min-w-0 gap-4">
+    <div className="grid w-full min-w-0 gap-5">
       {ordenAbierta && (
         <div className="overflow-hidden rounded-3xl border border-cyan-200 bg-white shadow-xl shadow-cyan-100/70">
           <div className="bg-gradient-to-r from-slate-950 via-blue-950 to-cyan-800 p-5 text-white">
             <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">
-              Orden seleccionada desde Agenda
+              {tr("selectedFromSchedule")}
             </p>
             <h2 className="mt-2 text-3xl font-black tracking-tight">
-              Trabajar orden
+              {tr("workOrderReady")}
             </h2>
             <p className="mt-1 text-sm font-bold text-white/60">
-              Esta orden fue abierta desde la agenda por hora. Ya está lista para trabajar.
+              {tr("workOrderReadyDescription")}
             </p>
           </div>
         </div>
@@ -4550,19 +4597,49 @@ function OrdenesGrid({ ordenes, obtenerCliente, ordenProps, ordenInicialAbiertaI
 
       {ordenesOrdenadas.length === 0 && (
         <p className="rounded-2xl bg-white/90 p-4 text-sm font-semibold text-slate-500 shadow-sm">
-          No hay órdenes activas.
+          {tr("noActiveOrders")}
         </p>
       )}
 
-      {ordenesOrdenadas.map((o) => (
-        <OrdenCard
-          key={o.id}
-          orden={o}
-          cliente={obtenerCliente(o.clienteId)}
-          compacta={false}
-          abrirDetallesInicial={String(o.id) === String(ordenInicialAbiertaId)}
-          {...ordenProps}
-        />
+      {diasOrdenados.map((diaKey) => (
+        <section key={diaKey} className="space-y-4">
+          <div className="sticky top-2 z-20 overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-lg shadow-slate-300/50 backdrop-blur">
+            <div className="flex flex-col gap-2 bg-gradient-to-r from-slate-950 via-blue-950 to-cyan-800 px-5 py-4 text-white sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">
+                  {tr("workDay")}
+                </p>
+                <h3 className="text-2xl font-black capitalize tracking-tight">
+                  {formatDiaTitulo(diaKey)}
+                </h3>
+              </div>
+
+              <span className="w-fit rounded-full bg-white/15 px-4 py-2 text-xs font-black ring-1 ring-white/20">
+                {ordenesPorDia[diaKey].length} {ordenesPorDia[diaKey].length === 1 ? tr("orderSingular") : tr("orderPlural")}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid gap-4">
+            {ordenesPorDia[diaKey].map((o, index) => (
+              <div key={o.id} className="relative">
+                <div className="absolute left-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white text-sm font-black text-slate-950 shadow-lg ring-1 ring-slate-200">
+                  {index + 1}
+                </div>
+
+                <div className="pl-12">
+                  <OrdenCard
+                    orden={o}
+                    cliente={obtenerCliente(o.clienteId)}
+                    compacta={false}
+                    abrirDetallesInicial={String(o.id) === String(ordenInicialAbiertaId)}
+                    {...ordenProps}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       ))}
     </div>
   );
@@ -5516,7 +5593,7 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
         status: orden.estado || "",
         customer: cliente?.nombre || "",
         phone: cliente?.telefono || "",
-        address: cliente?.direccion || "",
+        address: orden.direccionTrabajo || cliente?.direccion || "",
         problem: orden.problema || "",
         hours: orden.duracionHoras || "0.00",
         cancelReason: orden.cancelReason || "",
@@ -5689,6 +5766,7 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
         <div className="grid gap-3">
           {ordenesFiltradas.map((orden) => {
             const cliente = obtenerCliente(orden.clienteId);
+            const direccionHistorial = orden.direccionTrabajo || cliente?.direccion || "";
             const completada = orden.estado === "Completado";
             const fecha = orden.fechaCompletada || orden.fechaCancelacion || orden.fechaCreacion || orden.fecha;
             const hora = orden.horaCierre || orden.horaInicio || fecha || "";
@@ -5758,10 +5836,10 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
                             {orden.duracionHoras || "0.00"} h
                           </p>
 
-                          {cliente?.direccion && (
+                          {direccionHistorial && (
                             <p className="flex items-center justify-center gap-1.5 truncate sm:col-span-2">
                               <MapPin size={13} />
-                              {cliente.direccion}
+                              {direccionHistorial}
                             </p>
                           )}
                         </div>
@@ -5790,9 +5868,9 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
                           </a>
                         )}
 
-                        {cliente?.direccion && (
+                        {direccionHistorial && (
                           <a
-                            href={`https://maps.apple.com/?q=${encodeURIComponent(cliente.direccion)}`}
+                            href={`https://maps.apple.com/?q=${encodeURIComponent(direccionHistorial)}`}
                             target="_blank"
                             rel="noreferrer"
                             className="flex items-center justify-center gap-1.5 rounded-2xl bg-slate-950 shadow-lg shadow-slate-300 transition hover:-translate-y-0.5 px-4 py-3 text-sm font-black text-white"

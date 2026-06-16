@@ -118,6 +118,7 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
       const matchTexto = !q || [
         cliente?.nombre,
         cliente?.telefono,
+        orden.direccionTrabajo,
         cliente?.direccion,
         tecnico?.nombre,
         orden.problema,
@@ -326,6 +327,7 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
           {vistaHistorial === "detallada" && historialFiltrado.map((orden) => {
             const cliente = obtenerCliente(orden.clienteId);
             const tecnico = obtenerTecnico?.(orden.tecnicoId);
+            const direccionHistorial = orden.direccionTrabajo || cliente?.direccion || "";
             const fotosCount = ["antes", "durante", "despues"].filter((k) => orden.fotos?.[k]).length;
             const materiales = materialesTexto?.(orden);
             const fecha = formatReportDate(orden.fechaCompletada || orden.fechaCreacion || orden.fecha);
@@ -368,7 +370,7 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
                             </div>
                             <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/80 px-3 py-2 shadow-sm">
                               <MapPin size={15} className="shrink-0 text-blue-700" />
-                              <span className="line-clamp-1">{cliente?.direccion || t("noAddress")}</span>
+                              <span className="line-clamp-1">{direccionHistorial || t("noAddress")}</span>
                             </div>
                           </div>
                         </div>
@@ -432,8 +434,8 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
                         </a>
                       )}
 
-                      {cliente?.direccion && (
-                        <a href={urlAppleMaps?.(cliente.direccion)} target="_blank" rel="noreferrer" className="relative inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-white/12 px-3 text-sm font-black text-white shadow-sm ring-1 ring-white/15 backdrop-blur transition hover:bg-white/18">
+                      {direccionHistorial && (
+                        <a href={urlAppleMaps?.(direccionHistorial)} target="_blank" rel="noreferrer" className="relative inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-white/12 px-3 text-sm font-black text-white shadow-sm ring-1 ring-white/15 backdrop-blur transition hover:bg-white/18">
                           <MapPinned size={15} />
                           {t("map")}
                         </a>
