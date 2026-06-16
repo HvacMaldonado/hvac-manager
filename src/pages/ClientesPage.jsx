@@ -504,7 +504,7 @@ export default function ClientesPage({
                     <Sparkles size={24} />
                   </div>
                   <span className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-cyan-200">
-                    Nuevo
+                    {t("newLabel")}
                   </span>
                 </div>
 
@@ -1002,7 +1002,7 @@ export default function ClientesPage({
                           <div className="mb-3 flex items-center justify-between gap-2">
                             <div>
                               <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500">
-                                Nueva ubicación
+                                {t("newLocation")}
                               </p>
                               <h5 className="text-sm font-black text-slate-950">
                                 Agregar dirección para este cliente

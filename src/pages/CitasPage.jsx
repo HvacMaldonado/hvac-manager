@@ -201,7 +201,7 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
                     <Sparkles size={24} />
                   </div>
                   <span className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-cyan-200">
-                    Nueva
+                    {t("new")}
                   </span>
                 </div>
 
