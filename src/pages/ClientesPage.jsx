@@ -571,8 +571,8 @@ export default function ClientesPage({
                   <FormSection icon={Users} title={t("mainInformation")} subtitle={t("basicContactData")} tone="blue">
                     <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
                       {[
-                        { value: "residencial", label: "Residencial", help: "Casa o cliente individual" },
-                        { value: "corporativo", label: "Corporativo", help: "Apartamentos, edificios o empresas" },
+                        { value: "residencial", label: t("customerResidential"), help: t("customerResidentialHelp") },
+                        { value: "corporativo", label: t("customerCorporate"), help: t("customerCorporateHelp") },
                       ].map((tipo) => {
                         const activo = clienteForm.tipoCliente === tipo.value;
 
@@ -655,7 +655,7 @@ export default function ClientesPage({
                   </FormSection>
 
                   {clienteForm.tipoCliente === "residencial" ? (
-                    <FormSection icon={MapPinned} title="Dirección residencial" subtitle="Se guardará automáticamente como ubicación principal" tone="cyan">
+                    <FormSection icon={MapPinned} title={t("residentialAddress")} subtitle={t("residentialAddressDescription")} tone="cyan">
                       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                         <div className="relative md:col-span-2 xl:col-span-3">
                           <input
@@ -663,7 +663,7 @@ export default function ClientesPage({
                             onFocus={() => setDireccionActiva(true)}
                             onBlur={() => setTimeout(() => setDireccionActiva(false), 180)}
                             onChange={(e) => buscarDireccionesGeoapify(e.target.value)}
-                            placeholder="Dirección de la casa"
+                            placeholder={t("homeAddress")}
                             autoComplete="new-password"
                             className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-cyan-400"
                           />
@@ -688,7 +688,7 @@ export default function ClientesPage({
                           )}
 
                           {direccionCargando && (
-                            <p className="mt-2 text-xs font-semibold text-slate-500">Buscando direcciones...</p>
+                            <p className="mt-2 text-xs font-semibold text-slate-500">{t("searchingAddresses")}</p>
                           )}
 
                           {direccionError && (
@@ -723,9 +723,9 @@ export default function ClientesPage({
                       <div className="flex items-start gap-3">
                         <MapPinned size={20} className="mt-0.5 text-cyan-700" />
                         <div>
-                          <p className="text-sm font-black text-slate-950">Ubicaciones separadas</p>
+                          <p className="text-sm font-black text-slate-950">{t("separateLocations")}</p>
                           <p className="mt-1 text-xs font-bold leading-relaxed text-slate-600">
-                            Guarda primero la ficha principal del cliente corporativo. Después usa el botón Ubicaciones para agregar apartamentos, edificios, códigos de acceso y notas.
+                            {t("corporateLocationsDescription")}
                           </p>
                         </div>
                       </div>
@@ -836,8 +836,8 @@ export default function ClientesPage({
                           <p className="line-clamp-1 font-semibold text-slate-700">
                             <MapPin size={14} className="mr-1 inline text-blue-700" />
                             {(c.cliente_direcciones || []).length > 0
-                              ? `${(c.cliente_direcciones || []).length} ubicacion${(c.cliente_direcciones || []).length === 1 ? "" : "es"}`
-                              : "Sin ubicaciones"}
+                              ? `${(c.cliente_direcciones || []).length} ${(c.cliente_direcciones || []).length === 1 ? t("locationSingular") : t("locationPlural")}`
+                              : t("noLocations")}
                           </p>
                           {(c.apartamento || c.edificio || c.codigoAcceso) && (
                             <p className="text-xs text-slate-500">
@@ -1051,7 +1051,7 @@ export default function ClientesPage({
 
                               {ubicacionDireccionCargando && (
                                 <p className="mt-2 text-xs font-semibold text-slate-500">
-                                  Buscando direcciones...
+                                  {t("searchingAddresses")}
                                 </p>
                               )}
 
