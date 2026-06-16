@@ -177,7 +177,7 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
               <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">{t("agenda")}</p>
               <h2 className="mt-1 flex items-center gap-2 text-2xl font-black">
                 <CalendarDays size={24} />
-                Citas
+                {t("appointments")}
               </h2>
             </div>
 

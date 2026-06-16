@@ -405,7 +405,7 @@ export default function TecnicosPage({ t, tecnicos, actualizarTecnico, guardarTe
               <p className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-300">{t("technician")}</p>
               <h2 className="mt-1 flex items-center gap-2 text-2xl font-black">
                 <UserCog size={24} />
-                Técnico
+                {t("technician")}
               </h2>
             </div>
 
