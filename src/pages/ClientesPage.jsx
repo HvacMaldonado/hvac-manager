@@ -480,7 +480,7 @@ export default function ClientesPage({
               <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">{t("customerManagement")}</p>
               <h2 className="mt-1 flex items-center gap-2 text-2xl font-black">
                 <Users size={24} />
-                Clientes
+                {t("customers")}
               </h2>
             </div>
 
