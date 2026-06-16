@@ -6,6 +6,7 @@ import {
   ClipboardList,
   Filter,
   MapPin,
+  MapPinned,
   Phone,
   Search,
   Sparkles,
@@ -162,6 +163,8 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
   }, [clientes, busquedaClienteCita]);
 
   const clienteSeleccionadoCita = clientes.find((c) => String(c.id) === String(citaForm.clienteId));
+  const ubicacionesClienteCita = clienteSeleccionadoCita?.cliente_direcciones || [];
+  const ubicacionSeleccionadaCita = ubicacionesClienteCita.find((u) => String(u.id) === String(citaForm.ubicacionId));
 
   const inputClass = "w-full rounded-2xl border border-slate-300 bg-white p-3 pl-10 text-sm outline-none shadow-sm transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100";
 
@@ -280,14 +283,14 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
                               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-700">{t("selectedCustomer")}</p>
                               <p className="mt-1 text-sm font-black text-slate-950">{clienteSeleccionadoCita.nombre}</p>
                               <p className="text-xs font-semibold text-slate-600">
-                                {formatPhoneDisplay(clienteSeleccionadoCita.telefono || "")} · {clienteSeleccionadoCita.direccion || t("noAddress")}
+                                {formatPhoneDisplay(clienteSeleccionadoCita.telefono || "")} · {ubicacionesClienteCita.length} ubicacion{ubicacionesClienteCita.length === 1 ? "" : "es"}
                               </p>
                             </div>
 
                             <button
                               type="button"
                               onClick={() => {
-                                setCitaForm({ ...citaForm, clienteId: "" });
+                                setCitaForm({ ...citaForm, clienteId: "", ubicacionId: "" });
                                 setBusquedaClienteCita("");
                               }}
                               className="rounded-xl bg-white px-3 py-2 text-xs font-black text-blue-700 shadow-sm hover:bg-blue-100"
@@ -307,14 +310,21 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
                                   key={c.id}
                                   type="button"
                                   onClick={() => {
-                                    setCitaForm({ ...citaForm, clienteId: c.id });
+                                    const ubicaciones = c.cliente_direcciones || [];
+                                    const ubicacionPrincipal = ubicaciones.find((u) => u.principal) || ubicaciones[0];
+
+                                    setCitaForm({
+                                      ...citaForm,
+                                      clienteId: c.id,
+                                      ubicacionId: ubicacionPrincipal?.id ? String(ubicacionPrincipal.id) : "",
+                                    });
                                     setBusquedaClienteCita(c.nombre || "");
                                   }}
                                   className="block w-full border-b border-slate-100 px-4 py-3 text-left transition hover:bg-blue-50"
                                 >
                                   <span className="block text-sm font-black text-slate-950">{c.nombre}</span>
                                   <span className="block text-xs font-semibold text-slate-500">
-                                    {formatPhoneDisplay(c.telefono || "")} · {c.direccion || t("noAddress")}
+                                    {formatPhoneDisplay(c.telefono || "")} · {(c.cliente_direcciones || []).length} ubicacion{(c.cliente_direcciones || []).length === 1 ? "" : "es"}
                                   </span>
                                 </button>
                               ))
@@ -322,6 +332,51 @@ export default function CitasPage({ t, citas, setCitas, citaForm, setCitaForm, c
                           </div>
                         )}
                       </div>
+                      {clienteSeleccionadoCita && (
+                        <div className="lg:col-span-2">
+                          <FormSection icon={MapPinned} title="Ubicación de la cita" subtitle="Selecciona la dirección exacta de la visita" tone="cyan">
+                            {ubicacionesClienteCita.length === 0 ? (
+                              <div className="rounded-2xl border border-dashed border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-800">
+                                Este cliente no tiene ubicaciones. Ve a Clientes y agrega al menos una ubicación antes de programar la cita.
+                              </div>
+                            ) : (
+                              <div className="space-y-3">
+                                <select
+                                  value={citaForm.ubicacionId || ""}
+                                  onChange={(e) => setCitaForm({ ...citaForm, ubicacionId: e.target.value })}
+                                  className="w-full rounded-2xl border border-slate-300 bg-white p-3 text-sm font-black text-slate-800 outline-none shadow-sm transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100"
+                                >
+                                  <option value="">Seleccionar ubicación</option>
+                                  {ubicacionesClienteCita.map((u) => (
+                                    <option key={u.id} value={u.id}>
+                                      {u.etiqueta || u.direccion || "Ubicación"}
+                                    </option>
+                                  ))}
+                                </select>
+
+                                {ubicacionSeleccionadaCita && (
+                                  <div className="rounded-2xl border border-cyan-100 bg-cyan-50 p-4">
+                                    <p className="text-sm font-black text-slate-950">
+                                      {ubicacionSeleccionadaCita.etiqueta || "Ubicación seleccionada"}
+                                    </p>
+                                    <p className="mt-1 text-xs font-bold text-slate-700">
+                                      {ubicacionSeleccionadaCita.direccion || "Sin dirección"}
+                                    </p>
+                                    <p className="mt-2 text-xs font-semibold text-slate-600">
+                                      Apt {ubicacionSeleccionadaCita.apartamento || "—"} · Edificio {ubicacionSeleccionadaCita.edificio || "—"} · Código {ubicacionSeleccionadaCita.codigo_acceso || "—"}
+                                    </p>
+                                    {ubicacionSeleccionadaCita.notas && (
+                                      <p className="mt-2 rounded-xl bg-white p-2 text-xs font-bold text-slate-600">
+                                        {ubicacionSeleccionadaCita.notas}
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </FormSection>
+                        </div>
+                      )}
 
                       <ModernField label={t("technician")} icon={UserCog}>
                         <select

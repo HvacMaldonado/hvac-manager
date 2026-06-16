@@ -1394,7 +1394,7 @@ export default function App() {
   const [inventarioForm, setInventarioForm] = useState({ nombre: "", categoria: "Unidades de aire acondicionado", tipo: "Material consumible", cantidad: "", unidad: "pieza", costo: "", stockMinimo: "1" });
   const [herramientaForm, setHerramientaForm] = useState({ nombre: "", tecnicoId: "", cantidad: "", estado: "Disponible", notas: "" });
   const [tecnicoHerramientasSeleccionado, setTecnicoHerramientasSeleccionado] = useState("");
-  const [citaForm, setCitaForm] = useState({ clienteId: "", tecnicoId: "", fecha: "", hora: "", motivo: "", notas: "" });
+  const [citaForm, setCitaForm] = useState({ clienteId: "", ubicacionId: "", tecnicoId: "", fecha: "", hora: "", motivo: "", notas: "" });
   const [reporteFiltro, setReporteFiltro] = useState({ texto: "", tecnicoId: "", clienteId: "", estado: "", fechaInicio: "", fechaFin: "" });
 
   useEffect(() => {
@@ -1418,6 +1418,7 @@ export default function App() {
             calle: "",
             codigoAcceso: direccionPrincipal.codigo_acceso || "",
             edificio: direccionPrincipal.edificio || "",
+            cliente_direcciones: cliente.cliente_direcciones || [],
             fechaCreacion: cliente.created_at || "",
           };
         });
@@ -2789,7 +2790,17 @@ const compartirOrden = async (orden, metodo) => {
   };
 
   const crearCita = async () => {
-    if (!citaForm.clienteId || !citaForm.tecnicoId || !citaForm.fecha || !citaForm.hora) return setMensaje("Completa cliente, técnico, fecha y hora de la cita.");
+    const clienteSeleccionado = obtenerCliente(citaForm.clienteId);
+    const ubicacionesCliente = clienteSeleccionado?.cliente_direcciones || [];
+    const ubicacionTrabajo = ubicacionesCliente.find((u) => String(u.id) === String(citaForm.ubicacionId));
+
+    if (!citaForm.clienteId || !citaForm.ubicacionId || !citaForm.tecnicoId || !citaForm.fecha || !citaForm.hora) {
+      return setMensaje("Completa cliente, ubicación, técnico, fecha y hora de la cita.");
+    }
+
+    if (!ubicacionTrabajo) {
+      return setMensaje("Selecciona una ubicación válida para esta cita.");
+    }
 
     if (existeConflictoHorario({
       tecnicoId: citaForm.tecnicoId,
@@ -2802,11 +2813,18 @@ const compartirOrden = async (orden, metodo) => {
     try {
       const nuevaCita = await crearCitaSupabase({
         ...citaForm,
+        ubicacionId: String(citaForm.ubicacionId || ""),
+        ubicacionEtiqueta: ubicacionTrabajo.etiqueta || "",
+        direccionTrabajo: ubicacionTrabajo.direccion || "",
+        apartamentoTrabajo: ubicacionTrabajo.apartamento || "",
+        edificioTrabajo: ubicacionTrabajo.edificio || "",
+        codigoAccesoTrabajo: ubicacionTrabajo.codigo_acceso || "",
+        notasUbicacion: ubicacionTrabajo.notas || "",
         estado: "Programada",
       });
 
       setCitas([...citas, nuevaCita]);
-      setCitaForm({ clienteId: "", tecnicoId: "", fecha: "", hora: "", motivo: "", notas: "" });
+      setCitaForm({ clienteId: "", ubicacionId: "", tecnicoId: "", fecha: "", hora: "", motivo: "", notas: "" });
     } catch (error) {
       console.error("ERROR COMPLETO SUPABASE:", error);
       alert(JSON.stringify(error, null, 2));
