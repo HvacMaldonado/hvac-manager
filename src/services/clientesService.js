@@ -21,6 +21,7 @@ export async function crearClienteSupabase(cliente) {
       nombre: cliente.nombre,
       telefono: cliente.telefono || "",
       email: cliente.email || "",
+      tipo_cliente: cliente.tipoCliente || cliente.tipo_cliente || "residencial",
       notas: cliente.notas || "",
       activo: true,
     })
@@ -34,7 +35,7 @@ export async function crearClienteSupabase(cliente) {
       .from("cliente_direcciones")
       .insert({
         cliente_id: clienteCreado.id,
-        etiqueta: "Principal",
+        etiqueta: cliente.tipoCliente === "corporativo" ? "Principal" : "Casa principal",
         direccion: cliente.direccion,
         apartamento: cliente.apartamento || "",
         edificio: cliente.edificio || "",

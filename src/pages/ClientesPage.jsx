@@ -436,7 +436,13 @@ export default function ClientesPage({
     try {
       setGuardandoUbicacion(true);
 
-      const nuevaUbicacion = await crearDireccionClienteSupabase(clienteId, ubicacionForm);
+      const clienteActual = clientes.find((cliente) => String(cliente.id) === String(clienteId));
+      const direccionesActualesAntes = clienteActual?.cliente_direcciones || [];
+
+      const nuevaUbicacion = await crearDireccionClienteSupabase(clienteId, {
+        ...ubicacionForm,
+        principal: direccionesActualesAntes.length === 0,
+      });
 
       setClientes(clientes.map((cliente) => {
         if (String(cliente.id) !== String(clienteId)) return cliente;
@@ -563,6 +569,31 @@ export default function ClientesPage({
 
                 <div className="space-y-4">
                   <FormSection icon={Users} title={t("mainInformation")} subtitle={t("basicContactData")} tone="blue">
+                    <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      {[
+                        { value: "residencial", label: "Residencial", help: "Casa o cliente individual" },
+                        { value: "corporativo", label: "Corporativo", help: "Apartamentos, edificios o empresas" },
+                      ].map((tipo) => {
+                        const activo = clienteForm.tipoCliente === tipo.value;
+
+                        return (
+                          <button
+                            key={tipo.value}
+                            type="button"
+                            onClick={() => setClienteForm({ ...clienteForm, tipoCliente: tipo.value })}
+                            className={`rounded-2xl border px-4 py-3 text-left transition ${
+                              activo
+                                ? "border-blue-400 bg-blue-50 text-blue-800 shadow-sm"
+                                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                            }`}
+                          >
+                            <p className="text-sm font-black">{tipo.label}</p>
+                            <p className="mt-1 text-xs font-bold opacity-75">{tipo.help}</p>
+                          </button>
+                        );
+                      })}
+                    </div>
+
                     <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
                       <div className="lg:col-span-5">
                         <ModernInput
@@ -623,17 +654,83 @@ export default function ClientesPage({
                     </div>
                   </FormSection>
 
-                  <div className="rounded-3xl border border-dashed border-cyan-200 bg-cyan-50/70 p-4">
-                    <div className="flex items-start gap-3">
-                      <MapPinned size={20} className="mt-0.5 text-cyan-700" />
-                      <div>
-                        <p className="text-sm font-black text-slate-950">Ubicaciones separadas</p>
-                        <p className="mt-1 text-xs font-bold leading-relaxed text-slate-600">
-                          Guarda primero la ficha principal del cliente. Después usa el botón Ubicaciones para agregar direcciones, apartamentos, edificios, códigos de acceso y notas.
-                        </p>
+                  {clienteForm.tipoCliente === "residencial" ? (
+                    <FormSection icon={MapPinned} title="Dirección residencial" subtitle="Se guardará automáticamente como ubicación principal" tone="cyan">
+                      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                        <div className="relative md:col-span-2 xl:col-span-3">
+                          <input
+                            value={clienteForm.direccion}
+                            onFocus={() => setDireccionActiva(true)}
+                            onBlur={() => setTimeout(() => setDireccionActiva(false), 180)}
+                            onChange={(e) => buscarDireccionesGeoapify(e.target.value)}
+                            placeholder="Dirección de la casa"
+                            autoComplete="new-password"
+                            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-cyan-400"
+                          />
+
+                          {direccionActiva && direccionSugerencias.length > 0 && (
+                            <div className="absolute left-0 right-0 z-50 mt-2 max-h-72 overflow-auto rounded-2xl border border-slate-200 bg-white shadow-xl">
+                              {direccionSugerencias.map((feature, index) => {
+                                const parts = normalizeGeoapifyAddress(feature);
+                                return (
+                                  <button
+                                    key={`${parts.full}-${index}`}
+                                    type="button"
+                                    onMouseDown={() => seleccionarDireccionGeoapify(feature)}
+                                    className="flex w-full items-start gap-2 px-3 py-2.5 text-left text-sm font-semibold text-slate-700 hover:bg-blue-50"
+                                  >
+                                    <MapPin size={15} className="mt-0.5 shrink-0 text-blue-700" />
+                                    <span>{parts.full}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {direccionCargando && (
+                            <p className="mt-2 text-xs font-semibold text-slate-500">Buscando direcciones...</p>
+                          )}
+
+                          {direccionError && (
+                            <p className="mt-2 text-xs font-bold text-amber-700">{direccionError}</p>
+                          )}
+                        </div>
+
+                        <input
+                          value={clienteForm.apartamento}
+                          onChange={(e) => setClienteForm({ ...clienteForm, apartamento: e.target.value })}
+                          placeholder="Apartamento / unidad"
+                          className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-cyan-400"
+                        />
+
+                        <input
+                          value={clienteForm.edificio}
+                          onChange={(e) => setClienteForm({ ...clienteForm, edificio: e.target.value })}
+                          placeholder="Edificio"
+                          className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-cyan-400"
+                        />
+
+                        <input
+                          value={clienteForm.codigoAcceso}
+                          onChange={(e) => setClienteForm({ ...clienteForm, codigoAcceso: e.target.value })}
+                          placeholder="Código de acceso"
+                          className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-cyan-400"
+                        />
+                      </div>
+                    </FormSection>
+                  ) : (
+                    <div className="rounded-3xl border border-dashed border-cyan-200 bg-cyan-50/70 p-4">
+                      <div className="flex items-start gap-3">
+                        <MapPinned size={20} className="mt-0.5 text-cyan-700" />
+                        <div>
+                          <p className="text-sm font-black text-slate-950">Ubicaciones separadas</p>
+                          <p className="mt-1 text-xs font-bold leading-relaxed text-slate-600">
+                            Guarda primero la ficha principal del cliente corporativo. Después usa el botón Ubicaciones para agregar apartamentos, edificios, códigos de acceso y notas.
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -742,9 +839,15 @@ export default function ClientesPage({
                               ? `${(c.cliente_direcciones || []).length} ubicacion${(c.cliente_direcciones || []).length === 1 ? "" : "es"}`
                               : "Sin ubicaciones"}
                           </p>
-                          <p className="text-xs text-slate-500">
-                            {t("apt")} {c.apartamento || "—"} · {t("building")} {c.edificio || "—"} · {t("accessCode")} {c.codigoAcceso || "—"}
-                          </p>
+                          {(c.apartamento || c.edificio || c.codigoAcceso) && (
+                            <p className="text-xs text-slate-500">
+                              {[
+                                c.apartamento ? `${t("apt")} ${c.apartamento}` : "",
+                                c.edificio ? `${t("building")} ${c.edificio}` : "",
+                                c.codigoAcceso ? `${t("accessCode")} ${c.codigoAcceso}` : "",
+                              ].filter(Boolean).join(" · ")}
+                            </p>
+                          )}
                         </>
                       )}
                     </div>
@@ -875,13 +978,15 @@ export default function ClientesPage({
                                   {d.direccion || t("noAddress")}
                                 </p>
 
-                                <p className="mt-2 text-xs font-semibold text-slate-500">
-                                  {t("apt")} {d.apartamento || "—"} · {t("building")} {d.edificio || "—"}
-                                </p>
-
-                                <p className="mt-1 text-xs font-semibold text-slate-500">
-                                  {t("accessCode")} {d.codigo_acceso || "—"}
-                                </p>
+                                {(d.apartamento || d.edificio || d.codigo_acceso) && (
+                                  <p className="mt-2 text-xs font-semibold text-slate-500">
+                                    {[
+                                      d.apartamento ? `${t("apt")} ${d.apartamento}` : "",
+                                      d.edificio ? `${t("building")} ${d.edificio}` : "",
+                                      d.codigo_acceso ? `${t("accessCode")} ${d.codigo_acceso}` : "",
+                                    ].filter(Boolean).join(" · ")}
+                                  </p>
+                                )}
 
                                 {d.notas && (
                                   <p className="mt-2 rounded-xl bg-white p-2 text-xs font-bold text-slate-600">

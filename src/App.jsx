@@ -1389,7 +1389,7 @@ export default function App() {
 
   const [now, setNow] = useState(new Date());
   const [busquedaClienteOrden, setBusquedaClienteOrden] = useState("");
-  const [clienteForm, setClienteForm] = useState({ nombre: "", telefono: "", email: "", direccion: "", apartamento: "", calle: "", codigoAcceso: "", edificio: "" });
+  const [clienteForm, setClienteForm] = useState({ tipoCliente: "residencial", nombre: "", telefono: "", email: "", direccion: "", apartamento: "", calle: "", codigoAcceso: "", edificio: "" });
   const [ordenForm, setOrdenForm] = useState({ clienteId: "", ubicacionId: "", problema: "", tecnicoId: "", prioridad: "Media", fechaProgramada: "", horaProgramada: "", precioCobrado: "" });
   const [inventarioForm, setInventarioForm] = useState({ nombre: "", categoria: "Unidades de aire acondicionado", tipo: "Material consumible", cantidad: "", unidad: "pieza", costo: "", stockMinimo: "1" });
   const [herramientaForm, setHerramientaForm] = useState({ nombre: "", tecnicoId: "", cantidad: "", estado: "Disponible", notas: "" });
@@ -1413,6 +1413,7 @@ export default function App() {
             nombre: cliente.nombre || "",
             telefono: cliente.telefono || "",
             email: cliente.email || "",
+            tipoCliente: cliente.tipo_cliente || cliente.tipoCliente || "residencial",
             direccion: direccionPrincipal.direccion || "",
             apartamento: direccionPrincipal.apartamento || "",
             calle: "",
@@ -1704,6 +1705,21 @@ export default function App() {
         nombre: clienteSupabase.nombre,
         telefono: clienteSupabase.telefono || "",
         email: clienteSupabase.email || "",
+        tipoCliente: clienteForm.tipoCliente || "residencial",
+        cliente_direcciones: clienteForm.direccion
+          ? [{
+              id: `local-${clienteSupabase.id}`,
+              cliente_id: clienteSupabase.id,
+              etiqueta: clienteForm.tipoCliente === "corporativo" ? "Principal" : "Casa principal",
+              direccion: clienteForm.direccion || "",
+              apartamento: clienteForm.apartamento || "",
+              edificio: clienteForm.edificio || "",
+              codigo_acceso: clienteForm.codigoAcceso || "",
+              notas: "",
+              principal: true,
+              activo: true,
+            }]
+          : [],
         direccion: clienteForm.direccion || "",
         apartamento: clienteForm.apartamento || "",
         calle: clienteForm.calle || "",
@@ -1721,7 +1737,7 @@ export default function App() {
     setOrdenForm((actual) => ({ ...actual, clienteId: String(nuevo.id) }));
     setBusquedaClienteOrden(`${nuevo.nombre} - ${nuevo.telefono || ""}`);
     setCitaForm((actual) => ({ ...actual, clienteId: String(nuevo.id) }));
-    setClienteForm({ nombre: "", telefono: "", email: "", direccion: "", apartamento: "", calle: "", codigoAcceso: "", edificio: "" });
+    setClienteForm({ tipoCliente: "residencial", nombre: "", telefono: "", email: "", direccion: "", apartamento: "", calle: "", codigoAcceso: "", edificio: "" });
     setClienteAccion(nuevo);
     setMensaje("Cliente creado correctamente. Elige qué deseas hacer ahora.");
   };
