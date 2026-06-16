@@ -1390,7 +1390,7 @@ export default function App() {
   const [now, setNow] = useState(new Date());
   const [busquedaClienteOrden, setBusquedaClienteOrden] = useState("");
   const [clienteForm, setClienteForm] = useState({ nombre: "", telefono: "", email: "", direccion: "", apartamento: "", calle: "", codigoAcceso: "", edificio: "" });
-  const [ordenForm, setOrdenForm] = useState({ clienteId: "", problema: "", tecnicoId: "", prioridad: "Media", fechaProgramada: "", horaProgramada: "", precioCobrado: "" });
+  const [ordenForm, setOrdenForm] = useState({ clienteId: "", ubicacionId: "", problema: "", tecnicoId: "", prioridad: "Media", fechaProgramada: "", horaProgramada: "", precioCobrado: "" });
   const [inventarioForm, setInventarioForm] = useState({ nombre: "", categoria: "Unidades de aire acondicionado", tipo: "Material consumible", cantidad: "", unidad: "pieza", costo: "", stockMinimo: "1" });
   const [herramientaForm, setHerramientaForm] = useState({ nombre: "", tecnicoId: "", cantidad: "", estado: "Disponible", notas: "" });
   const [tecnicoHerramientasSeleccionado, setTecnicoHerramientasSeleccionado] = useState("");
@@ -1758,9 +1758,16 @@ export default function App() {
 
   const crearOrden = async () => {
     const tecnicoSeleccionado = obtenerTecnico(ordenForm.tecnicoId);
+    const clienteSeleccionado = obtenerCliente(ordenForm.clienteId);
+    const ubicacionesCliente = clienteSeleccionado?.cliente_direcciones || [];
+    const ubicacionTrabajo = ubicacionesCliente.find((u) => String(u.id) === String(ordenForm.ubicacionId));
 
-    if (!ordenForm.clienteId || !ordenForm.tecnicoId || !ordenForm.problema) {
-      return setMensaje("Selecciona cliente, técnico y problema reportado.");
+    if (!ordenForm.clienteId || !ordenForm.ubicacionId || !ordenForm.tecnicoId || !ordenForm.problema) {
+      return setMensaje("Selecciona cliente, ubicación, técnico y problema reportado.");
+    }
+
+    if (!ubicacionTrabajo) {
+      return setMensaje("Selecciona una ubicación válida para esta orden.");
     }
 
     if (!tecnicoSeleccionado || tecnicoSeleccionado.activo === false) {
@@ -1778,6 +1785,13 @@ export default function App() {
     const fecha = new Date();
     const orden = {
       clienteId: String(ordenForm.clienteId),
+      ubicacionId: String(ordenForm.ubicacionId || ""),
+      ubicacionEtiqueta: ubicacionTrabajo.etiqueta || "",
+      direccionTrabajo: ubicacionTrabajo.direccion || "",
+      apartamentoTrabajo: ubicacionTrabajo.apartamento || "",
+      edificioTrabajo: ubicacionTrabajo.edificio || "",
+      codigoAccesoTrabajo: ubicacionTrabajo.codigo_acceso || "",
+      notasUbicacion: ubicacionTrabajo.notas || "",
       tecnicoId: String(ordenForm.tecnicoId),
       problema: ordenForm.problema,
       prioridad: ordenForm.prioridad,
@@ -1802,7 +1816,7 @@ export default function App() {
     try {
       const nuevaOrden = await crearOrdenSupabase(orden);
       setOrdenes([...ordenes, nuevaOrden]);
-      setOrdenForm({ clienteId: String(ordenForm.clienteId), problema: "", tecnicoId: "", prioridad: "Media", fechaProgramada: "", horaProgramada: "", precioCobrado: "" });
+      setOrdenForm({ clienteId: String(ordenForm.clienteId), ubicacionId: String(ordenForm.ubicacionId || ""), problema: "", tecnicoId: "", prioridad: "Media", fechaProgramada: "", horaProgramada: "", precioCobrado: "" });
       setMensaje("Orden asignada correctamente. Ahora aparecerá en el panel del técnico seleccionado.");
     } catch (error) {
       console.error("Error guardando orden en Supabase:", error);

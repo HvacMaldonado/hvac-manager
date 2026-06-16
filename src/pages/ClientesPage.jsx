@@ -273,6 +273,10 @@ export default function ClientesPage({
     notas: "",
   });
   const [guardandoUbicacion, setGuardandoUbicacion] = useState(false);
+  const [ubicacionDireccionActiva, setUbicacionDireccionActiva] = useState(false);
+  const [ubicacionDireccionSugerencias, setUbicacionDireccionSugerencias] = useState([]);
+  const [ubicacionDireccionCargando, setUbicacionDireccionCargando] = useState(false);
+  const [ubicacionDireccionError, setUbicacionDireccionError] = useState("");
 
   const emailSuggestion = getEmailSuggestion(clienteForm.email);
   const emailInvalid = Boolean(clienteForm.email) && !isValidEmail(clienteForm.email);
@@ -337,12 +341,55 @@ export default function ClientesPage({
     setDireccionError("");
   };
 
+  const buscarDireccionUbicacionGeoapify = async (value) => {
+    setUbicacionForm({ ...ubicacionForm, direccion: value });
+    setUbicacionDireccionActiva(true);
+    setUbicacionDireccionError("");
+
+    if (!value || value.trim().length < 3) {
+      setUbicacionDireccionSugerencias([]);
+      return;
+    }
+
+    setUbicacionDireccionCargando(true);
+
+    try {
+      const results = await searchGeoapifyAddresses(value);
+      setUbicacionDireccionSugerencias(results);
+    } catch (error) {
+      console.warn("Geoapify ubicación error:", error);
+      setUbicacionDireccionSugerencias([]);
+      setUbicacionDireccionError("No se pudo buscar la dirección. Revisa Geoapify.");
+    } finally {
+      setUbicacionDireccionCargando(false);
+    }
+  };
+
+  const seleccionarDireccionUbicacionGeoapify = (feature) => {
+    const parts = normalizeGeoapifyAddress(feature);
+
+    if (!parts.full) return;
+
+    setUbicacionForm({
+      ...ubicacionForm,
+      direccion: parts.full,
+    });
+
+    setUbicacionDireccionSugerencias([]);
+    setUbicacionDireccionActiva(false);
+    setUbicacionDireccionError("");
+  };
+
   const visibles = useMemo(() => {
     const q = String(busqueda || "").toLowerCase().trim();
 
     let lista = clientes.filter((c) => {
       if (!q) return true;
-      return [c.nombre, c.telefono, c.email, c.direccion, c.apartamento, c.edificio, c.calle, c.codigoAcceso]
+      const ubicacionesTexto = (c.cliente_direcciones || [])
+        .map((d) => [d.etiqueta, d.direccion, d.apartamento, d.edificio, d.codigo_acceso, d.notas].join(" "))
+        .join(" ");
+
+      return [c.nombre, c.telefono, c.email, ubicacionesTexto]
         .some((v) => String(v || "").toLowerCase().includes(q));
     });
 
@@ -576,96 +623,17 @@ export default function ClientesPage({
                     </div>
                   </FormSection>
 
-                  <FormSection icon={MapPinned} title={t("serviceLocation")} subtitle={t("serviceLocationDescription")} tone="cyan">
-                    <label className="block">
-                      <span className="mb-1 block text-xs font-black uppercase tracking-wide text-slate-500">{t("fullAddress")}</span>
-                      <div className="relative">
-                        <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input
-                          value={clienteForm.direccion}
-                          onFocus={() => setDireccionActiva(true)}
-                          onBlur={() => setTimeout(() => setDireccionActiva(false), 180)}
-                          onChange={(e) => buscarDireccionesGeoapify(e.target.value)}
-                          placeholder={t("addressPlaceholder")}
-                          autoComplete="off"
-                          className="w-full rounded-2xl border border-slate-300 bg-white p-3 pl-10 text-sm outline-none shadow-sm transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100"
-                        />
-
-                        {direccionActiva && direccionSugerencias.length > 0 && (
-                          <div className="absolute left-0 right-0 z-50 mt-2 max-h-72 overflow-auto rounded-2xl border border-slate-200 bg-white shadow-xl">
-                            {direccionSugerencias.map((feature, index) => {
-                              const parts = normalizeGeoapifyAddress(feature);
-                              return (
-                                <button
-                                  key={`${parts.full}-${index}`}
-                                  type="button"
-                                  onMouseDown={() => seleccionarDireccionGeoapify(feature)}
-                                  className="flex w-full items-start gap-2 px-3 py-2.5 text-left text-sm font-semibold text-slate-700 hover:bg-blue-50"
-                                >
-                                  <MapPin size={15} className="mt-0.5 shrink-0 text-blue-700" />
-                                  <span>{parts.full}</span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
+                  <div className="rounded-3xl border border-dashed border-cyan-200 bg-cyan-50/70 p-4">
+                    <div className="flex items-start gap-3">
+                      <MapPinned size={20} className="mt-0.5 text-cyan-700" />
+                      <div>
+                        <p className="text-sm font-black text-slate-950">Ubicaciones separadas</p>
+                        <p className="mt-1 text-xs font-bold leading-relaxed text-slate-600">
+                          Guarda primero la ficha principal del cliente. Después usa el botón Ubicaciones para agregar direcciones, apartamentos, edificios, códigos de acceso y notas.
+                        </p>
                       </div>
-
-                      {direccionCargando && (
-                        <p className="mt-2 text-xs font-semibold text-slate-500">
-                          Buscando direcciones...
-                        </p>
-                      )}
-
-                      {direccionError && (
-                        <p className="mt-2 text-xs font-bold text-amber-700">
-                          {direccionError}
-                        </p>
-                      )}
-
-                      {!direccionError && (
-                        <p className="mt-2 text-xs font-semibold text-slate-500">
-                          {t("geoapifyHelp")}
-                        </p>
-                      )}
-                    </label>
-                  </FormSection>
-
-                  <FormSection icon={KeyRound} title={t("accessDetails")} subtitle={t("accessDetailsDescription")} tone="slate">
-                    <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
-                      <ModernInput
-                        label="Apt"
-                        icon={Home}
-                        value={clienteForm.apartamento}
-                        onChange={(v) => setClienteForm({ ...clienteForm, apartamento: v })}
-                        placeholder="Apt"
-                      />
-
-                      <ModernInput
-                        label={t("building")}
-                        icon={Building2}
-                        value={clienteForm.edificio}
-                        onChange={(v) => setClienteForm({ ...clienteForm, edificio: v })}
-                        placeholder={t("building")}
-                      />
-
-                      <ModernInput
-                        label={t("street")}
-                        icon={MapPinned}
-                        value={clienteForm.calle}
-                        onChange={(v) => setClienteForm({ ...clienteForm, calle: v })}
-                        placeholder={t("street")}
-                      />
-
-                      <ModernInput
-                        label={t("accessCode")}
-                        icon={Hash}
-                        value={clienteForm.codigoAcceso}
-                        onChange={(v) => setClienteForm({ ...clienteForm, codigoAcceso: v })}
-                        placeholder={t("accessCode")}
-                      />
                     </div>
-                  </FormSection>
+                  </div>
                 </div>
               </div>
             </div>
@@ -770,7 +738,9 @@ export default function ClientesPage({
                         <>
                           <p className="line-clamp-1 font-semibold text-slate-700">
                             <MapPin size={14} className="mr-1 inline text-blue-700" />
-                            {c.direccion || t("noAddress")}
+                            {(c.cliente_direcciones || []).length > 0
+                              ? `${(c.cliente_direcciones || []).length} ubicacion${(c.cliente_direcciones || []).length === 1 ? "" : "es"}`
+                              : "Sin ubicaciones"}
                           </p>
                           <p className="text-xs text-slate-500">
                             {t("apt")} {c.apartamento || "—"} · {t("building")} {c.edificio || "—"} · {t("accessCode")} {c.codigoAcceso || "—"}
@@ -813,7 +783,7 @@ export default function ClientesPage({
                         className="inline-flex min-w-[125px] items-center justify-center gap-1 rounded-xl bg-indigo-50 px-3 py-2 text-xs font-black text-indigo-700 hover:bg-indigo-100"
                       >
                         <MapPinned size={13} />
-                        {t("locations")}
+                        Ubicaciones
                       </button>
 
                       <button onClick={() => abrirCrearOrdenConCliente(c)} className="inline-flex min-w-[120px] items-center justify-center gap-1 rounded-xl bg-slate-950 px-3 py-2 text-xs font-black text-white">
@@ -836,8 +806,13 @@ export default function ClientesPage({
                         </span>
                       )}
 
-                      {c.direccion ? (
-                        <a href={urlAppleMaps(c.direccion)} target="_blank" rel="noreferrer" className="inline-flex min-w-[44px] items-center justify-center gap-1 rounded-xl border bg-white px-3 py-2 text-xs font-black text-slate-700">
+                      {(c.cliente_direcciones || []).find((d) => d.principal)?.direccion || (c.cliente_direcciones || [])[0]?.direccion ? (
+                        <a
+                          href={urlAppleMaps((c.cliente_direcciones || []).find((d) => d.principal)?.direccion || (c.cliente_direcciones || [])[0]?.direccion)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex min-w-[44px] items-center justify-center gap-1 rounded-xl border bg-white px-3 py-2 text-xs font-black text-slate-700"
+                        >
                           <Navigation size={13} />
                         </a>
                       ) : (
@@ -864,7 +839,7 @@ export default function ClientesPage({
                         <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                           <div>
                             <p className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-500">
-                              {t("locations")}
+                              Ubicaciones
                             </p>
                             <h4 className="text-lg font-black text-slate-950">
                               {c.nombre}
@@ -872,7 +847,7 @@ export default function ClientesPage({
                           </div>
 
                           <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-black text-indigo-700">
-                            {(c.cliente_direcciones || []).length} {t("locations")}
+                            {(c.cliente_direcciones || []).length} Ubicaciones
                           </span>
                         </div>
 
@@ -939,12 +914,48 @@ export default function ClientesPage({
                               className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-indigo-400"
                             />
 
-                            <input
-                              value={ubicacionForm.direccion}
-                              onChange={(e) => setUbicacionForm({ ...ubicacionForm, direccion: e.target.value })}
-                              placeholder="Dirección"
-                              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-indigo-400 md:col-span-2"
-                            />
+                            <div className="relative md:col-span-2">
+                              <input
+                                value={ubicacionForm.direccion}
+                                onFocus={() => setUbicacionDireccionActiva(true)}
+                                onBlur={() => setTimeout(() => setUbicacionDireccionActiva(false), 180)}
+                                onChange={(e) => buscarDireccionUbicacionGeoapify(e.target.value)}
+                                placeholder="Dirección"
+                                autoComplete="new-password"
+                                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-indigo-400"
+                              />
+
+                              {ubicacionDireccionActiva && ubicacionDireccionSugerencias.length > 0 && (
+                                <div className="absolute left-0 right-0 z-50 mt-2 max-h-72 overflow-auto rounded-2xl border border-slate-200 bg-white shadow-xl">
+                                  {ubicacionDireccionSugerencias.map((feature, index) => {
+                                    const parts = normalizeGeoapifyAddress(feature);
+                                    return (
+                                      <button
+                                        key={`${parts.full}-${index}`}
+                                        type="button"
+                                        onMouseDown={() => seleccionarDireccionUbicacionGeoapify(feature)}
+                                        className="flex w-full items-start gap-2 px-3 py-2.5 text-left text-sm font-semibold text-slate-700 hover:bg-blue-50"
+                                      >
+                                        <MapPin size={15} className="mt-0.5 shrink-0 text-blue-700" />
+                                        <span>{parts.full}</span>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              )}
+
+                              {ubicacionDireccionCargando && (
+                                <p className="mt-2 text-xs font-semibold text-slate-500">
+                                  Buscando direcciones...
+                                </p>
+                              )}
+
+                              {ubicacionDireccionError && (
+                                <p className="mt-2 text-xs font-bold text-amber-700">
+                                  {ubicacionDireccionError}
+                                </p>
+                              )}
+                            </div>
 
                             <input
                               value={ubicacionForm.apartamento}

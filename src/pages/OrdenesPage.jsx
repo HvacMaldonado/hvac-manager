@@ -8,6 +8,7 @@ import {
   ClipboardList,
   Clock3,
   MapPin,
+  MapPinned,
   Navigation,
   Phone,
   Search,
@@ -167,10 +168,22 @@ export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, cr
   const [periodoOrdenes, setPeriodoOrdenes] = useState("semana");
 
   const seleccionarCliente = (c) => {
-    setOrdenForm({ ...ordenForm, clienteId: String(c.id) });
+    const ubicaciones = c.cliente_direcciones || [];
+    const ubicacionPrincipal = ubicaciones.find((d) => d.principal) || ubicaciones[0];
+
+    setOrdenForm({
+      ...ordenForm,
+      clienteId: String(c.id),
+      ubicacionId: ubicacionPrincipal?.id ? String(ubicacionPrincipal.id) : "",
+    });
+
     setBusquedaClienteOrden(`${c.nombre} - ${c.telefono || ""}`);
     setMostrarClientes(false);
   };
+
+  const clienteSeleccionado = clientesFiltradosOrden.find((c) => String(c.id) === String(ordenForm.clienteId));
+  const ubicacionesCliente = clienteSeleccionado?.cliente_direcciones || [];
+  const ubicacionSeleccionada = ubicacionesCliente.find((d) => String(d.id) === String(ordenForm.ubicacionId));
 
   const inputClass = "w-full rounded-2xl border border-slate-300 bg-white p-3 pl-10 text-sm outline-none shadow-sm transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100";
 
@@ -225,13 +238,59 @@ export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, cr
                           className="block w-full px-4 py-3 text-left transition hover:bg-blue-50"
                         >
                           <p className="font-black text-slate-950">{c.nombre}</p>
-                          <p className="text-xs text-slate-500">{c.telefono} · {c.direccion}</p>
+                          <p className="text-xs text-slate-500">
+                            {c.telefono} · {(c.cliente_direcciones || []).length} ubicacion{(c.cliente_direcciones || []).length === 1 ? "" : "es"}
+                          </p>
                         </button>
                       ))}
                     </div>
                   )}
                 </div>
               </FormSection>
+
+              {ordenForm.clienteId && (
+                <FormSection icon={MapPinned} title="Ubicación del trabajo" subtitle="Selecciona la dirección exacta para esta orden" tone="cyan">
+                  {ubicacionesCliente.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-800">
+                      Este cliente no tiene ubicaciones. Ve a Clientes y agrega al menos una ubicación antes de crear la orden.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <select
+                        value={ordenForm.ubicacionId || ""}
+                        onChange={(e) => setOrdenForm({ ...ordenForm, ubicacionId: e.target.value })}
+                        className="w-full rounded-2xl border border-slate-300 bg-white p-3 text-sm font-black text-slate-800 outline-none shadow-sm transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100"
+                      >
+                        <option value="">Seleccionar ubicación</option>
+                        {ubicacionesCliente.map((u) => (
+                          <option key={u.id} value={u.id}>
+                            {u.etiqueta || u.direccion || "Ubicación"}
+                          </option>
+                        ))}
+                      </select>
+
+                      {ubicacionSeleccionada && (
+                        <div className="rounded-2xl border border-cyan-100 bg-cyan-50 p-4">
+                          <p className="text-sm font-black text-slate-950">
+                            {ubicacionSeleccionada.etiqueta || "Ubicación seleccionada"}
+                          </p>
+                          <p className="mt-1 text-xs font-bold text-slate-700">
+                            {ubicacionSeleccionada.direccion || "Sin dirección"}
+                          </p>
+                          <p className="mt-2 text-xs font-semibold text-slate-600">
+                            Apt {ubicacionSeleccionada.apartamento || "—"} · Edificio {ubicacionSeleccionada.edificio || "—"} · Código {ubicacionSeleccionada.codigo_acceso || "—"}
+                          </p>
+                          {ubicacionSeleccionada.notas && (
+                            <p className="mt-2 rounded-xl bg-white p-2 text-xs font-bold text-slate-600">
+                              {ubicacionSeleccionada.notas}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </FormSection>
+              )}
 
               <FormSection icon={CalendarCheck2} title={t("scheduling")} subtitle={t("schedulingDescription")} tone="cyan">
                 <div className="grid grid-cols-2 gap-2">
@@ -628,7 +687,7 @@ function AdminOrdenRow({ orden, cliente, ordenProps, t = (key) => key }) {
   const [shareOpen, setShareOpen] = useState(false);
 
   const tecnico = ordenProps.obtenerTecnico(orden.tecnicoId);
-  const direccion = cliente?.direccion || "";
+  const direccion = orden.direccionTrabajo || cliente?.direccion || "";
   const telefono = cliente?.telefono || "";
 
   const compartir = (metodo) => {
