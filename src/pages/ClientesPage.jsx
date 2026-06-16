@@ -594,6 +594,26 @@ export default function ClientesPage({
                       })}
                     </div>
 
+                    {clienteForm.tipoCliente === "corporativo" && (
+                      <div className="mb-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
+                        <ModernInput
+                          label="Nombre del complejo / empresa"
+                          icon={Building2}
+                          value={clienteForm.nombreComplejo}
+                          onChange={(v) => setClienteForm({ ...clienteForm, nombreComplejo: v })}
+                          placeholder="Midtown Apartments"
+                        />
+
+                        <ModernInput
+                          label="Persona de contacto"
+                          icon={Users}
+                          value={clienteForm.contactoPrincipal}
+                          onChange={(v) => setClienteForm({ ...clienteForm, contactoPrincipal: v })}
+                          placeholder="Nombre del contacto"
+                        />
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
                       <div className="lg:col-span-5">
                         <ModernInput

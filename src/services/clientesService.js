@@ -22,6 +22,8 @@ export async function crearClienteSupabase(cliente) {
       telefono: cliente.telefono || "",
       email: cliente.email || "",
       tipo_cliente: cliente.tipoCliente || cliente.tipo_cliente || "residencial",
+      nombre_complejo: cliente.nombreComplejo || cliente.nombre_complejo || "",
+      contacto_principal: cliente.contactoPrincipal || cliente.contacto_principal || "",
       notas: cliente.notas || "",
       activo: true,
     })

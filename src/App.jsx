@@ -1417,7 +1417,7 @@ export default function App() {
 
   const [now, setNow] = useState(new Date());
   const [busquedaClienteOrden, setBusquedaClienteOrden] = useState("");
-  const [clienteForm, setClienteForm] = useState({ tipoCliente: "residencial", nombre: "", telefono: "", email: "", direccion: "", apartamento: "", calle: "", codigoAcceso: "", edificio: "" });
+  const [clienteForm, setClienteForm] = useState({ tipoCliente: "residencial", nombre: "", nombreComplejo: "", contactoPrincipal: "", telefono: "", email: "", direccion: "", apartamento: "", calle: "", codigoAcceso: "", edificio: "" });
   const [ordenForm, setOrdenForm] = useState({ clienteId: "", ubicacionId: "", problema: "", tecnicoId: "", prioridad: "Media", fechaProgramada: "", horaProgramada: "", precioCobrado: "" });
   const [inventarioForm, setInventarioForm] = useState({ nombre: "", categoria: "Unidades de aire acondicionado", tipo: "Material consumible", cantidad: "", unidad: "pieza", costo: "", stockMinimo: "1" });
   const [herramientaForm, setHerramientaForm] = useState({ nombre: "", tecnicoId: "", cantidad: "", estado: "Disponible", notas: "" });
@@ -1442,6 +1442,8 @@ export default function App() {
             telefono: cliente.telefono || "",
             email: cliente.email || "",
             tipoCliente: cliente.tipo_cliente || cliente.tipoCliente || "residencial",
+            nombreComplejo: cliente.nombre_complejo || cliente.nombreComplejo || "",
+            contactoPrincipal: cliente.contacto_principal || cliente.contactoPrincipal || "",
             direccion: direccionPrincipal.direccion || "",
             apartamento: direccionPrincipal.apartamento || "",
             calle: "",
@@ -1734,6 +1736,8 @@ export default function App() {
         telefono: clienteSupabase.telefono || "",
         email: clienteSupabase.email || "",
         tipoCliente: clienteForm.tipoCliente || "residencial",
+        nombreComplejo: clienteForm.nombreComplejo || "",
+        contactoPrincipal: clienteForm.contactoPrincipal || "",
         cliente_direcciones: clienteForm.direccion
           ? [{
               id: `local-${clienteSupabase.id}`,
@@ -1765,7 +1769,7 @@ export default function App() {
     setOrdenForm((actual) => ({ ...actual, clienteId: String(nuevo.id) }));
     setBusquedaClienteOrden(`${nuevo.nombre} - ${nuevo.telefono || ""}`);
     setCitaForm((actual) => ({ ...actual, clienteId: String(nuevo.id) }));
-    setClienteForm({ tipoCliente: "residencial", nombre: "", telefono: "", email: "", direccion: "", apartamento: "", calle: "", codigoAcceso: "", edificio: "" });
+    setClienteForm({ tipoCliente: "residencial", nombre: "", nombreComplejo: "", contactoPrincipal: "", telefono: "", email: "", direccion: "", apartamento: "", calle: "", codigoAcceso: "", edificio: "" });
     setClienteAccion(nuevo);
     setMensaje("Cliente creado correctamente. Elige qué deseas hacer ahora.");
   };
@@ -4586,7 +4590,34 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
     if (abrirDetallesInicial) setVerDetalles(true);
   }, [abrirDetallesInicial]);
 
-  const direccion = cliente?.direccion || "";
+  const ubicacionOrden = (cliente?.cliente_direcciones || []).find((d) => String(d.id) === String(orden.ubicacionId)) || {};
+  const direccion = orden.direccionTrabajo || ubicacionOrden.direccion || cliente?.direccion || "";
+  const apartamentoTrabajo = orden.apartamentoTrabajo || ubicacionOrden.apartamento || cliente?.apartamento || "";
+  const edificioTrabajo = orden.edificioTrabajo || ubicacionOrden.edificio || cliente?.edificio || "";
+  const codigoAccesoTrabajo = orden.codigoAccesoTrabajo || ubicacionOrden.codigo_acceso || cliente?.codigoAcceso || "";
+  const notasUbicacion = orden.notasUbicacion || ubicacionOrden.notas || "";
+  const tipoCliente = cliente?.tipoCliente || "residencial";
+  const esCorporativo = tipoCliente === "corporativo";
+  const tipoClienteBadge = esCorporativo
+    ? "border-violet-300/40 bg-violet-500/25 text-violet-50"
+    : "border-emerald-300/40 bg-emerald-500/25 text-emerald-50";
+
+  const tipoClienteBarra = esCorporativo
+    ? "from-violet-600 via-indigo-500 to-blue-500"
+    : "from-emerald-500 via-cyan-400 to-blue-500";
+
+  const tipoClienteFondo = esCorporativo
+    ? "from-slate-950 via-indigo-950 to-violet-800"
+    : "from-slate-950 via-emerald-950 to-cyan-800";
+
+  const tipoClientePanel = esCorporativo
+    ? "bg-white/10 ring-violet-200/20 shadow-lg shadow-violet-950/20 backdrop-blur"
+    : "bg-white/10 ring-emerald-200/20 shadow-lg shadow-emerald-950/20 backdrop-blur";
+
+  const tipoClienteGlow = esCorporativo
+    ? "before:bg-violet-400/20 after:bg-fuchsia-300/15"
+    : "before:bg-emerald-300/20 after:bg-cyan-300/15";
+
   const telefono = cliente?.telefono || "";
   const tecnico = obtenerTecnico(orden.tecnicoId);
   const hora = orden.horaProgramada || orden.hora || "";
@@ -4617,11 +4648,13 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
 
   return (
     <article className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl shadow-slate-300/70 transition hover:-translate-y-0.5 hover:shadow-2xl">
-      <div className="h-2 bg-gradient-to-r from-blue-700 via-cyan-500 to-emerald-400" />
+      <div className={`h-2 bg-gradient-to-r ${tipoClienteBarra}`} />
 
       <div className="p-4">
         <div className={`overflow-hidden rounded-[1.75rem] border ${tarjetaEstadoClase}`}>
-          <div className="bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-800 p-5 text-white">
+          <div className={`relative overflow-hidden bg-gradient-to-br ${tipoClienteFondo} p-5 text-white before:absolute before:-left-24 before:-top-24 before:h-72 before:w-72 before:rounded-full before:blur-3xl after:absolute after:-bottom-24 after:right-10 after:h-72 after:w-72 after:rounded-full after:blur-3xl ${tipoClienteGlow}`}>
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(255,255,255,0.16),transparent_28%),linear-gradient(135deg,rgba(255,255,255,0.08),transparent_38%)]" />
+            <div className="relative z-10">
             <div className="space-y-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="inline-flex w-fit items-center gap-3 rounded-2xl bg-white/12 px-4 py-3 text-white ring-1 ring-white/15 shadow-lg">
@@ -4654,6 +4687,11 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
               </div>
 
               <div>
+                <div className={`mb-3 inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-black uppercase tracking-[0.18em] shadow-lg ${tipoClienteBadge}`}>
+                  <span>{esCorporativo ? "🏢" : "🏠"}</span>
+                  <span>{esCorporativo ? t("customerCorporate") : t("customerResidential")}</span>
+                </div>
+
                 <h3 className="truncate text-4xl font-black tracking-tight text-white">
                   {cliente?.nombre || t("deletedCustomer")}
                 </h3>
@@ -4670,14 +4708,14 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
               <div className="space-y-3">
 
                 <div className="grid gap-3 lg:grid-cols-[1.3fr_.7fr]">
-                  <div className="rounded-2xl bg-white/10 px-4 py-3 ring-1 ring-white/10">
+                  <div className={`rounded-2xl px-4 py-3 ring-1 ${tipoClientePanel}`}>
                     <p className="flex items-center gap-2 text-lg font-black text-cyan-50">
                       <MapPin size={20} />
                       {direccion || t("noAddress")}
                     </p>
                   </div>
 
-                  <div className="rounded-2xl bg-white/10 px-4 py-3 ring-1 ring-white/10">
+                  <div className={`rounded-2xl px-4 py-3 ring-1 ${tipoClientePanel}`}>
                     <p className="flex items-center gap-2 text-sm font-black text-cyan-50">
                       <User size={17} />
                       {tecnico?.nombre || t("noTechnician")}
@@ -4688,55 +4726,68 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
                   </div>
                 </div>
 
-                <div className="rounded-2xl bg-white/10 p-4 ring-1 ring-white/10">
-                  <p className="mb-3 text-xs font-black uppercase tracking-[0.25em] text-cyan-200">
-                    {t("accessDetails")}
-                  </p>
+                <div className={`rounded-2xl p-4 ring-1 ${tipoClientePanel}`}>
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-xs font-black uppercase tracking-[0.25em] text-cyan-200">
+                      {t("accessDetails")}
+                    </p>
+
+                    <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wide ring-1 ${tipoClienteBadge}`}>
+                      {esCorporativo ? t("customerCorporate") : t("customerResidential")}
+                    </span>
+                  </div>
 
                   <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                    {apartamentoTrabajo && (
+                      <div className="rounded-xl bg-white/10 p-3">
+                        <p className="text-[10px] font-black uppercase text-cyan-200">
+                          {t("apt")}
+                        </p>
 
-                    <div className="rounded-xl bg-white/10 p-3">
-                      <p className="text-[10px] font-black uppercase text-cyan-200">
-                        {t("apt")}
-                      </p>
+                        <p className="text-sm font-bold text-white">
+                          {apartamentoTrabajo}
+                        </p>
+                      </div>
+                    )}
 
-                      <p className="text-sm font-bold text-white">
-                        {cliente?.apartamento || "—"}
-                      </p>
-                    </div>
+                    {edificioTrabajo && (
+                      <div className="rounded-xl bg-white/10 p-3">
+                        <p className="text-[10px] font-black uppercase text-cyan-200">
+                          {t("building")}
+                        </p>
 
-                    <div className="rounded-xl bg-white/10 p-3">
-                      <p className="text-[10px] font-black uppercase text-cyan-200">
-                        {t("building")}
-                      </p>
+                        <p className="text-sm font-bold text-white">
+                          {edificioTrabajo}
+                        </p>
+                      </div>
+                    )}
 
-                      <p className="text-sm font-bold text-white">
-                        {cliente?.edificio || "—"}
-                      </p>
-                    </div>
+                    {codigoAccesoTrabajo && (
+                      <div className="rounded-xl bg-white/10 p-3">
+                        <p className="text-[10px] font-black uppercase text-cyan-200">
+                          {t("accessCode")}
+                        </p>
 
-                    <div className="rounded-xl bg-white/10 p-3">
-                      <p className="text-[10px] font-black uppercase text-cyan-200">
-                        {t("street")}
-                      </p>
-
-                      <p className="text-sm font-bold text-white">
-                        {cliente?.calle || "—"}
-                      </p>
-                    </div>
-
-                    <div className="rounded-xl bg-white/10 p-3">
-                      <p className="text-[10px] font-black uppercase text-cyan-200">
-                        {t("accessCode")}
-                      </p>
-
-                      <p className="text-sm font-bold text-white">
-                        {cliente?.codigoAcceso || "—"}
-                      </p>
-                    </div>
-
+                        <p className="text-sm font-bold text-white">
+                          {codigoAccesoTrabajo}
+                        </p>
+                      </div>
+                    )}
                   </div>
+
+                  {notasUbicacion && (
+                    <div className="mt-3 rounded-xl bg-amber-100/20 p-3 ring-1 ring-amber-200/20">
+                      <p className="text-[10px] font-black uppercase tracking-wide text-amber-100">
+                        {t("notes")}
+                      </p>
+                      <p className="mt-1 text-sm font-bold text-white">
+                        {notasUbicacion}
+                      </p>
+                    </div>
+                  )}
                 </div>
+
+              </div>
 
               </div>
 
