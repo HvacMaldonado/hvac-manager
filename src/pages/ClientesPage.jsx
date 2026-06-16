@@ -379,6 +379,45 @@ export default function ClientesPage({
     setClienteEdit(null);
   };
 
+  const guardarUbicacionCliente = async (clienteId) => {
+    if (!clienteId) return;
+
+    if (!ubicacionForm.etiqueta.trim() || !ubicacionForm.direccion.trim()) {
+      return alert("Etiqueta y dirección son obligatorias.");
+    }
+
+    try {
+      setGuardandoUbicacion(true);
+
+      const nuevaUbicacion = await crearDireccionClienteSupabase(clienteId, ubicacionForm);
+
+      setClientes(clientes.map((cliente) => {
+        if (String(cliente.id) !== String(clienteId)) return cliente;
+
+        const direccionesActuales = cliente.cliente_direcciones || [];
+
+        return {
+          ...cliente,
+          cliente_direcciones: [...direccionesActuales, nuevaUbicacion],
+        };
+      }));
+
+      setUbicacionForm({
+        etiqueta: "",
+        direccion: "",
+        apartamento: "",
+        edificio: "",
+        codigoAcceso: "",
+        notas: "",
+      });
+    } catch (error) {
+      console.error("Error guardando ubicación:", error);
+      alert("No se pudo guardar la ubicación. Revisa Supabase o permisos.");
+    } finally {
+      setGuardandoUbicacion(false);
+    }
+  };
+
   return (
     <section className="space-y-4">
       <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-xl shadow-slate-300/60 backdrop-blur">
@@ -878,6 +917,76 @@ export default function ClientesPage({
                             ))}
                           </div>
                         )}
+
+                        <div className="mt-4 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                          <div className="mb-3 flex items-center justify-between gap-2">
+                            <div>
+                              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500">
+                                Nueva ubicación
+                              </p>
+                              <h5 className="text-sm font-black text-slate-950">
+                                Agregar dirección para este cliente
+                              </h5>
+                            </div>
+                            <Plus size={18} className="text-indigo-700" />
+                          </div>
+
+                          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                            <input
+                              value={ubicacionForm.etiqueta}
+                              onChange={(e) => setUbicacionForm({ ...ubicacionForm, etiqueta: e.target.value })}
+                              placeholder="Etiqueta: Edificio A - Apt 101"
+                              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-indigo-400"
+                            />
+
+                            <input
+                              value={ubicacionForm.direccion}
+                              onChange={(e) => setUbicacionForm({ ...ubicacionForm, direccion: e.target.value })}
+                              placeholder="Dirección"
+                              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-indigo-400 md:col-span-2"
+                            />
+
+                            <input
+                              value={ubicacionForm.apartamento}
+                              onChange={(e) => setUbicacionForm({ ...ubicacionForm, apartamento: e.target.value })}
+                              placeholder="Apartamento"
+                              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-indigo-400"
+                            />
+
+                            <input
+                              value={ubicacionForm.edificio}
+                              onChange={(e) => setUbicacionForm({ ...ubicacionForm, edificio: e.target.value })}
+                              placeholder="Edificio"
+                              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-indigo-400"
+                            />
+
+                            <input
+                              value={ubicacionForm.codigoAcceso}
+                              onChange={(e) => setUbicacionForm({ ...ubicacionForm, codigoAcceso: e.target.value })}
+                              placeholder="Código de acceso"
+                              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-indigo-400"
+                            />
+
+                            <textarea
+                              value={ubicacionForm.notas}
+                              onChange={(e) => setUbicacionForm({ ...ubicacionForm, notas: e.target.value })}
+                              placeholder="Notas de esta ubicación"
+                              rows={3}
+                              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-indigo-400 md:col-span-2 xl:col-span-3"
+                            />
+                          </div>
+
+                          <div className="mt-3 flex justify-end">
+                            <button
+                              onClick={() => guardarUbicacionCliente(c.id)}
+                              disabled={guardandoUbicacion}
+                              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-700 px-5 py-3 text-sm font-black text-white shadow-lg shadow-indigo-200 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              <Save size={16} />
+                              {guardandoUbicacion ? "Guardando..." : "Guardar ubicación"}
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}

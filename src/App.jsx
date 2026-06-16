@@ -1671,8 +1671,8 @@ export default function App() {
   };
 
   const agregarCliente = async () => {
-    if (!clienteForm.nombre || !clienteForm.telefono || !clienteForm.direccion) {
-      return setMensaje("Nombre, teléfono y dirección son obligatorios.");
+    if (!clienteForm.nombre || !clienteForm.telefono) {
+      return setMensaje("Nombre y teléfono son obligatorios.");
     }
 
     if (!phoneIsValidUS(clienteForm.telefono)) {
