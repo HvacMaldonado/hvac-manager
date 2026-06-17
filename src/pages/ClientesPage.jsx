@@ -855,9 +855,11 @@ export default function ClientesPage({
                         <>
                           <p className="line-clamp-1 font-semibold text-slate-700">
                             <MapPin size={14} className="mr-1 inline text-blue-700" />
-                            {(c.cliente_direcciones || []).length > 0
-                              ? `${(c.cliente_direcciones || []).length} ${(c.cliente_direcciones || []).length === 1 ? t("locationSingular") : t("locationPlural")}`
-                              : t("noLocations")}
+                            {c.tipoCliente === "corporativo"
+                              ? ((c.cliente_direcciones || []).length > 0
+                                ? `${(c.cliente_direcciones || []).length} ${(c.cliente_direcciones || []).length === 1 ? t("locationSingular") : t("locationPlural")}`
+                                : t("noLocations"))
+                              : (c.direccion || (c.cliente_direcciones || [])[0]?.direccion || t("noAddress"))}
                           </p>
                           {(c.apartamento || c.edificio || c.codigoAcceso) && (
                             <p className="text-xs text-slate-500">
@@ -906,7 +908,7 @@ export default function ClientesPage({
                         className="inline-flex min-w-[125px] items-center justify-center gap-1 rounded-xl bg-indigo-50 px-3 py-2 text-xs font-black text-indigo-700 hover:bg-indigo-100"
                       >
                         <MapPinned size={13} />
-                        Ubicaciones
+                        {c.tipoCliente === "corporativo" ? "Ubicaciones" : "Dirección"}
                       </button>
 
                       <button onClick={() => abrirCrearOrdenConCliente(c)} className="inline-flex min-w-[120px] items-center justify-center gap-1 rounded-xl bg-slate-950 px-3 py-2 text-xs font-black text-white">
