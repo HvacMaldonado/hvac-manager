@@ -905,7 +905,12 @@ export default function ClientesPage({
 
                       <button
                         onClick={() => setUbicacionClienteId(ubicacionClienteId === c.id ? null : c.id)}
-                        className="inline-flex min-w-[125px] items-center justify-center gap-1 rounded-xl bg-indigo-50 px-3 py-2 text-xs font-black text-indigo-700 hover:bg-indigo-100"
+                        className={
+                          "inline-flex min-w-[125px] items-center justify-center gap-1 rounded-xl px-3 py-2 text-xs font-black transition " +
+                          (c.tipoCliente === "corporativo"
+                            ? "bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
+                            : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100")
+                        }
                       >
                         <MapPinned size={13} />
                         {c.tipoCliente === "corporativo" ? "Ubicaciones" : "Dirección"}
