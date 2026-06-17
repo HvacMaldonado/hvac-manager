@@ -291,7 +291,7 @@ export default function ClientesPage({
       cliente.fechaCreacion || "",
     ].filter(Boolean);
 
-    return movimientos.sort().at(-1) || "";
+    return movimientos.sort().slice(-1)[0] || "";
   };
 
   const getTecnicoPrincipalCliente = (cliente) => {
