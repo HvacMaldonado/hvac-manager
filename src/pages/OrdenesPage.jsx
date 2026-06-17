@@ -184,6 +184,22 @@ export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, cr
   const clienteSeleccionado = clientesFiltradosOrden.find((c) => String(c.id) === String(ordenForm.clienteId));
   const ubicacionesCliente = clienteSeleccionado?.cliente_direcciones || [];
   const ubicacionSeleccionada = ubicacionesCliente.find((d) => String(d.id) === String(ordenForm.ubicacionId));
+  const esClienteCorporativo = clienteSeleccionado?.tipoCliente === "corporativo";
+
+  const etiquetaUbicacionTrabajo = (u) => {
+    if (!u) return "Ubicación";
+    const edificio = String(u.edificio || "").trim();
+    const apartamento = String(u.apartamento || "").trim();
+    const etiqueta = String(u.etiqueta || "").trim();
+    const direccion = String(u.direccion || "").trim();
+
+    if (edificio && apartamento) return `Edificio ${edificio} · Apt ${apartamento}`;
+    if (apartamento) return `Apt ${apartamento}`;
+    if (edificio) return `Edificio ${edificio}`;
+    if (etiqueta) return etiqueta;
+    if (direccion) return direccion;
+    return "Ubicación";
+  };
 
   const inputClass = "w-full rounded-2xl border border-slate-300 bg-white p-3 pl-10 text-sm outline-none shadow-sm transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100";
 
@@ -264,22 +280,30 @@ export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, cr
                         <option value="">Seleccionar ubicación</option>
                         {ubicacionesCliente.map((u) => (
                           <option key={u.id} value={u.id}>
-                            {u.etiqueta || u.direccion || "Ubicación"}
+                            {etiquetaUbicacionTrabajo(u)}
                           </option>
                         ))}
                       </select>
 
                       {ubicacionSeleccionada && (
                         <div className="rounded-2xl border border-cyan-100 bg-cyan-50 p-4">
-                          <p className="text-sm font-black text-slate-950">
-                            {ubicacionSeleccionada.etiqueta || "Ubicación seleccionada"}
+                          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-cyan-700">
+                            {esClienteCorporativo ? "Unidad seleccionada" : "Ubicación seleccionada"}
                           </p>
-                          <p className="mt-1 text-xs font-bold text-slate-700">
+                          <p className="mt-1 text-base font-black text-slate-950">
+                            {etiquetaUbicacionTrabajo(ubicacionSeleccionada)}
+                          </p>
+                          <p className="mt-2 text-xs font-black uppercase tracking-wide text-slate-500">
+                            Dirección principal
+                          </p>
+                          <p className="mt-1 text-sm font-bold text-slate-700">
                             {ubicacionSeleccionada.direccion || "Sin dirección"}
                           </p>
-                          <p className="mt-2 text-xs font-semibold text-slate-600">
-                            Apt {ubicacionSeleccionada.apartamento || "—"} · Edificio {ubicacionSeleccionada.edificio || "—"} · Código {ubicacionSeleccionada.codigo_acceso || "—"}
-                          </p>
+                          <div className="mt-3 grid gap-2 rounded-2xl bg-white/80 p-3 text-xs font-bold text-slate-700 sm:grid-cols-3">
+                            <span>Edificio: {ubicacionSeleccionada.edificio || "—"}</span>
+                            <span>Apt: {ubicacionSeleccionada.apartamento || "—"}</span>
+                            <span>Código: {ubicacionSeleccionada.codigo_acceso || "—"}</span>
+                          </div>
                           {ubicacionSeleccionada.notas && (
                             <p className="mt-2 rounded-xl bg-white p-2 text-xs font-bold text-slate-600">
                               {ubicacionSeleccionada.notas}
