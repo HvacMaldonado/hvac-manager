@@ -4031,17 +4031,7 @@ function TecnicoAssignedTodayPanel({ ordenes = [], citas = [], obtenerCliente, o
     });
 
   const citaYaTieneOrden = (cita) => {
-    let ordenesRespaldo = [];
-
-    try {
-      ordenesRespaldo = JSON.parse(localStorage.getItem("ordenes") || "[]");
-    } catch {
-      ordenesRespaldo = [];
-    }
-
-    const ordenesParaComparar = [...ordenes, ...ordenesRespaldo];
-
-    return ordenesParaComparar.some((orden) => {
+    return ordenes.some((orden) => {
       const mismaCita = String(orden.origenCitaId || "") === String(cita.id);
 
       const mismosDatos =
