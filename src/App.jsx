@@ -86,6 +86,16 @@ import TecnicoCompactOrderCard from "./components/TecnicoCompactOrderCard.jsx";
 import TecnicoCompactCitaCard from "./components/TecnicoCompactCitaCard.jsx";
 import SignatureModal from "./components/SignatureModal.jsx";
 import {
+  toDateKey,
+  todayKey,
+  todayDateKey,
+  isTodayValue,
+  isFutureValue,
+  getDayName,
+  sortByDateTime,
+} from "./utils/dateUtils";
+import { priorityWeight } from "./utils/orderUtils";
+import {
   ADMIN_RECOVERY_CODE,
   iconProps,
   DEFAULT_TECNICOS,
@@ -1323,43 +1333,6 @@ function formatReportDate(value) {
   if (!value) return new Date().toLocaleDateString();
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleDateString();
-}
-
-function toDateKey(value) {
-  if (!value) return "";
-  if (/^\d{4}-\d{2}-\d{2}$/.test(String(value))) return String(value);
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "";
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function todayKey() {
-  return toDateKey(new Date());
-}
-
-function isTodayValue(value) {
-  return toDateKey(value) === todayKey();
-}
-
-function isFutureValue(value) {
-  const key = toDateKey(value);
-  return key && key > todayKey();
-}
-
-function getDayName(value = new Date(), lang = "es") {
-  const date = value instanceof Date ? value : new Date(value);
-  const locale = lang === "en" ? "en-US" : "es-US";
-  const day = date.toLocaleDateString(locale, { weekday: "long" });
-  return day.charAt(0).toUpperCase() + day.slice(1);
-}
-
-function sortByDateTime(a, b) {
-  const aKey = `${a.fechaProgramada || a.fecha || toDateKey(a.fechaCreacion || a.fechaCompletada)} ${a.horaProgramada || a.hora || ""}`;
-  const bKey = `${b.fechaProgramada || b.fecha || toDateKey(b.fechaCreacion || b.fechaCompletada)} ${b.horaProgramada || b.hora || ""}`;
-  return aKey.localeCompare(bKey);
 }
 
 function normalizeOrden(orden) {
@@ -3439,16 +3412,6 @@ function getOrderDateKey(orden) {
   const d = new Date(raw);
   if (Number.isNaN(d.getTime())) return "";
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function todayDateKey() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function priorityWeight(value) {
-  const map = { Urgente: 0, Alta: 1, Media: 2, Baja: 3 };
-  return map[value] ?? 4;
 }
 
 function sortTechnicianOrders(a, b) {
