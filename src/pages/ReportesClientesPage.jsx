@@ -71,7 +71,7 @@ export default function ReportesClientesPage({ t, clientes, ordenes, citas = [],
       const ultimaActividad = [
         ...ordenesC.map((o) => o.fechaCompletada || o.fechaCreacion || o.fecha || ""),
         ...citasC.map((x) => x.fecha || x.fechaCreacion || ""),
-      ].filter(Boolean).sort().at(-1) || "";
+      ].filter(Boolean).sort().slice(-1)[0] || "";
 
       const status = activityStatus(ordenesC.length, citasC.length, t);
 
