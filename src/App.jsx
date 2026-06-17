@@ -1640,12 +1640,7 @@ export default function App() {
     cargarInventarioSupabase();
   }, []);
 
-  useEffect(() => localStorage.setItem("clientes", JSON.stringify(clientes)), [clientes]);
-  useEffect(() => localStorage.setItem("ordenes", JSON.stringify(ordenes)), [ordenes]);
-  useEffect(() => localStorage.setItem("inventarioHVAC", JSON.stringify(inventario)), [inventario]);
-  useEffect(() => localStorage.setItem("herramientasHVAC", JSON.stringify(herramientas)), [herramientas]);
-  useEffect(() => localStorage.setItem("tecnicosHVAC", JSON.stringify(tecnicos)), [tecnicos]);
-  useEffect(() => localStorage.setItem("citasHVAC", JSON.stringify(citas)), [citas]);
+  // Los datos grandes viven en Supabase. No guardarlos en localStorage evita QuotaExceededError en iPad/Safari.
   useEffect(() => localStorage.setItem("adminPassword", adminPassword), [adminPassword]);
   useEffect(() => localStorage.setItem("hvacLang", lang), [lang]);
   useEffect(() => { session ? localStorage.setItem("hvacSession", JSON.stringify(session)) : localStorage.removeItem("hvacSession"); }, [session]);
