@@ -22,6 +22,7 @@ import {
   MessageCircle,
   Printer,
   Share2,
+  Trash2,
   MoreHorizontal,
   X,} from "lucide-react";
 
@@ -839,6 +840,16 @@ function AdminOrdenRow({ orden, cliente, ordenProps, t = (key) => key }) {
               </>
             )}
           </div>
+          {ordenProps?.session?.role === "admin" && (
+            <button
+              type="button"
+              onClick={() => ordenProps?.eliminarOrdenAdmin?.(orden)}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-rose-50 px-3 text-xs font-black text-rose-700 ring-1 ring-rose-100 transition hover:bg-rose-100"
+            >
+              <Trash2 size={15} />
+              {t("delete")}
+            </button>
+          )}
         </div>
       </div>
     </article>

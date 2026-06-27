@@ -123,3 +123,33 @@ export async function actualizarOrdenSupabase(id, cambios) {
   if (error) throw error;
   return mapOrden(data);
 }
+
+
+export async function eliminarOrdenSupabase(id) {
+  const ordenId = String(id);
+
+  const tablasRelacionadas = [
+    "orden_materiales",
+    "orden_fotos",
+    "orden_firmas",
+    "orden_tecnicos",
+  ];
+
+  for (const tabla of tablasRelacionadas) {
+    const { error } = await supabase
+      .from(tabla)
+      .delete()
+      .eq("orden_id", ordenId);
+
+    if (error) throw error;
+  }
+
+  const { error } = await supabase
+    .from("ordenes")
+    .delete()
+    .eq("id", ordenId);
+
+  if (error) throw error;
+
+  return true;
+}

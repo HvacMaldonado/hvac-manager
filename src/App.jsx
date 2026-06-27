@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { crearClienteSupabase, obtenerClientesSupabase } from "./services/clientesService";
 import { obtenerTecnicosSupabase, crearTecnicoSupabase, actualizarTecnicoSupabase } from "./services/tecnicosService";
 import { obtenerCitasSupabase, crearCitaSupabase, actualizarCitaSupabase } from "./services/citasService";
-import { obtenerOrdenesSupabase, crearOrdenSupabase, actualizarOrdenSupabase } from "./services/ordenesService";
+import { obtenerOrdenesSupabase, crearOrdenSupabase, actualizarOrdenSupabase, eliminarOrdenSupabase } from "./services/ordenesService";
 import { obtenerHerramientasSupabase, crearHerramientaSupabase, actualizarHerramientaSupabase, eliminarHerramientaSupabase } from "./services/herramientasService";
 import { obtenerInventarioSupabase, crearInventarioSupabase, actualizarInventarioSupabase, eliminarInventarioSupabase } from "./services/inventarioService";
 import { obtenerMaterialesOrdenesSupabase, crearOrdenMaterialSupabase, actualizarOrdenMaterialSupabase, eliminarOrdenMaterialSupabase } from "./services/ordenMaterialesService";
@@ -2831,6 +2831,37 @@ const compartirOrden = async (orden, metodo) => {
     }
   };
 
+  const eliminarOrdenAdmin = async (ordenOrId) => {
+    const orden = typeof ordenOrId === "object"
+      ? ordenOrId
+      : ordenes.find((o) => String(o.id) === String(ordenOrId));
+
+    if (!orden) {
+      setMensaje("No se encontró la orden para eliminar.");
+      return;
+    }
+
+    if (session?.role !== "admin") {
+      setMensaje("Solo un administrador puede eliminar órdenes.");
+      return;
+    }
+
+    const confirmar = window.confirm(
+      `¿Eliminar permanentemente la orden #${orden.id}?\n\nEsta acción borrará también materiales, fotos, firmas y asignaciones relacionadas.`
+    );
+
+    if (!confirmar) return;
+
+    try {
+      await eliminarOrdenSupabase(orden.id);
+      setOrdenes((actual) => actual.filter((o) => String(o.id) !== String(orden.id)));
+      setMensaje("Orden eliminada permanentemente.");
+    } catch (error) {
+      console.error("Error eliminando orden en Supabase:", error);
+      setMensaje("No se pudo eliminar la orden en Supabase.");
+    }
+  };
+
   const exportarCSV = (filas, nombre) => {
     if (!filas.length) return alert("No hay datos para exportar.");
     const headers = Object.keys(filas[0]);
@@ -2849,7 +2880,7 @@ const compartirOrden = async (orden, metodo) => {
   const colorEstado = (estado) => estado === "Completado" ? "bg-emerald-100 text-emerald-700 border-emerald-200" : estado === "Cancelada" ? "bg-rose-100 text-rose-700 border-rose-200" : estado === "Necesita seguimiento" ? "bg-amber-100 text-amber-800 border-amber-200" : estado === "En proceso" ? "bg-sky-100 text-sky-700 border-sky-200" : estado === "En ruta" ? "bg-cyan-100 text-cyan-700 border-cyan-200" : estado === "Asignada" ? "bg-blue-100 text-blue-700 border-blue-200" : "bg-slate-100 text-slate-700 border-slate-200";
   const colorPrioridad = (p) => PRIORIDADES.find((x) => x.value === p)?.cls || "bg-slate-100 text-slate-700 border-slate-200";
 
-  const ordenProps = { inventario, obtenerMaterial, obtenerTecnico, colorEstado, colorPrioridad, marcarEnRuta, marcarLlegada, iniciarTrabajo, marcarNecesitaSeguimiento, setFirmaOrdenModal, completarOrden, cancelarOrden, subirFoto, guardarNotaTecnico, corregirOrdenAdmin, session, urlGoogleMaps, urlAppleMaps, urlTelefono, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, calcularCostoOrden, materialesTexto, compartirOrden, convertirCitaEnOrden, reprogramarCita, setReprogramarCitaModal, cancelarOrden: (ordenOrId) => {
+  const ordenProps = { inventario, obtenerMaterial, obtenerTecnico, colorEstado, colorPrioridad, marcarEnRuta, marcarLlegada, iniciarTrabajo, marcarNecesitaSeguimiento, setFirmaOrdenModal, completarOrden, cancelarOrden, subirFoto, guardarNotaTecnico, corregirOrdenAdmin, eliminarOrdenAdmin, session, urlGoogleMaps, urlAppleMaps, urlTelefono, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, calcularCostoOrden, materialesTexto, compartirOrden, convertirCitaEnOrden, reprogramarCita, setReprogramarCitaModal, cancelarOrden: (ordenOrId) => {
     const orden = typeof ordenOrId === "object" ? ordenOrId : ordenes.find((o) => o.id === ordenOrId);
     setCancelModalOrden(orden || null);
   }, t };
