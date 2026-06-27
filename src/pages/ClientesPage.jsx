@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { crearDireccionClienteSupabase } from "../services/clientesService";
+import { showDeleteCustomerModal } from "../utils/showDeleteCustomerModal";
 
 import {
   Building2,
