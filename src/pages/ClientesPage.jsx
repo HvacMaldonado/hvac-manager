@@ -252,6 +252,7 @@ export default function ClientesPage({
   agregarCliente,
   abrirCrearOrdenConCliente,
   abrirProgramarCitaConCliente,
+  eliminarCliente,
   urlAppleMaps,
   urlTelefono,
 }) {
