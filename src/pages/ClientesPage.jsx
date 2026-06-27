@@ -952,7 +952,18 @@ export default function ClientesPage({
                       )}
 
                       <button
-                        onClick={() => eliminarCliente ? eliminarCliente(c) : setClientes(clientes.filter((x) => String(x.id) !== String(c.id)))}
+                        type="button"
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+
+                          if (typeof eliminarCliente !== "function") {
+                            alert("La función eliminarCliente no está conectada en ClientesPage.");
+                            return;
+                          }
+
+                          eliminarCliente(c);
+                        }}
                         className="inline-flex min-w-[44px] items-center justify-center gap-1 rounded-xl bg-red-50 px-3 py-2 text-xs font-black text-red-700 hover:bg-red-100"
                       >
                         <Trash2 size={13} />
