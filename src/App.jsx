@@ -1362,8 +1362,6 @@ export default function App() {
   const [ordenAgendaAbiertaId, setOrdenAgendaAbiertaId] = useState(null);
   const [loginForm, setLoginForm] = useState({ usuario: "", password: "" });
   const [mensaje, setMensaje] = useState("");
-  const [clienteAEliminar, setClienteAEliminar] = useState(null);
-  const [eliminandoCliente, setEliminandoCliente] = useState(false);
   const [clienteAccion, setClienteAccion] = useState(null);
   const [adminPassword, setAdminPassword] = useState(() => localStorage.getItem("adminPassword") || "admin123");
   const [clientes, setClientes] = useState(() => getStorage("clientes", []));
@@ -1628,7 +1626,7 @@ export default function App() {
 
   const cerrarSesion = () => { setSession(null); setAdminPage("clientes"); setMensaje(""); setClienteAccion(null); };
 
-  const eliminarCliente = (cliente) => {
+  const eliminarCliente = async (cliente) => {
     if (!cliente?.id) {
       setMensaje("No se encontró el cliente para eliminar.");
       return;
@@ -1639,36 +1637,18 @@ export default function App() {
       return;
     }
 
-    const ordenesCliente = ordenes.filter((orden) => String(orden.clienteId) === String(cliente.id));
-    const citasCliente = citas.filter((cita) => String(cita.clienteId) === String(cliente.id));
-
-    setClienteAEliminar({
-      ...cliente,
-      totalOrdenes: ordenesCliente.length,
-      totalCitas: citasCliente.length,
-    });
-  };
-
-  const confirmarEliminarCliente = async () => {
-    if (!clienteAEliminar?.id) return;
-
     try {
-      setEliminandoCliente(true);
+      await eliminarClienteSupabase(cliente.id);
 
-      await eliminarClienteSupabase(clienteAEliminar.id);
+      setClientes((actual) => actual.filter((c) => String(c.id) !== String(cliente.id)));
+      setOrdenes((actual) => actual.filter((orden) => String(orden.clienteId) !== String(cliente.id)));
+      setCitas((actual) => actual.filter((cita) => String(cita.clienteId) !== String(cliente.id)));
 
-      setClientes((actual) => actual.filter((c) => String(c.id) !== String(clienteAEliminar.id)));
-      setOrdenes((actual) => actual.filter((orden) => String(orden.clienteId) !== String(clienteAEliminar.id)));
-      setCitas((actual) => actual.filter((cita) => String(cita.clienteId) !== String(clienteAEliminar.id)));
-
-      setClienteAEliminar(null);
       setMensaje("Cliente y registros relacionados eliminados correctamente.");
     } catch (error) {
       console.error("Error eliminando cliente en Supabase:", error);
       alert(JSON.stringify(error, null, 2));
       setMensaje("No se pudo eliminar el cliente en Supabase.");
-    } finally {
-      setEliminandoCliente(false);
     }
   };
 
@@ -3314,73 +3294,8 @@ const compartirOrden = async (orden, metodo) => {
           );
         })()}
       </main>
-      {clienteAEliminar && (
-        <div className="fixed inset-0 z-[140] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-2xl overflow-hidden rounded-[2rem] border border-red-200/20 bg-white shadow-2xl shadow-slate-950/30">
-            <div className="bg-gradient-to-r from-slate-950 via-red-950 to-slate-950 px-6 py-6 text-white">
-              <p className="text-[11px] font-black uppercase tracking-[0.35em] text-red-200">
-                Confirmación de eliminación
-              </p>
-              <h3 className="mt-2 text-2xl font-black">
-                ¿Eliminar permanentemente a {clienteAEliminar.nombre}?
-              </h3>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
-                Esta acción eliminará el cliente seleccionado y cualquier registro relacionado encontrado en el sistema.
-              </p>
-            </div>
 
-            <div className="space-y-5 px-6 py-6">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5 shadow-sm">
-                  <p className="text-[11px] font-black uppercase tracking-[0.25em] text-slate-500">
-                    Órdenes relacionadas
-                  </p>
-                  <p className="mt-2 text-3xl font-black text-slate-950">
-                    {clienteAEliminar.totalOrdenes}
-                  </p>
-                </div>
 
-                <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5 shadow-sm">
-                  <p className="text-[11px] font-black uppercase tracking-[0.25em] text-slate-500">
-                    Citas relacionadas
-                  </p>
-                  <p className="mt-2 text-3xl font-black text-slate-950">
-                    {clienteAEliminar.totalCitas}
-                  </p>
-                </div>
-              </div>
-
-              <div className="rounded-[1.5rem] border border-red-200 bg-gradient-to-r from-red-50 to-rose-50 px-5 py-4 shadow-sm">
-                <p className="text-sm font-black text-red-800">
-                  Advertencia importante
-                </p>
-                <p className="mt-1 text-sm leading-6 text-red-700">
-                  Esta eliminación es permanente y no se puede deshacer.
-                </p>
-              </div>
-
-              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                <button
-                  type="button"
-                  onClick={() => !eliminandoCliente && setClienteAEliminar(null)}
-                  className="inline-flex min-w-[140px] items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50"
-                >
-                  Cancelar
-                </button>
-
-                <button
-                  type="button"
-                  onClick={confirmarEliminarCliente}
-                  disabled={eliminandoCliente}
-                  className="inline-flex min-w-[240px] items-center justify-center rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 px-5 py-3 text-sm font-black text-white shadow-xl shadow-red-500/25 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  {eliminandoCliente ? "Eliminando..." : "Eliminar cliente y registros"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
     </div>
   );

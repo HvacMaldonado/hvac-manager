@@ -963,7 +963,15 @@ export default function ClientesPage({
                             return;
                           }
 
-                          eliminarCliente(c);
+                          const totalOrdenes = ordenes.filter((orden) => String(orden.clienteId) === String(c.id)).length;
+                          const totalCitas = citas.filter((cita) => String(cita.clienteId) === String(c.id)).length;
+
+                          showDeleteCustomerModal({
+                            cliente: c,
+                            ordenes: totalOrdenes,
+                            citas: totalCitas,
+                            onConfirm: () => eliminarCliente(c),
+                          });
                         }}
                         className="inline-flex min-w-[44px] items-center justify-center gap-1 rounded-xl bg-red-50 px-3 py-2 text-xs font-black text-red-700 hover:bg-red-100"
                       >
