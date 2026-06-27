@@ -1632,26 +1632,45 @@ export default function App() {
       return;
     }
 
-    const tieneOrdenes = ordenes.some((orden) => String(orden.clienteId) === String(cliente.id));
-    const tieneCitas = citas.some((cita) => String(cita.clienteId) === String(cliente.id));
-
-    if (tieneOrdenes || tieneCitas) {
-      setMensaje("No se puede eliminar este cliente porque tiene órdenes o citas registradas.");
+    if (session?.role !== "admin") {
+      setMensaje("Solo un administrador puede eliminar clientes.");
       return;
     }
 
+    const ordenesCliente = ordenes.filter((orden) => String(orden.clienteId) === String(cliente.id));
+    const citasCliente = citas.filter((cita) => String(cita.clienteId) === String(cliente.id));
+
+    const detalle =
+      ordenesCliente.length > 0 || citasCliente.length > 0
+        ? `\n\nEste cliente tiene:\n- ${ordenesCliente.length} orden(es)\n- ${citasCliente.length} cita(s)\n\nTambién se eliminarán esos registros relacionados.`
+        : "\n\nEste cliente no tiene órdenes ni citas relacionadas.";
+
     const confirmar = window.confirm(
-      `¿Eliminar permanentemente a ${cliente.nombre}?\n\nEsta acción también eliminará sus direcciones guardadas.`
+      `¿Eliminar permanentemente a ${cliente.nombre}?${detalle}\n\nEsta acción no se puede deshacer.`
     );
 
     if (!confirmar) return;
 
+    const confirmacionFinal = window.prompt(
+      `Para confirmar, escribe ELIMINAR\n\nCliente: ${cliente.nombre}`
+    );
+
+    if (confirmacionFinal !== "ELIMINAR") {
+      setMensaje("Eliminación cancelada.");
+      return;
+    }
+
     try {
       await eliminarClienteSupabase(cliente.id);
+
       setClientes((actual) => actual.filter((c) => String(c.id) !== String(cliente.id)));
-      setMensaje("Cliente eliminado correctamente.");
+      setOrdenes((actual) => actual.filter((orden) => String(orden.clienteId) !== String(cliente.id)));
+      setCitas((actual) => actual.filter((cita) => String(cita.clienteId) !== String(cliente.id)));
+
+      setMensaje("Cliente y registros relacionados eliminados correctamente.");
     } catch (error) {
       console.error("Error eliminando cliente en Supabase:", error);
+      alert(JSON.stringify(error, null, 2));
       setMensaje("No se pudo eliminar el cliente en Supabase.");
     }
   };

@@ -75,9 +75,49 @@ export async function crearDireccionClienteSupabase(clienteId, direccion) {
   return data;
 }
 
-
 export async function eliminarClienteSupabase(id) {
   const clienteId = String(id);
+
+  const { data: ordenesCliente, error: ordenesError } = await supabase
+    .from("ordenes")
+    .select("id")
+    .eq("cliente_id", clienteId);
+
+  if (ordenesError) throw ordenesError;
+
+  const ordenIds = (ordenesCliente || []).map((orden) => orden.id);
+
+  if (ordenIds.length > 0) {
+    const tablasOrden = [
+      "orden_materiales",
+      "orden_fotos",
+      "orden_firmas",
+      "orden_tecnicos",
+    ];
+
+    for (const tabla of tablasOrden) {
+      const { error } = await supabase
+        .from(tabla)
+        .delete()
+        .in("orden_id", ordenIds);
+
+      if (error) throw error;
+    }
+
+    const { error: ordenesDeleteError } = await supabase
+      .from("ordenes")
+      .delete()
+      .in("id", ordenIds);
+
+    if (ordenesDeleteError) throw ordenesDeleteError;
+  }
+
+  const { error: citasError } = await supabase
+    .from("citas")
+    .delete()
+    .eq("cliente_id", clienteId);
+
+  if (citasError) throw citasError;
 
   const { error: direccionesError } = await supabase
     .from("cliente_direcciones")
