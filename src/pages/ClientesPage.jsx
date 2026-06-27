@@ -980,176 +980,330 @@ export default function ClientesPage({
                       </button>
                     </div>
                   </article>
-                  {ubicacionClienteId === c.id && (
-                    <div className="col-span-full border-t border-blue-100 bg-indigo-50/60 px-6 py-4">
-                      <div className="rounded-3xl border border-indigo-100 bg-white p-4 shadow-md shadow-indigo-100/60">
-                        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                          <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-500">
-                              Ubicaciones
-                            </p>
-                            <h4 className="text-lg font-black text-slate-950">
-                              {c.nombre}
-                            </h4>
-                          </div>
+                  {ubicacionClienteId === c.id && (() => {
+                    const ubicaciones = c.cliente_direcciones || [];
+                    const tipoCliente = c.tipoCliente || c.tipo_cliente || "residencial";
+                    const esCorporativo = tipoCliente === "corporativo";
+                    const ubicacionPrincipal = ubicaciones.find((d) => d.principal) || ubicaciones[0];
 
-                          <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-black text-indigo-700">
-                            {(c.cliente_direcciones || []).length} Ubicaciones
-                          </span>
-                        </div>
+                    return (
+                      <div className="col-span-full border-t border-blue-100 bg-gradient-to-br from-slate-50 via-blue-50/70 to-cyan-50/60 px-5 py-5">
+                        <div className="overflow-hidden rounded-[2rem] border border-blue-100 bg-white shadow-xl shadow-blue-100/60">
+                          <div className="relative overflow-hidden bg-gradient-to-r from-slate-950 via-blue-950 to-cyan-900 px-6 py-6 text-white">
+                            <div className="pointer-events-none absolute -right-20 -top-20 h-52 w-52 rounded-full bg-cyan-300/20 blur-3xl" />
+                            <div className="pointer-events-none absolute -left-20 bottom-[-90px] h-52 w-52 rounded-full bg-blue-500/20 blur-3xl" />
 
-                        {(c.cliente_direcciones || []).length === 0 ? (
-                          <div className="rounded-2xl border border-dashed border-indigo-200 bg-indigo-50 p-4 text-sm font-bold text-indigo-700">
-                            {t("noAddress")}
-                          </div>
-                        ) : (
-                          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                            {(c.cliente_direcciones || []).map((d) => (
-                              <div key={d.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
-                                <div className="mb-2 flex items-center justify-between gap-2">
-                                  <p className="font-black text-slate-950">
-                                    {d.etiqueta || t("address")}
+                            <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                              <div className="flex items-start gap-4">
+                                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/10 shadow-2xl shadow-black/20 backdrop-blur-xl">
+                                  {esCorporativo ? <Building2 size={25} /> : <Home size={25} />}
+                                </div>
+
+                                <div>
+                                  <p className="text-[10px] font-black uppercase tracking-[0.35em] text-cyan-200">
+                                    {esCorporativo ? "Cliente corporativo" : "Cliente residencial"}
                                   </p>
-                                  {d.principal && (
-                                    <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-black text-emerald-700">
-                                      Principal
+
+                                  <h4 className="mt-2 text-2xl font-black tracking-tight text-white">
+                                    {c.nombre}
+                                  </h4>
+
+                                  <div className="mt-2 flex flex-wrap gap-2 text-xs font-black">
+                                    <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-white/80">
+                                      {ubicaciones.length} {ubicaciones.length === 1 ? "ubicación" : "ubicaciones"}
                                     </span>
-                                  )}
+
+                                    {c.telefono && (
+                                      <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-cyan-100">
+                                        {c.telefono}
+                                      </span>
+                                    )}
+
+                                    {c.email && (
+                                      <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-white/70">
+                                        {c.email}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
-
-                                <p className="line-clamp-2 text-sm font-bold text-slate-700">
-                                  <MapPin size={14} className="mr-1 inline text-blue-700" />
-                                  {d.direccion || t("noAddress")}
-                                </p>
-
-                                {(d.apartamento || d.edificio || d.codigo_acceso) && (
-                                  <p className="mt-2 text-xs font-semibold text-slate-500">
-                                    {[
-                                      d.apartamento ? `${t("apt")} ${d.apartamento}` : "",
-                                      d.edificio ? `${t("building")} ${d.edificio}` : "",
-                                      d.codigo_acceso ? `${t("accessCode")} ${d.codigo_acceso}` : "",
-                                    ].filter(Boolean).join(" · ")}
-                                  </p>
-                                )}
-
-                                {d.notas && (
-                                  <p className="mt-2 rounded-xl bg-white p-2 text-xs font-bold text-slate-600">
-                                    {d.notas}
-                                  </p>
-                                )}
                               </div>
-                            ))}
-                          </div>
-                        )}
 
-                        <div className="mt-4 rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                          <div className="mb-3 flex items-center justify-between gap-2">
-                            <div>
-                              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500">
-                                {t("newLocation")}
-                              </p>
-                              <h5 className="text-sm font-black text-slate-950">
-                                Agregar dirección para este cliente
-                              </h5>
+                              <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[360px]">
+                                <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-xl">
+                                  <p className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-200">
+                                    Principal
+                                  </p>
+                                  <p className="mt-2 line-clamp-2 text-sm font-bold leading-5 text-white/85">
+                                    {ubicacionPrincipal?.direccion || "Sin dirección principal"}
+                                  </p>
+                                </div>
+
+                                <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-xl">
+                                  <p className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-200">
+                                    Registro
+                                  </p>
+                                  <p className="mt-2 text-sm font-bold leading-5 text-white/85">
+                                    {esCorporativo ? "Múltiples ubicaciones" : "Dirección individual"}
+                                  </p>
+                                </div>
+                              </div>
                             </div>
-                            <Plus size={18} className="text-indigo-700" />
                           </div>
 
-                          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                            <input
-                              value={ubicacionForm.etiqueta}
-                              onChange={(e) => setUbicacionForm({ ...ubicacionForm, etiqueta: e.target.value })}
-                              placeholder="Etiqueta: Edificio A - Apt 101"
-                              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-indigo-400"
-                            />
+                          <div className="grid gap-5 p-5 xl:grid-cols-[1fr_0.92fr]">
+                            <section className="rounded-[1.6rem] border border-slate-200 bg-slate-50/80 p-5">
+                              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600">
+                                    Ubicaciones registradas
+                                  </p>
+                                  <h5 className="mt-1 text-xl font-black text-slate-950">
+                                    Lo que ya existe para este cliente
+                                  </h5>
+                                </div>
 
-                            <div className="relative md:col-span-2">
-                              <input
-                                value={ubicacionForm.direccion}
-                                onFocus={() => setUbicacionDireccionActiva(true)}
-                                onBlur={() => setTimeout(() => setUbicacionDireccionActiva(false), 180)}
-                                onChange={(e) => buscarDireccionUbicacionGeoapify(e.target.value)}
-                                placeholder="Dirección"
-                                autoComplete="new-password"
-                                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-indigo-400"
-                              />
+                                <span className="inline-flex w-fit items-center rounded-full bg-blue-100 px-4 py-2 text-xs font-black text-blue-700">
+                                  {ubicaciones.length} guardadas
+                                </span>
+                              </div>
 
-                              {ubicacionDireccionActiva && ubicacionDireccionSugerencias.length > 0 && (
-                                <div className="absolute left-0 right-0 z-50 mt-2 max-h-72 overflow-auto rounded-2xl border border-slate-200 bg-white shadow-xl">
-                                  {ubicacionDireccionSugerencias.map((feature, index) => {
-                                    const parts = normalizeGeoapifyAddress(feature);
-                                    return (
-                                      <button
-                                        key={`${parts.full}-${index}`}
-                                        type="button"
-                                        onMouseDown={() => seleccionarDireccionUbicacionGeoapify(feature)}
-                                        className="flex w-full items-start gap-2 px-3 py-2.5 text-left text-sm font-semibold text-slate-700 hover:bg-blue-50"
-                                      >
-                                        <MapPin size={15} className="mt-0.5 shrink-0 text-blue-700" />
-                                        <span>{parts.full}</span>
-                                      </button>
-                                    );
-                                  })}
+                              {ubicaciones.length === 0 ? (
+                                <div className="rounded-[1.4rem] border border-dashed border-blue-200 bg-white p-6 text-center shadow-sm">
+                                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
+                                    <MapPinned size={24} />
+                                  </div>
+
+                                  <p className="mt-4 text-base font-black text-slate-950">
+                                    Este cliente aún no tiene ubicaciones registradas
+                                  </p>
+
+                                  <p className="mx-auto mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-500">
+                                    Usa el formulario de la derecha para agregar la primera dirección, apartamento, edificio o código de acceso.
+                                  </p>
+                                </div>
+                              ) : (
+                                <div className="grid gap-3">
+                                  {ubicaciones.map((d, index) => (
+                                    <article
+                                      key={d.id || `${d.direccion}-${index}`}
+                                      className="rounded-[1.35rem] border border-slate-200 bg-white p-4 shadow-md shadow-slate-100"
+                                    >
+                                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                                        <div className="flex gap-3">
+                                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-700">
+                                            <MapPin size={20} />
+                                          </div>
+
+                                          <div>
+                                            <div className="flex flex-wrap items-center gap-2">
+                                              <h6 className="text-base font-black text-slate-950">
+                                                {d.etiqueta || `Ubicación ${index + 1}`}
+                                              </h6>
+
+                                              {d.principal && (
+                                                <span className="rounded-full bg-emerald-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-emerald-700">
+                                                  Principal
+                                                </span>
+                                              )}
+                                            </div>
+
+                                            <p className="mt-1 text-sm font-bold leading-6 text-slate-700">
+                                              {d.direccion || "Sin dirección"}
+                                            </p>
+
+                                            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                                              <div className="rounded-2xl bg-slate-50 px-3 py-2">
+                                                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">
+                                                  Apt / Unidad
+                                                </p>
+                                                <p className="mt-1 text-xs font-black text-slate-700">
+                                                  {d.apartamento || "—"}
+                                                </p>
+                                              </div>
+
+                                              <div className="rounded-2xl bg-slate-50 px-3 py-2">
+                                                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">
+                                                  Edificio
+                                                </p>
+                                                <p className="mt-1 text-xs font-black text-slate-700">
+                                                  {d.edificio || "—"}
+                                                </p>
+                                              </div>
+
+                                              <div className="rounded-2xl bg-slate-50 px-3 py-2">
+                                                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">
+                                                  Acceso
+                                                </p>
+                                                <p className="mt-1 text-xs font-black text-slate-700">
+                                                  {d.codigo_acceso || "—"}
+                                                </p>
+                                              </div>
+                                            </div>
+
+                                            {d.notas && (
+                                              <div className="mt-3 rounded-2xl border border-amber-100 bg-amber-50 px-3 py-2 text-xs font-bold leading-5 text-amber-800">
+                                                {d.notas}
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </article>
+                                  ))}
                                 </div>
                               )}
+                            </section>
 
-                              {ubicacionDireccionCargando && (
-                                <p className="mt-2 text-xs font-semibold text-slate-500">
-                                  {t("searchingAddresses")}
-                                </p>
-                              )}
+                            <section className="rounded-[1.6rem] border border-cyan-100 bg-white p-5 shadow-xl shadow-cyan-100/50">
+                              <div className="mb-5 flex items-start justify-between gap-4">
+                                <div>
+                                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-700">
+                                    Nueva ubicación
+                                  </p>
 
-                              {ubicacionDireccionError && (
-                                <p className="mt-2 text-xs font-bold text-amber-700">
-                                  {ubicacionDireccionError}
-                                </p>
-                              )}
-                            </div>
+                                  <h5 className="mt-1 text-xl font-black text-slate-950">
+                                    Agregar dirección para este cliente
+                                  </h5>
 
-                            <input
-                              value={ubicacionForm.apartamento}
-                              onChange={(e) => setUbicacionForm({ ...ubicacionForm, apartamento: e.target.value })}
-                              placeholder="Apartamento"
-                              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-indigo-400"
-                            />
+                                  <p className="mt-1 text-sm font-semibold leading-6 text-slate-500">
+                                    Completa solo los campos necesarios. La ubicación quedará vinculada a este cliente.
+                                  </p>
+                                </div>
 
-                            <input
-                              value={ubicacionForm.edificio}
-                              onChange={(e) => setUbicacionForm({ ...ubicacionForm, edificio: e.target.value })}
-                              placeholder="Edificio"
-                              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-indigo-400"
-                            />
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-700">
+                                  <Plus size={22} />
+                                </div>
+                              </div>
 
-                            <input
-                              value={ubicacionForm.codigoAcceso}
-                              onChange={(e) => setUbicacionForm({ ...ubicacionForm, codigoAcceso: e.target.value })}
-                              placeholder="Código de acceso"
-                              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-indigo-400"
-                            />
+                              <div className="grid gap-3">
+                                <div className="grid gap-3 sm:grid-cols-[0.82fr_1.18fr]">
+                                  <label className="block">
+                                    <span className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+                                      Etiqueta
+                                    </span>
+                                    <input
+                                      value={ubicacionForm.etiqueta}
+                                      onChange={(event) => setUbicacionForm({ ...ubicacionForm, etiqueta: event.target.value })}
+                                      placeholder="Ej. Edificio A - Apt 101"
+                                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 outline-none transition focus:border-cyan-400 focus:bg-white"
+                                    />
+                                  </label>
 
-                            <textarea
-                              value={ubicacionForm.notas}
-                              onChange={(e) => setUbicacionForm({ ...ubicacionForm, notas: e.target.value })}
-                              placeholder="Notas de esta ubicación"
-                              rows={3}
-                              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-indigo-400 md:col-span-2 xl:col-span-3"
-                            />
-                          </div>
+                                  <label className="block">
+                                    <span className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+                                      Dirección
+                                    </span>
+                                    <input
+                                      value={ubicacionForm.direccion}
+                                      onChange={(event) => setUbicacionForm({ ...ubicacionForm, direccion: event.target.value })}
+                                      placeholder="Dirección completa"
+                                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 outline-none transition focus:border-cyan-400 focus:bg-white"
+                                    />
+                                  </label>
+                                </div>
 
-                          <div className="mt-3 flex justify-end">
-                            <button
-                              onClick={() => guardarUbicacionCliente(c.id)}
-                              disabled={guardandoUbicacion}
-                              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-700 px-5 py-3 text-sm font-black text-white shadow-lg shadow-indigo-200 disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                              <Save size={16} />
-                              {guardandoUbicacion ? "Guardando..." : "Guardar ubicación"}
-                            </button>
+                                <div className="grid gap-3 sm:grid-cols-3">
+                                  <label className="block">
+                                    <span className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+                                      Apartamento
+                                    </span>
+                                    <input
+                                      value={ubicacionForm.apartamento}
+                                      onChange={(event) => setUbicacionForm({ ...ubicacionForm, apartamento: event.target.value })}
+                                      placeholder="Apt / unidad"
+                                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 outline-none transition focus:border-cyan-400 focus:bg-white"
+                                    />
+                                  </label>
+
+                                  <label className="block">
+                                    <span className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+                                      Edificio
+                                    </span>
+                                    <input
+                                      value={ubicacionForm.edificio}
+                                      onChange={(event) => setUbicacionForm({ ...ubicacionForm, edificio: event.target.value })}
+                                      placeholder="Edificio"
+                                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 outline-none transition focus:border-cyan-400 focus:bg-white"
+                                    />
+                                  </label>
+
+                                  <label className="block">
+                                    <span className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+                                      Código
+                                    </span>
+                                    <input
+                                      value={ubicacionForm.codigoAcceso}
+                                      onChange={(event) => setUbicacionForm({ ...ubicacionForm, codigoAcceso: event.target.value })}
+                                      placeholder="Código acceso"
+                                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 outline-none transition focus:border-cyan-400 focus:bg-white"
+                                    />
+                                  </label>
+                                </div>
+
+                                <label className="block">
+                                  <span className="mb-1 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+                                    Notas
+                                  </span>
+                                  <textarea
+                                    value={ubicacionForm.notas}
+                                    onChange={(event) => setUbicacionForm({ ...ubicacionForm, notas: event.target.value })}
+                                    placeholder="Notas de esta ubicación"
+                                    rows={4}
+                                    className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 outline-none transition focus:border-cyan-400 focus:bg-white"
+                                  />
+                                </label>
+
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    if (!ubicacionForm.direccion?.trim()) {
+                                      alert("Ingresa una dirección antes de guardar la ubicación.");
+                                      return;
+                                    }
+
+                                    try {
+                                      const nuevaUbicacion = await crearDireccionClienteSupabase(c.id, ubicacionForm);
+
+                                      setClientes((actual) =>
+                                        actual.map((cliente) =>
+                                          String(cliente.id) === String(c.id)
+                                            ? {
+                                                ...cliente,
+                                                cliente_direcciones: [
+                                                  ...(cliente.cliente_direcciones || []),
+                                                  nuevaUbicacion,
+                                                ],
+                                              }
+                                            : cliente
+                                        )
+                                      );
+
+                                      setUbicacionForm({
+                                        etiqueta: "",
+                                        direccion: "",
+                                        apartamento: "",
+                                        edificio: "",
+                                        codigoAcceso: "",
+                                        notas: "",
+                                        principal: false,
+                                      });
+                                    } catch (error) {
+                                      console.error("Error guardando ubicación:", error);
+                                      alert("No se pudo guardar la ubicación.");
+                                    }
+                                  }}
+                                  className="mt-2 inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-700 to-cyan-600 px-5 py-4 text-sm font-black text-white shadow-xl shadow-cyan-700/20 transition hover:-translate-y-0.5"
+                                >
+                                  <Save size={17} />
+                                  Guardar ubicación
+                                </button>
+                              </div>
+                            </section>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                   </>
                 );
               })}
