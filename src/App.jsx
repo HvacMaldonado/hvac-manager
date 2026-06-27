@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { crearClienteSupabase, obtenerClientesSupabase } from "./services/clientesService";
+import { crearClienteSupabase, obtenerClientesSupabase, eliminarClienteSupabase } from "./services/clientesService";
 import { obtenerTecnicosSupabase, crearTecnicoSupabase, actualizarTecnicoSupabase } from "./services/tecnicosService";
 import { obtenerCitasSupabase, crearCitaSupabase, actualizarCitaSupabase } from "./services/citasService";
 import { obtenerOrdenesSupabase, crearOrdenSupabase, actualizarOrdenSupabase, eliminarOrdenSupabase } from "./services/ordenesService";
@@ -1626,6 +1626,36 @@ export default function App() {
 
   const cerrarSesion = () => { setSession(null); setAdminPage("clientes"); setMensaje(""); setClienteAccion(null); };
 
+  const eliminarCliente = async (cliente) => {
+    if (!cliente?.id) {
+      setMensaje("No se encontró el cliente para eliminar.");
+      return;
+    }
+
+    const tieneOrdenes = ordenes.some((orden) => String(orden.clienteId) === String(cliente.id));
+    const tieneCitas = citas.some((cita) => String(cita.clienteId) === String(cliente.id));
+
+    if (tieneOrdenes || tieneCitas) {
+      setMensaje("No se puede eliminar este cliente porque tiene órdenes o citas registradas.");
+      return;
+    }
+
+    const confirmar = window.confirm(
+      `¿Eliminar permanentemente a ${cliente.nombre}?\n\nEsta acción también eliminará sus direcciones guardadas.`
+    );
+
+    if (!confirmar) return;
+
+    try {
+      await eliminarClienteSupabase(cliente.id);
+      setClientes((actual) => actual.filter((c) => String(c.id) !== String(cliente.id)));
+      setMensaje("Cliente eliminado correctamente.");
+    } catch (error) {
+      console.error("Error eliminando cliente en Supabase:", error);
+      setMensaje("No se pudo eliminar el cliente en Supabase.");
+    }
+  };
+
   const abrirCrearOrdenConCliente = (cliente) => {
     if (!cliente) return;
     setOrdenForm((actual) => ({ ...actual, clienteId: String(cliente.id) }));
@@ -2998,7 +3028,7 @@ const compartirOrden = async (orden, metodo) => {
                 </button>
               ))}</nav>
 
-            {adminPage === "clientes" && <ClientesPage t={t} clientes={clientes} setClientes={setClientes} ordenes={ordenes} citas={citas} clienteForm={clienteForm} setClienteForm={setClienteForm} agregarCliente={agregarCliente} abrirCrearOrdenConCliente={abrirCrearOrdenConCliente} abrirProgramarCitaConCliente={abrirProgramarCitaConCliente} urlGoogleMaps={urlGoogleMaps} urlAppleMaps={urlAppleMaps} urlTelefono={urlTelefono} />}
+            {adminPage === "clientes" && <ClientesPage t={t} clientes={clientes} setClientes={setClientes} ordenes={ordenes} citas={citas} clienteForm={clienteForm} setClienteForm={setClienteForm} agregarCliente={agregarCliente} abrirCrearOrdenConCliente={abrirCrearOrdenConCliente} abrirProgramarCitaConCliente={abrirProgramarCitaConCliente} eliminarCliente={eliminarCliente} urlGoogleMaps={urlGoogleMaps} urlAppleMaps={urlAppleMaps} urlTelefono={urlTelefono} />}
             {adminPage === "tecnicos" && <TecnicosPage t={t} tecnicos={tecnicos} actualizarTecnico={actualizarTecnico} guardarTecnico={guardarTecnico} darDeBajaTecnico={darDeBajaTecnico} setTecnicos={setTecnicos} />}
             {adminPage === "citas" && <CitasPage t={t} citas={citas} setCitas={setCitas} citaForm={citaForm} setCitaForm={setCitaForm} crearCita={crearCita} convertirCitaEnOrden={convertirCitaEnOrden} clientes={clientes} tecnicos={tecnicosActivos} obtenerCliente={obtenerCliente} obtenerTecnico={obtenerTecnico} />}
             {adminPage === "calendario" && <CalendarioPage t={t} lang={lang} citas={citas} ordenes={ordenes} clientes={clientes} tecnicos={tecnicosActivos} obtenerCliente={obtenerCliente} obtenerTecnico={obtenerTecnico} urlAppleMaps={urlAppleMaps} urlTelefono={urlTelefono} />}

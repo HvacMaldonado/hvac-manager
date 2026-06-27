@@ -74,3 +74,24 @@ export async function crearDireccionClienteSupabase(clienteId, direccion) {
 
   return data;
 }
+
+
+export async function eliminarClienteSupabase(id) {
+  const clienteId = String(id);
+
+  const { error: direccionesError } = await supabase
+    .from("cliente_direcciones")
+    .delete()
+    .eq("cliente_id", clienteId);
+
+  if (direccionesError) throw direccionesError;
+
+  const { error: clienteError } = await supabase
+    .from("clientes")
+    .delete()
+    .eq("id", clienteId);
+
+  if (clienteError) throw clienteError;
+
+  return true;
+}
