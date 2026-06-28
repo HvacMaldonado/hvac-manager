@@ -240,6 +240,16 @@ const TEXT = {
     general: "General",
     settings: "Configuración",
     createOrder: "Crear orden",
+    lockedCustomerLocation: "Ubicación bloqueada desde el registro del cliente.",
+    workLocation: "Ubicación del trabajo",
+    workLocationDescription: "Selecciona la dirección exacta para esta orden",
+    noCustomerLocationsBeforeOrder: "Este cliente no tiene ubicaciones. Ve a Clientes y agrega al menos una ubicación antes de crear la orden.",
+    selectLocation: "Seleccionar ubicación",
+    selectedUnit: "Unidad seleccionada",
+    selectedLocation: "Ubicación seleccionada",
+    mainAddress: "Dirección principal",
+    invalidCorporateAddress: "Dirección corporativa requerida",
+    invalidCorporateAddressMessage: "Primero guarda una dirección general real para este cliente corporativo. No se puede crear una unidad con una dirección vacía o genérica.",
     searchCustomer: "Buscar cliente",
     customerManagement: "Gestión de clientes",
     customersLabel: "Clientes",
@@ -272,6 +282,45 @@ const TEXT = {
     searchingAddresses: "Buscando direcciones...",
     separateLocations: "Ubicaciones separadas",
     corporateLocationsDescription: "Guarda primero la ficha principal del cliente corporativo. Después usa el botón Ubicaciones para agregar apartamentos, edificios, códigos de acceso y notas.",
+    companyComplex: "Empresa / complejo",
+    officePhone: "Teléfono de oficina",
+    corporateEmail: "Email corporativo",
+    corporateAccount: "Cuenta corporativa",
+    groupedByBuilding: "Agrupado por edificio",
+    addUnitApartment: "Agregar unidad / apartamento",
+    addLocation: "Agregar ubicación",
+    generalAddressBelongsCorporate: "La dirección general ya pertenece a la cuenta corporativa.",
+    addAddressForCustomer: "Agrega una dirección asociada a este cliente.",
+    tenantContact: "Inquilino / contacto",
+    labelField: "Etiqueta",
+    notes: "Notas",
+    actions: "Acciones",
+    edit: "Editar",
+    delete: "Eliminar",
+    update: "Actualizar",
+    save: "Guardar",
+    noUnitsRegistered: "Todavía no hay apartamentos, unidades u oficinas registradas.",
+    addFirstRecord: "Agrega el primer registro usando la fila superior.",
+    manager: "Encargado",
+    locations: "Ubicaciones",
+    address: "Dirección",
+    aptUnit: "Apt / unidad",
+    locationSaved: "Ubicación guardada correctamente.",
+    locationUpdated: "Ubicación actualizada correctamente.",
+    locationDeleted: "Ubicación eliminada correctamente.",
+    requiredBuildingApartment: "Edificio y apartamento/unidad son obligatorios.",
+    generalAddress: "Dirección general",
+    buildingNamePrefix: "Edificio",
+    contactPerson: "Persona de contacto",
+    contactPersonPlaceholder: "Ej. Encargado o administrador",
+    corporateComplexPlaceholder: "Ej. Midtown Apartments",
+    apartmentUnit: "Apartamento / unidad",
+    accessCodePlaceholder: "Código de acceso",
+    checkEmailFormat: "Revisa el formato del correo.",
+    didYouMean: "¿Quisiste decir",
+    records: "registros",
+    unableSaveLocation: "No se pudo guardar la ubicación.",
+    createOrder: "Crear orden",
     noLocations: "Sin ubicaciones",
     locationSingular: "ubicación",
     locationPlural: "ubicaciones",
@@ -835,6 +884,16 @@ const TEXT = {
     general: "General",
     settings: "Settings",
     createOrder: "Create order",
+    lockedCustomerLocation: "Location locked from the customer record.",
+    workLocation: "Work location",
+    workLocationDescription: "Select the exact address for this order",
+    noCustomerLocationsBeforeOrder: "This customer has no saved locations. Go to Customers and add at least one location before creating the order.",
+    selectLocation: "Select location",
+    selectedUnit: "Selected unit",
+    selectedLocation: "Selected location",
+    mainAddress: "Main address",
+    invalidCorporateAddress: "Corporate address required",
+    invalidCorporateAddressMessage: "Save a real general address for this corporate customer first. You cannot create a unit with an empty or generic address.",
     searchCustomer: "Search customer",
     customerManagement: "Customer management",
     customersLabel: "Customers",
@@ -867,6 +926,45 @@ const TEXT = {
     searchingAddresses: "Searching addresses...",
     separateLocations: "Separate locations",
     corporateLocationsDescription: "Save the corporate customer first. Then use Locations to add apartments, buildings, access codes and notes.",
+    companyComplex: "Company / complex",
+    officePhone: "Office phone",
+    corporateEmail: "Corporate email",
+    corporateAccount: "Corporate account",
+    groupedByBuilding: "Grouped by building",
+    addUnitApartment: "Add unit / apartment",
+    addLocation: "Add location",
+    generalAddressBelongsCorporate: "The general address already belongs to the corporate account.",
+    addAddressForCustomer: "Add an address associated with this customer.",
+    tenantContact: "Tenant / contact",
+    labelField: "Label",
+    notes: "Notes",
+    actions: "Actions",
+    edit: "Edit",
+    delete: "Delete",
+    update: "Update",
+    save: "Save",
+    noUnitsRegistered: "There are no apartments, units or offices registered yet.",
+    addFirstRecord: "Add the first record using the top row.",
+    manager: "Manager",
+    locations: "Locations",
+    address: "Address",
+    aptUnit: "Apt / unit",
+    locationSaved: "Location saved successfully.",
+    locationUpdated: "Location updated successfully.",
+    locationDeleted: "Location deleted successfully.",
+    requiredBuildingApartment: "Building and apartment/unit are required.",
+    generalAddress: "General address",
+    buildingNamePrefix: "Building",
+    contactPerson: "Contact person",
+    contactPersonPlaceholder: "Ex. Manager or administrator",
+    corporateComplexPlaceholder: "Ex. Midtown Apartments",
+    apartmentUnit: "Apartment / unit",
+    accessCodePlaceholder: "Access code",
+    checkEmailFormat: "Check the email format.",
+    didYouMean: "Did you mean",
+    records: "records",
+    unableSaveLocation: "Could not save location.",
+    createOrder: "Create order",
     noLocations: "No locations",
     locationSingular: "location",
     locationPlural: "locations",
@@ -1363,6 +1461,8 @@ export default function App() {
   const [loginForm, setLoginForm] = useState({ usuario: "", password: "" });
   const [mensaje, setMensaje] = useState("");
   const [clienteAccion, setClienteAccion] = useState(null);
+  const [clienteAviso, setClienteAviso] = useState(null);
+  const [clienteUbicacionAutoOpenId, setClienteUbicacionAutoOpenId] = useState(null);
   const [adminPassword, setAdminPassword] = useState(() => localStorage.getItem("adminPassword") || "admin123");
   const [clientes, setClientes] = useState(() => getStorage("clientes", []));
   const [ordenes, setOrdenes] = useState(() => getStorage("ordenes", []));
@@ -1654,8 +1754,58 @@ export default function App() {
 
   const abrirCrearOrdenConCliente = (cliente) => {
     if (!cliente) return;
-    setOrdenForm((actual) => ({ ...actual, clienteId: String(cliente.id) }));
-    setBusquedaClienteOrden(`${cliente.nombre} - ${cliente.telefono || ""}`);
+
+    const ubicacionInicial = cliente.ubicacionId ? String(cliente.ubicacionId) : "";
+    const ubicacionInicialData = ubicacionInicial
+      ? (cliente.cliente_direcciones || []).find((u) => String(u.id) === String(ubicacionInicial))
+      : null;
+
+    if (ubicacionInicial && ubicacionInicialData) {
+      setClientes((actual) =>
+        actual.map((c) => {
+          if (String(c.id) !== String(cliente.id)) return c;
+
+          const direccionesActuales = c.cliente_direcciones || [];
+          const existeUbicacion = direccionesActuales.some((u) => String(u.id) === String(ubicacionInicial));
+
+          const direccionCompleta = {
+            ...ubicacionInicialData,
+            id: ubicacionInicial,
+            cliente_id: cliente.id,
+            direccion: ubicacionInicialData.direccion || cliente.direccion || c.direccion || "",
+            apartamento: ubicacionInicialData.apartamento || cliente.apartamento || "",
+            edificio: ubicacionInicialData.edificio || cliente.edificio || "",
+            codigo_acceso: ubicacionInicialData.codigo_acceso || cliente.codigoAcceso || "",
+            etiqueta: ubicacionInicialData.etiqueta || cliente.nombre || "",
+            notas: ubicacionInicialData.notas || "",
+            principal: false,
+            activo: true,
+          };
+
+          return {
+            ...c,
+            direccion: c.direccion || cliente.direccion || direccionCompleta.direccion || "",
+            cliente_direcciones: existeUbicacion
+              ? direccionesActuales.map((u) => String(u.id) === String(ubicacionInicial) ? { ...u, ...direccionCompleta } : u)
+              : [...direccionesActuales, direccionCompleta],
+          };
+        })
+      );
+    }
+
+    const nombreVisibleOrden =
+      ubicacionInicialData?.etiqueta
+        ? `${ubicacionInicialData.etiqueta} · ${cliente.nombre}`
+        : `${cliente.nombre} - ${cliente.telefono || ""}`;
+
+    setOrdenForm((actual) => ({
+      ...actual,
+      clienteId: String(cliente.id),
+      ubicacionId: ubicacionInicial,
+      ubicacionBloqueada: Boolean(ubicacionInicial),
+    }));
+
+    setBusquedaClienteOrden(nombreVisibleOrden);
     setAdminPage("ordenes");
     setClienteAccion(null);
     setMensaje("");
@@ -1674,26 +1824,85 @@ export default function App() {
     const email = limpiarTexto(datos.email);
     const nombre = limpiarTexto(datos.nombre);
     const direccion = limpiarTexto(datos.direccion);
+    const tipo = datos.tipoCliente || datos.tipo_cliente || "residencial";
+
     return clientes.find((c) => {
-      return (phone && limpiarTelefono(c.telefono) === phone) || (email && limpiarTexto(c.email) === email) || (nombre && direccion && limpiarTexto(c.nombre) === nombre && limpiarTexto(c.direccion) === direccion);
+      const tipoCliente = c.tipoCliente || c.tipo_cliente || "residencial";
+      const nombreCliente = limpiarTexto(c.nombre);
+      const nombreComplejo = limpiarTexto(c.nombreComplejo || c.nombre_complejo || "");
+      const emailCliente = limpiarTexto(c.email);
+      const phoneCliente = limpiarTelefono(c.telefono);
+      const direccionCliente = limpiarTexto(
+        c.direccion ||
+        (c.cliente_direcciones || []).find((d) => d.principal)?.direccion ||
+        (c.cliente_direcciones || [])[0]?.direccion ||
+        ""
+      );
+
+      if (tipo === "corporativo") {
+        const mismoNombre = nombre && (nombreCliente === nombre || nombreComplejo === nombre);
+        const mismaDireccion = direccion && direccionCliente === direccion;
+        const mismoEmail = email && emailCliente === email;
+        const mismoTelefono = phone && phoneCliente === phone;
+
+        return tipoCliente === "corporativo" && mismoNombre && (mismaDireccion || mismoEmail || mismoTelefono);
+      }
+
+      return (
+        (phone && phoneCliente === phone) ||
+        (email && emailCliente === email) ||
+        (nombre && direccion && nombreCliente === nombre && direccionCliente === direccion)
+      );
     });
   };
 
   const agregarCliente = async () => {
-    if (!clienteForm.nombre || !clienteForm.telefono) {
-      return setMensaje("Nombre y teléfono son obligatorios.");
+    const esCorporativo = clienteForm.tipoCliente === "corporativo";
+    const nombreFinal = esCorporativo
+      ? String(clienteForm.nombreComplejo || "").trim()
+      : String(clienteForm.nombre || "").trim();
+
+    const telefonoFinal = formatPhoneUS(clienteForm.telefono);
+
+    if (!nombreFinal || !telefonoFinal) {
+      return setMensaje(
+        esCorporativo
+          ? "Empresa / complejo y teléfono de oficina son obligatorios."
+          : "Nombre y teléfono son obligatorios."
+      );
     }
 
     if (!phoneIsValidUS(clienteForm.telefono)) {
       return setMensaje("El teléfono debe tener exactamente 10 dígitos. Formato: ___-___-____.");
     }
 
-    const existente = clienteExiste(clienteForm);
+    const datosCliente = {
+      ...clienteForm,
+      nombre: nombreFinal,
+      telefono: telefonoFinal,
+    };
+
+    const existente = clienteExiste(datosCliente);
 
     if (existente) {
       setOrdenForm((actual) => ({ ...actual, clienteId: String(existente.id) }));
       setBusquedaClienteOrden(`${existente.nombre} - ${existente.telefono || ""}`);
       setCitaForm((actual) => ({ ...actual, clienteId: String(existente.id) }));
+
+      if ((existente.tipoCliente || existente.tipo_cliente) === "corporativo" || esCorporativo) {
+        setClienteAccion(null);
+        setClienteUbicacionAutoOpenId(null);
+        setMensaje("Este cliente corporativo ya existe. Revisa el registro existente antes de agregar ubicaciones.");
+        setClienteAviso({
+          tipo: "warning",
+          titulo: lang === "en" ? "Corporate customer already exists" : "Cliente corporativo existente",
+          mensaje: lang === "en"
+            ? "A matching corporate customer already exists. Locations were not opened automatically to avoid mixing records."
+            : "Ya existe un cliente corporativo parecido. No se abrieron ubicaciones automáticamente para evitar mezclar registros.",
+        });
+        return;
+      }
+
       setClienteAccion(existente);
       setMensaje("Este cliente ya existe. Elige si deseas crear una orden, programar una cita o solo guardarlo.");
       return;
@@ -1703,14 +1912,14 @@ export default function App() {
 
     try {
       const clienteSupabase = await crearClienteSupabase({
-        ...clienteForm,
-        telefono: formatPhoneUS(clienteForm.telefono),
+        ...datosCliente,
+        telefono: telefonoFinal,
       });
 
       nuevo = {
         id: clienteSupabase.id,
-        nombre: clienteSupabase.nombre,
-        telefono: clienteSupabase.telefono || "",
+        nombre: clienteSupabase.nombre || nombreFinal,
+        telefono: clienteSupabase.telefono || telefonoFinal,
         email: clienteSupabase.email || "",
         tipoCliente: clienteForm.tipoCliente || "residencial",
         nombreComplejo: clienteForm.nombreComplejo || "",
@@ -1719,7 +1928,7 @@ export default function App() {
           ? [{
               id: `local-${clienteSupabase.id}`,
               cliente_id: clienteSupabase.id,
-              etiqueta: clienteForm.tipoCliente === "corporativo" ? "Principal" : "Casa principal",
+              etiqueta: esCorporativo ? "Principal" : "Casa principal",
               direccion: clienteForm.direccion || "",
               apartamento: clienteForm.apartamento || "",
               edificio: clienteForm.edificio || "",
@@ -1747,6 +1956,21 @@ export default function App() {
     setBusquedaClienteOrden(`${nuevo.nombre} - ${nuevo.telefono || ""}`);
     setCitaForm((actual) => ({ ...actual, clienteId: String(nuevo.id) }));
     setClienteForm({ tipoCliente: "residencial", nombre: "", nombreComplejo: "", contactoPrincipal: "", telefono: "", email: "", direccion: "", apartamento: "", calle: "", codigoAcceso: "", edificio: "" });
+
+    if (esCorporativo) {
+      setClienteAccion(null);
+      setClienteUbicacionAutoOpenId(String(nuevo.id));
+      setMensaje("Cliente corporativo creado correctamente. Ahora agrega sus apartamentos, unidades u oficinas.");
+      setClienteAviso({
+        tipo: "success",
+        titulo: lang === "en" ? "Corporate customer created" : "Cliente corporativo creado",
+        mensaje: lang === "en"
+          ? "The corporate account was saved. Now add apartments, units or offices."
+          : "La cuenta corporativa fue guardada. Ahora agrega apartamentos, unidades u oficinas.",
+      });
+      return;
+    }
+
     setClienteAccion(nuevo);
     setMensaje("Cliente creado correctamente. Elige qué deseas hacer ahora.");
   };
@@ -1842,7 +2066,7 @@ export default function App() {
     try {
       const nuevaOrden = await crearOrdenSupabase(orden);
       setOrdenes([...ordenes, nuevaOrden]);
-      setOrdenForm({ clienteId: String(ordenForm.clienteId), ubicacionId: String(ordenForm.ubicacionId || ""), problema: "", tecnicoId: "", prioridad: "Media", fechaProgramada: "", horaProgramada: "", precioCobrado: "" });
+      setOrdenForm({ clienteId: String(ordenForm.clienteId), ubicacionId: String(ordenForm.ubicacionId || ""), ubicacionBloqueada: false, problema: "", tecnicoId: "", prioridad: "Media", fechaProgramada: "", horaProgramada: "", precioCobrado: "" });
       setMensaje("Orden asignada correctamente. Ahora aparecerá en el panel del técnico seleccionado.");
     } catch (error) {
       console.error("Error guardando orden en Supabase:", error);
@@ -2844,7 +3068,10 @@ const compartirOrden = async (orden, metodo) => {
         apartamentoTrabajo: ubicacionTrabajo.apartamento || "",
         edificioTrabajo: ubicacionTrabajo.edificio || "",
         codigoAccesoTrabajo: ubicacionTrabajo.codigo_acceso || "",
-        notasUbicacion: ubicacionTrabajo.notas || "",
+        notasUbicacion: [
+          ubicacionTrabajo.etiqueta ? `Inquilino: ${ubicacionTrabajo.etiqueta}` : "",
+          ubicacionTrabajo.notas || "",
+        ].filter(Boolean).join("\n"),
         estado: "Programada",
       });
 
@@ -2963,6 +3190,38 @@ const compartirOrden = async (orden, metodo) => {
 
       <main className="w-full min-w-0 px-2.5 2xl:px-6 py-3 2xl:py-5">
 
+        {clienteAviso && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-md overflow-hidden rounded-3xl border border-white/20 bg-white shadow-2xl shadow-slate-950/40">
+              <div className={
+                "px-6 py-5 text-white " +
+                (clienteAviso.tipo === "warning"
+                  ? "bg-gradient-to-br from-amber-600 via-orange-600 to-red-700"
+                  : "bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-800")
+              }>
+                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-white/70">
+                  HVAC Manager
+                </p>
+                <h3 className="mt-2 text-xl font-black">{clienteAviso.titulo}</h3>
+              </div>
+
+              <div className="p-6">
+                <p className="text-sm font-bold leading-6 text-slate-600">
+                  {clienteAviso.mensaje}
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => setClienteAviso(null)}
+                  className="mt-5 w-full rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-lg transition hover:-translate-y-0.5"
+                >
+                  {lang === "en" ? "Understood" : "Entendido"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {clienteAccion && (
           <div className="fixed inset-0 z-50 flex items-center justify-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm">
             <div className="w-full max-w-md overflow-hidden rounded-2xl border border-white/20 bg-white shadow-lg shadow-slate-950/40">
@@ -3024,8 +3283,8 @@ const compartirOrden = async (orden, metodo) => {
                 </button>
               ))}</nav>
 
-            {adminPage === "clientes" && <ClientesPage t={t} clientes={clientes} setClientes={setClientes} ordenes={ordenes} citas={citas} clienteForm={clienteForm} setClienteForm={setClienteForm} agregarCliente={agregarCliente} abrirCrearOrdenConCliente={abrirCrearOrdenConCliente} abrirProgramarCitaConCliente={abrirProgramarCitaConCliente} eliminarCliente={eliminarCliente} urlGoogleMaps={urlGoogleMaps} urlAppleMaps={urlAppleMaps} urlTelefono={urlTelefono} />}
-            {adminPage === "tecnicos" && <TecnicosPage t={t} tecnicos={tecnicos} actualizarTecnico={actualizarTecnico} guardarTecnico={guardarTecnico} darDeBajaTecnico={darDeBajaTecnico} setTecnicos={setTecnicos} />}
+            {adminPage === "clientes" && <ClientesPage t={t} clientes={clientes} setClientes={setClientes} ordenes={ordenes} citas={citas} clienteForm={clienteForm} setClienteForm={setClienteForm} agregarCliente={agregarCliente} abrirCrearOrdenConCliente={abrirCrearOrdenConCliente} abrirProgramarCitaConCliente={abrirProgramarCitaConCliente} eliminarCliente={eliminarCliente} clienteUbicacionAutoOpenId={clienteUbicacionAutoOpenId} setClienteUbicacionAutoOpenId={setClienteUbicacionAutoOpenId} urlGoogleMaps={urlGoogleMaps} urlAppleMaps={urlAppleMaps} urlTelefono={urlTelefono} />}
+            {adminPage === "tecnicos" && <TecnicosPage t={t} tecnicos={tecnicos} actualizarTecnico={actualizarTecnico} guardarTecnico={guardarTecnico} darDeBajaTecnico={darDeBajaTecnico} setTecnicos={setTecnicos} ordenes={ordenes} citas={citas} herramientas={herramientas} />}
             {adminPage === "citas" && <CitasPage t={t} citas={citas} setCitas={setCitas} citaForm={citaForm} setCitaForm={setCitaForm} crearCita={crearCita} convertirCitaEnOrden={convertirCitaEnOrden} clientes={clientes} tecnicos={tecnicosActivos} obtenerCliente={obtenerCliente} obtenerTecnico={obtenerTecnico} />}
             {adminPage === "calendario" && <CalendarioPage t={t} lang={lang} citas={citas} ordenes={ordenes} clientes={clientes} tecnicos={tecnicosActivos} obtenerCliente={obtenerCliente} obtenerTecnico={obtenerTecnico} urlAppleMaps={urlAppleMaps} urlTelefono={urlTelefono} />}
             {adminPage === "ordenes" && <OrdenesPage t={t} ordenes={ordenesActivasAdmin} obtenerCliente={obtenerCliente} ordenProps={ordenProps} crearOrden={crearOrden} ordenForm={ordenForm} setOrdenForm={setOrdenForm} busquedaClienteOrden={busquedaClienteOrden} setBusquedaClienteOrden={setBusquedaClienteOrden} clientesFiltradosOrden={clientesFiltradosOrden} tecnicos={tecnicosActivos} />}
@@ -4642,14 +4901,58 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
     if (abrirDetallesInicial) setVerDetalles(true);
   }, [abrirDetallesInicial]);
 
-  const ubicacionOrden = (cliente?.cliente_direcciones || []).find((d) => String(d.id) === String(orden.ubicacionId)) || {};
+  const normalizarTextoOrden = (valor) =>
+    String(valor || "")
+      .trim()
+      .toLowerCase()
+      .replace(/^edificio\s+/i, "")
+      .replace(/^building\s+/i, "");
+
+  const direccionesClienteOrden = cliente?.cliente_direcciones || [];
+
+  const ubicacionOrden =
+    direccionesClienteOrden.find((d) => String(d.id) === String(orden.ubicacionId)) ||
+    direccionesClienteOrden.find((d) => {
+      const aptCoincide =
+        !orden.apartamentoTrabajo ||
+        normalizarTextoOrden(d.apartamento) === normalizarTextoOrden(orden.apartamentoTrabajo);
+
+      const edificioCoincide =
+        !orden.edificioTrabajo ||
+        normalizarTextoOrden(d.edificio) === normalizarTextoOrden(orden.edificioTrabajo);
+
+      const codigoCoincide =
+        !orden.codigoAccesoTrabajo ||
+        normalizarTextoOrden(d.codigo_acceso) === normalizarTextoOrden(orden.codigoAccesoTrabajo);
+
+      return aptCoincide && edificioCoincide && codigoCoincide;
+    }) ||
+    {};
+
   const direccion = orden.direccionTrabajo || ubicacionOrden.direccion || cliente?.direccion || "";
   const apartamentoTrabajo = orden.apartamentoTrabajo || ubicacionOrden.apartamento || cliente?.apartamento || "";
   const edificioTrabajo = orden.edificioTrabajo || ubicacionOrden.edificio || cliente?.edificio || "";
   const codigoAccesoTrabajo = orden.codigoAccesoTrabajo || ubicacionOrden.codigo_acceso || cliente?.codigoAcceso || "";
   const notasUbicacion = orden.notasUbicacion || ubicacionOrden.notas || "";
+  const nombreDesdeNotasUbicacion =
+    String(notasUbicacion || "")
+      .split("\n")
+      .find((linea) => /^inquilino:/i.test(String(linea || "").trim()))
+      ?.replace(/^inquilino:\s*/i, "")
+      .trim() || "";
+
+  const notasUbicacionVisibles = String(notasUbicacion || "")
+    .split("\n")
+    .filter((linea) => !/^inquilino:/i.test(String(linea || "").trim()))
+    .join("\n")
+    .trim();
+
   const tipoCliente = cliente?.tipoCliente || "residencial";
   const esCorporativo = tipoCliente === "corporativo";
+  const nombreTrabajo = esCorporativo
+    ? (orden.ubicacionEtiqueta || ubicacionOrden.etiqueta || nombreDesdeNotasUbicacion || cliente?.nombre || t("deletedCustomer"))
+    : (cliente?.nombre || t("deletedCustomer"));
+  const cuentaCorporativa = esCorporativo ? cliente?.nombre || "" : "";
   const tipoClienteBadge = esCorporativo
     ? "border-violet-300/40 bg-violet-500/25 text-violet-50"
     : "border-emerald-300/40 bg-emerald-500/25 text-emerald-50";
@@ -4692,7 +4995,7 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
   if (compacta) {
     return (
       <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-        <p className="font-black text-slate-950">{cliente?.nombre || t("deletedCustomer")}</p>
+        <p className="font-black text-slate-950">{nombreTrabajo}</p>
         <p className="text-xs font-semibold text-slate-600">{orden.problema}</p>
       </div>
     );
@@ -4745,7 +5048,7 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
                 </div>
 
                 <h3 className="truncate text-4xl font-black tracking-tight text-white">
-                  {cliente?.nombre || t("deletedCustomer")}
+                  {nombreTrabajo}
                 </h3>
 
                 <div className="mt-3 rounded-3xl bg-white/10 p-4 ring-1 ring-white/10">

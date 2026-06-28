@@ -182,24 +182,55 @@ export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, cr
     setMostrarClientes(false);
   };
 
-  const clienteSeleccionado = clientesFiltradosOrden.find((c) => String(c.id) === String(ordenForm.clienteId));
+  const clienteSeleccionado =
+    obtenerCliente?.(ordenForm.clienteId) ||
+    clientesFiltradosOrden.find((c) => String(c.id) === String(ordenForm.clienteId));
+
   const ubicacionesCliente = clienteSeleccionado?.cliente_direcciones || [];
   const ubicacionSeleccionada = ubicacionesCliente.find((d) => String(d.id) === String(ordenForm.ubicacionId));
+  const ubicacionBloqueada = Boolean(ordenForm.ubicacionBloqueada && ubicacionSeleccionada);
   const esClienteCorporativo = clienteSeleccionado?.tipoCliente === "corporativo";
 
-  const etiquetaUbicacionTrabajo = (u) => {
-    if (!u) return "Ubicación";
-    const edificio = String(u.edificio || "").trim();
-    const apartamento = String(u.apartamento || "").trim();
-    const etiqueta = String(u.etiqueta || "").trim();
-    const direccion = String(u.direccion || "").trim();
+  const ordenesEnIngles = String(t("customer") || "").toLowerCase() === "customer";
 
-    if (edificio && apartamento) return `Edificio ${edificio} · Apt ${apartamento}`;
-    if (apartamento) return `Apt ${apartamento}`;
-    if (edificio) return `Edificio ${edificio}`;
-    if (etiqueta) return etiqueta;
-    if (direccion) return direccion;
-    return "Ubicación";
+  const ordenesUbicacionCopy = {
+    workLocation: ordenesEnIngles ? "Work location" : "Ubicación del trabajo",
+    workLocationDescription: ordenesEnIngles
+      ? "Select the exact address for this order"
+      : "Selecciona la dirección exacta para esta orden",
+    noLocations: ordenesEnIngles
+      ? "This customer has no saved locations. Go to Customers and add at least one location before creating the order."
+      : "Este cliente no tiene ubicaciones. Ve a Clientes y agrega al menos una ubicación antes de crear la orden.",
+    selectLocation: ordenesEnIngles ? "Select location" : "Seleccionar ubicación",
+    selectedUnit: ordenesEnIngles ? "Selected unit" : "Unidad seleccionada",
+    selectedLocation: ordenesEnIngles ? "Selected location" : "Ubicación seleccionada",
+    mainAddress: ordenesEnIngles ? "Main address" : "Dirección principal",
+    building: ordenesEnIngles ? "Building" : "Edificio",
+    apt: "Apt",
+    accessCode: ordenesEnIngles ? "Access code" : "Código",
+    noAddress: ordenesEnIngles ? "No address" : "Sin dirección",
+  };
+
+  const limpiarEdificioOrden = (valor) =>
+    String(valor || "")
+      .trim()
+      .replace(/^edificio\s+/i, "")
+      .replace(/^building\s+/i, "");
+
+  const etiquetaUbicacionTrabajo = (ubicacion) => {
+    if (!ubicacion) return "";
+
+    const edificio = limpiarEdificioOrden(ubicacion.edificio);
+    const apartamento = String(ubicacion.apartamento || "").trim();
+
+    if (edificio && apartamento) {
+      return `${ordenesUbicacionCopy.building} ${edificio} · ${ordenesUbicacionCopy.apt} ${apartamento}`;
+    }
+
+    if (apartamento) return `${ordenesUbicacionCopy.apt} ${apartamento}`;
+    if (edificio) return `${ordenesUbicacionCopy.building} ${edificio}`;
+
+    return ubicacion.etiqueta || ubicacion.direccion || ordenesUbicacionCopy.selectedLocation;
   };
 
   const inputClass = "w-full rounded-2xl border border-slate-300 bg-white p-3 pl-10 text-sm outline-none shadow-sm transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100";
@@ -236,6 +267,7 @@ export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, cr
                 <div className="relative">
                   <input
                     value={busquedaClienteOrden}
+                    disabled={ubicacionBloqueada}
                     onFocus={() => setMostrarClientes(Boolean(busquedaClienteOrden.trim()))}
                     onChange={(e) => {
                       setBusquedaClienteOrden(e.target.value);
@@ -265,57 +297,69 @@ export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, cr
                 </div>
               </FormSection>
 
-              {ordenForm.clienteId && (
-                <FormSection icon={MapPinned} title="Ubicación del trabajo" subtitle="Selecciona la dirección exacta para esta orden" tone="cyan">
-                  {ubicacionesCliente.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-800">
-                      Este cliente no tiene ubicaciones. Ve a Clientes y agrega al menos una ubicación antes de crear la orden.
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <select
-                        value={ordenForm.ubicacionId || ""}
-                        onChange={(e) => setOrdenForm({ ...ordenForm, ubicacionId: e.target.value })}
-                        className="w-full rounded-2xl border border-slate-300 bg-white p-3 text-sm font-black text-slate-800 outline-none shadow-sm transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100"
-                      >
-                        <option value="">Seleccionar ubicación</option>
-                        {ubicacionesCliente.map((u) => (
-                          <option key={u.id} value={u.id}>
-                            {etiquetaUbicacionTrabajo(u)}
-                          </option>
-                        ))}
-                      </select>
+                {ordenForm.clienteId && (
+                  <FormSection icon={MapPinned} title={ordenesUbicacionCopy.workLocation} subtitle={ordenesUbicacionCopy.workLocationDescription} tone="cyan">
+                    {ubicacionesCliente.length === 0 ? (
+                      <div className="rounded-2xl border border-dashed border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-800">
+                        {ordenesUbicacionCopy.noLocations}
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <select
+                          value={ordenForm.ubicacionId || ""}
+                          disabled={ubicacionBloqueada}
+                          onChange={(e) => setOrdenForm({ ...ordenForm, ubicacionId: e.target.value })}
+                          className={
+                            "w-full rounded-2xl border p-3 text-sm font-black outline-none shadow-sm transition " +
+                            (ubicacionBloqueada
+                              ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-500"
+                              : "border-slate-300 bg-white text-slate-800 focus:border-blue-700 focus:ring-4 focus:ring-blue-100")
+                          }
+                        >
+                          <option value="">{ordenesUbicacionCopy.selectLocation}</option>
+                          {ubicacionesCliente.map((u) => (
+                            <option key={u.id} value={u.id}>
+                              {etiquetaUbicacionTrabajo(u)}
+                            </option>
+                          ))}
+                        </select>
 
-                      {ubicacionSeleccionada && (
-                        <div className="rounded-2xl border border-cyan-100 bg-cyan-50 p-4">
-                          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-cyan-700">
-                            {esClienteCorporativo ? "Unidad seleccionada" : "Ubicación seleccionada"}
-                          </p>
-                          <p className="mt-1 text-base font-black text-slate-950">
-                            {etiquetaUbicacionTrabajo(ubicacionSeleccionada)}
-                          </p>
-                          <p className="mt-2 text-xs font-black uppercase tracking-wide text-slate-500">
-                            Dirección principal
-                          </p>
-                          <p className="mt-1 text-sm font-bold text-slate-700">
-                            {ubicacionSeleccionada.direccion || "Sin dirección"}
-                          </p>
-                          <div className="mt-3 grid gap-2 rounded-2xl bg-white/80 p-3 text-xs font-bold text-slate-700 sm:grid-cols-3">
-                            <span>Edificio: {ubicacionSeleccionada.edificio || "—"}</span>
-                            <span>Apt: {ubicacionSeleccionada.apartamento || "—"}</span>
-                            <span>Código: {ubicacionSeleccionada.codigo_acceso || "—"}</span>
+                        {ubicacionBloqueada && (
+                          <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm font-black text-slate-600">
+                            🔒 {t("lockedCustomerLocation") || "Location locked from the customer record."}
                           </div>
-                          {ubicacionSeleccionada.notas && (
-                            <p className="mt-2 rounded-xl bg-white p-2 text-xs font-bold text-slate-600">
-                              {ubicacionSeleccionada.notas}
+                        )}
+
+                        {ubicacionSeleccionada && (
+                          <div className="rounded-2xl border border-cyan-100 bg-cyan-50 p-4">
+                            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-cyan-700">
+                              {esClienteCorporativo ? ordenesUbicacionCopy.selectedUnit : ordenesUbicacionCopy.selectedLocation}
                             </p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </FormSection>
-              )}
+                            <p className="mt-1 text-base font-black text-slate-950">
+                              {etiquetaUbicacionTrabajo(ubicacionSeleccionada)}
+                            </p>
+                            <p className="mt-2 text-xs font-black uppercase tracking-wide text-slate-500">
+                              {ordenesUbicacionCopy.mainAddress}
+                            </p>
+                            <p className="mt-1 text-sm font-bold text-slate-700">
+                              {ubicacionSeleccionada.direccion || ordenesUbicacionCopy.noAddress}
+                            </p>
+                            <div className="mt-3 grid gap-2 rounded-2xl bg-white/80 p-3 text-xs font-bold text-slate-700 sm:grid-cols-3">
+                              <span>{ordenesUbicacionCopy.building}: {limpiarEdificioOrden(ubicacionSeleccionada.edificio) || "—"}</span>
+                              <span>{ordenesUbicacionCopy.apt}: {ubicacionSeleccionada.apartamento || "—"}</span>
+                              <span>{ordenesUbicacionCopy.accessCode}: {ubicacionSeleccionada.codigo_acceso || "—"}</span>
+                            </div>
+                            {ubicacionSeleccionada.notas && (
+                              <p className="mt-2 rounded-xl bg-white p-2 text-xs font-bold text-slate-600">
+                                {ubicacionSeleccionada.notas}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </FormSection>
+                )}
 
               <FormSection icon={CalendarCheck2} title={t("scheduling")} subtitle={t("schedulingDescription")} tone="cyan">
                 <div className="grid grid-cols-2 gap-2">

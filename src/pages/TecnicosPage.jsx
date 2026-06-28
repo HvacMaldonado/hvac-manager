@@ -1,5 +1,5 @@
 import { TECNICO_COLOR_OPTIONS, getTecnicoTheme } from "../utils/tecnicoThemes";
-import { crearTecnicoSupabase } from "../services/tecnicosService";
+import { crearTecnicoSupabase, eliminarTecnicoSupabase } from "../services/tecnicosService";
 import { useMemo, useState } from "react";
 import {
   CalendarDays,
@@ -361,7 +361,7 @@ function StatusBadge({ t = (key) => key, active }) {
   );
 }
 
-export default function TecnicosPage({ t, tecnicos, actualizarTecnico, guardarTecnico, darDeBajaTecnico, setTecnicos }) {
+export default function TecnicosPage({ t, tecnicos, actualizarTecnico, guardarTecnico, darDeBajaTecnico, setTecnicos, ordenes = [], citas = [], herramientas = [] }) {
   const [busqueda, setBusqueda] = useState("");
   const [editando, setEditando] = useState(null);
 
@@ -382,9 +382,26 @@ export default function TecnicosPage({ t, tecnicos, actualizarTecnico, guardarTe
     setEditando(null);
   };
 
-  const eliminarTecnico = (tec) => {
-    if (window.confirm(`${t("deleteTechnicianConfirm")} ${tec.nombre}?`)) {
+  const eliminarTecnico = async (tec) => {
+    const tieneOrdenes = ordenes.some((orden) => String(orden.tecnicoId) === String(tec.id));
+    const tieneCitas = citas.some((cita) => String(cita.tecnicoId) === String(tec.id));
+    const tieneHerramientas = herramientas.some((herramienta) => String(herramienta.tecnicoId) === String(tec.id));
+
+    if (tieneOrdenes || tieneCitas || tieneHerramientas) {
+      window.alert(
+        `${tec.nombre} no se puede eliminar porque tiene registros asignados. Usa Deactivate para conservar el historial.`
+      );
+      return;
+    }
+
+    if (!window.confirm(`${t("deleteTechnicianConfirm")} ${tec.nombre}?`)) return;
+
+    try {
+      await eliminarTecnicoSupabase(tec.id);
       setTecnicos(tecnicos.filter((x) => String(x.id) !== String(tec.id)));
+    } catch (error) {
+      console.error("Error eliminando técnico:", error);
+      window.alert("No se pudo eliminar el técnico en Supabase.");
     }
   };
 

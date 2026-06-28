@@ -86,3 +86,15 @@ export async function actualizarTecnicoSupabase(id, cambios) {
 
   return data;
 }
+
+
+export async function eliminarTecnicoSupabase(id) {
+  const { error } = await supabase
+    .from("tecnicos")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw error;
+
+  return true;
+}

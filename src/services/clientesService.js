@@ -75,6 +75,38 @@ export async function crearDireccionClienteSupabase(clienteId, direccion) {
   return data;
 }
 
+export async function actualizarDireccionClienteSupabase(id, direccion) {
+  const { data, error } = await supabase
+    .from("cliente_direcciones")
+    .update({
+      etiqueta: direccion.etiqueta || "Ubicación",
+      direccion: direccion.direccion || "",
+      apartamento: direccion.apartamento || "",
+      edificio: direccion.edificio || "",
+      codigo_acceso: direccion.codigoAcceso || "",
+      notas: direccion.notas || "",
+      principal: Boolean(direccion.principal),
+    })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return data;
+}
+
+export async function eliminarDireccionClienteSupabase(id) {
+  const { error } = await supabase
+    .from("cliente_direcciones")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw error;
+
+  return true;
+}
+
 export async function eliminarClienteSupabase(id) {
   const clienteId = String(id);
 
@@ -134,4 +166,41 @@ export async function eliminarClienteSupabase(id) {
   if (clienteError) throw clienteError;
 
   return true;
+}
+
+
+export async function actualizarClienteSupabase(id, cliente) {
+  const { data, error } = await supabase
+    .from("clientes")
+    .update({
+      nombre: cliente.nombre || "",
+      telefono: cliente.telefono || "",
+      email: cliente.email || "",
+      nombre_complejo: cliente.nombreComplejo || cliente.nombre_complejo || "",
+      contacto_principal: cliente.contactoPrincipal || cliente.contacto_principal || "",
+      notas: cliente.notas || "",
+    })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return data;
+}
+
+export async function actualizarDireccionesClienteSupabase(clienteId, cambios) {
+  const payload = {};
+
+  if ("direccion" in cambios) payload.direccion = cambios.direccion || "";
+
+  const { data, error } = await supabase
+    .from("cliente_direcciones")
+    .update(payload)
+    .eq("cliente_id", clienteId)
+    .select();
+
+  if (error) throw error;
+
+  return data || [];
 }
