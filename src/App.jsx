@@ -2065,8 +2065,19 @@ export default function App() {
 
     try {
       const nuevaOrden = await crearOrdenSupabase(orden);
-      setOrdenes([...ordenes, nuevaOrden]);
-      setOrdenForm({ clienteId: String(ordenForm.clienteId), ubicacionId: String(ordenForm.ubicacionId || ""), ubicacionBloqueada: false, problema: "", tecnicoId: "", prioridad: "Media", fechaProgramada: "", horaProgramada: "", precioCobrado: "" });
+      setOrdenes((actual) => [...actual, nuevaOrden]);
+      setOrdenForm({
+        clienteId: "",
+        ubicacionId: "",
+        ubicacionBloqueada: false,
+        problema: "",
+        tecnicoId: "",
+        prioridad: "Media",
+        fechaProgramada: "",
+        horaProgramada: "",
+        precioCobrado: "",
+      });
+      setBusquedaClienteOrden("");
       setMensaje("Orden asignada correctamente. Ahora aparecerá en el panel del técnico seleccionado.");
     } catch (error) {
       console.error("Error guardando orden en Supabase:", error);
@@ -2097,6 +2108,7 @@ export default function App() {
 
     const nuevaOrdenBase = {
       clienteId,
+      ubicacionId: String(cita.ubicacionId || cita.direccionId || ""),
       tecnicoId,
       origenCitaId: cita.id,
       problema: cita.motivo || "Trabajo creado desde cita programada",

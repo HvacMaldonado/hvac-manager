@@ -171,11 +171,16 @@ export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, cr
   const seleccionarCliente = (c) => {
     const ubicaciones = c.cliente_direcciones || [];
     const ubicacionPrincipal = ubicaciones.find((d) => d.principal) || ubicaciones[0];
+    const tipoClienteSeleccionado = c.tipoCliente || c.tipo_cliente || "residencial";
+    const esCorporativoSeleccionado = tipoClienteSeleccionado === "corporativo";
 
     setOrdenForm({
       ...ordenForm,
       clienteId: String(c.id),
-      ubicacionId: ubicacionPrincipal?.id ? String(ubicacionPrincipal.id) : "",
+      ubicacionId: esCorporativoSeleccionado
+        ? ""
+        : (ubicacionPrincipal?.id ? String(ubicacionPrincipal.id) : ""),
+      ubicacionBloqueada: false,
     });
 
     setBusquedaClienteOrden(`${c.nombre} - ${c.telefono || ""}`);
@@ -270,8 +275,16 @@ export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, cr
                     disabled={ubicacionBloqueada}
                     onFocus={() => setMostrarClientes(Boolean(busquedaClienteOrden.trim()))}
                     onChange={(e) => {
-                      setBusquedaClienteOrden(e.target.value);
-                      setMostrarClientes(Boolean(e.target.value.trim()));
+                      const nuevoValor = e.target.value;
+
+                      setBusquedaClienteOrden(nuevoValor);
+                      setOrdenForm({
+                        ...ordenForm,
+                        clienteId: "",
+                        ubicacionId: "",
+                        ubicacionBloqueada: false,
+                      });
+                      setMostrarClientes(Boolean(nuevoValor.trim()));
                     }}
                     placeholder={t("customerSearchPlaceholder")}
                     className="w-full rounded-2xl border border-slate-300 bg-white p-3 pr-10 text-sm outline-none shadow-sm transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100"

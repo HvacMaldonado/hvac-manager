@@ -6,6 +6,7 @@ function mapOrden(row) {
   return {
     id: row.id,
     clienteId: row.cliente_id || "",
+    ubicacionId: row.direccion_id || "",
     direccionId: row.direccion_id || "",
     origenCitaId: row.cita_id || "",
     tecnicoId: tecnicoAsignado?.tecnico_id || "",
@@ -50,7 +51,7 @@ export async function crearOrdenSupabase(orden) {
     .from("ordenes")
     .insert({
       cliente_id: orden.clienteId || null,
-      direccion_id: orden.direccionId || null,
+      direccion_id: orden.ubicacionId || orden.direccionId || null,
       cita_id: orden.origenCitaId || null,
       problema: orden.problema || "",
       prioridad: orden.prioridad || "Media",
@@ -91,7 +92,11 @@ export async function actualizarOrdenSupabase(id, cambios) {
   const payload = {};
 
   if ("clienteId" in cambios) payload.cliente_id = cambios.clienteId || null;
-  if ("direccionId" in cambios) payload.direccion_id = cambios.direccionId || null;
+  if ("ubicacionId" in cambios) {
+    payload.direccion_id = cambios.ubicacionId || null;
+  } else if ("direccionId" in cambios) {
+    payload.direccion_id = cambios.direccionId || null;
+  }
   if ("origenCitaId" in cambios) payload.cita_id = cambios.origenCitaId || null;
   if ("problema" in cambios) payload.problema = cambios.problema || "";
   if ("prioridad" in cambios) payload.prioridad = cambios.prioridad || "Media";
