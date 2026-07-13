@@ -91,6 +91,58 @@ export default function TecnicoCompactOrderCard({ orden, cliente, ordenProps }) 
   const informeCO =
     ordenProps?.obtenerInformeCOPorOrden?.(orden.id) || null;
 
+  const estadoCO = String(orden.estado || "")
+    .trim()
+    .toLowerCase();
+
+  const informeCOFirmado =
+    String(informeCO?.estado || "").toLowerCase() === "firmado";
+
+  const estadoPermiteInformeCO =
+    [
+      "en sitio",
+      "en proceso",
+      "trabajo en progreso",
+      "en trabajo",
+      "necesita seguimiento",
+    ].includes(estadoCO) ||
+    Boolean(
+      orden.horaLlegada ||
+      orden.fechaLlegada ||
+      orden.horaInicioTrabajo
+    );
+
+  const estadoFinalInformeCO = [
+    "completado",
+    "completada",
+    "cerrado",
+    "cerrada",
+    "completed",
+  ].includes(estadoCO);
+
+  const estadoCanceladoInformeCO = [
+    "cancelado",
+    "cancelada",
+    "cancelled",
+    "canceled",
+  ].includes(estadoCO);
+
+  const mostrarInformeCO =
+    !estadoCanceladoInformeCO &&
+    (
+      estadoPermiteInformeCO ||
+      (
+        estadoFinalInformeCO &&
+        Boolean(informeCO)
+      )
+    );
+
+  const etiquetaInformeCO = informeCOFirmado
+    ? "Ver informe CO"
+    : informeCO
+      ? "Continuar informe CO"
+      : "Generar informe CO";
+
   const fecha = getOrderDateKey(orden) || "Sin fecha";
   const hora = formatTechTime(orden.horaProgramada);
 
@@ -298,22 +350,24 @@ export default function TecnicoCompactOrderCard({ orden, cliente, ordenProps }) 
               </a>
             )}
 
-            <button
-              type="button"
-              data-compact-co-button="true"
-              onClick={() => ordenProps?.abrirInformeCO?.(orden)}
-              className={
-                "inline-flex h-12 items-center justify-center gap-2 rounded-2xl px-3 text-xs font-black text-white ring-1 " +
-                (informeCO?.estado === "firmado"
-                  ? "bg-emerald-500/25 ring-emerald-300/30"
-                  : "bg-violet-500/25 ring-violet-300/30")
-              }
-            >
-              <ShieldAlert size={15} />
-              {informeCO?.estado === "firmado"
-                ? "CO firmado"
-                : "Informe CO"}
-            </button>
+            {mostrarInformeCO && (
+              <button
+                type="button"
+                data-compact-co-button="true"
+                onClick={() => ordenProps?.abrirInformeCO?.(orden)}
+                className={
+                  "inline-flex h-12 items-center justify-center gap-2 rounded-2xl px-3 text-xs font-black text-white ring-1 " +
+                  (informeCOFirmado
+                    ? "bg-emerald-500/25 ring-emerald-300/30"
+                    : informeCO
+                      ? "bg-amber-500/25 ring-amber-300/30"
+                      : "bg-violet-500/25 ring-violet-300/30")
+                }
+              >
+                <ShieldAlert size={15} />
+                {etiquetaInformeCO}
+              </button>
+            )}
 
             <button
               onClick={() => ordenProps?.setFirmaOrdenModal?.(orden)}

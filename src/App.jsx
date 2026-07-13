@@ -1948,7 +1948,9 @@ export default function App() {
         contactoPrincipal: clienteForm.contactoPrincipal || "",
         cliente_direcciones: clienteForm.direccion
           ? [{
-              id: `local-${clienteSupabase.id}`,
+              id:
+                clienteSupabase.cliente_direcciones?.[0]?.id ||
+                "",
               cliente_id: clienteSupabase.id,
               etiqueta: esCorporativo ? "Principal" : "Casa principal",
               direccion: clienteForm.direccion || "",
@@ -2418,14 +2420,115 @@ export default function App() {
 
       const ubicaciones = cliente?.cliente_direcciones || [];
 
+      const tipoClienteCO = String(
+        cliente?.tipoCliente ||
+        cliente?.tipo_cliente ||
+        "residencial"
+      )
+        .trim()
+        .toLowerCase();
+
+      const esClienteCorporativoCO =
+        tipoClienteCO === "corporativo";
+
+      const normalizarUbicacionCO = (valor) =>
+        String(valor || "")
+          .trim()
+          .toLowerCase();
+
+      const ubicacionIdOrdenCO = String(
+        orden.ubicacionId ||
+        orden.direccionId ||
+        ""
+      ).trim();
+
+      const ubicacionPorIdCO = ubicacionIdOrdenCO
+        ? ubicaciones.find(
+            (item) =>
+              String(item.id) === ubicacionIdOrdenCO
+          ) || null
+        : null;
+
+      const coincidenciasUbicacionCO =
+        !ubicacionPorIdCO
+          ? ubicaciones.filter((item) => {
+              const validaciones = [];
+
+              if (orden.direccionTrabajo) {
+                validaciones.push(
+                  normalizarUbicacionCO(item.direccion) ===
+                    normalizarUbicacionCO(
+                      orden.direccionTrabajo
+                    )
+                );
+              }
+
+              if (orden.edificioTrabajo) {
+                validaciones.push(
+                  normalizarUbicacionCO(item.edificio) ===
+                    normalizarUbicacionCO(
+                      orden.edificioTrabajo
+                    )
+                );
+              }
+
+              if (orden.apartamentoTrabajo) {
+                validaciones.push(
+                  normalizarUbicacionCO(item.apartamento) ===
+                    normalizarUbicacionCO(
+                      orden.apartamentoTrabajo
+                    )
+                );
+              }
+
+              if (orden.codigoAccesoTrabajo) {
+                validaciones.push(
+                  normalizarUbicacionCO(
+                    item.codigo_acceso ||
+                    item.codigoAcceso
+                  ) ===
+                    normalizarUbicacionCO(
+                      orden.codigoAccesoTrabajo
+                    )
+                );
+              }
+
+              return (
+                validaciones.length > 0 &&
+                validaciones.every(Boolean)
+              );
+            })
+          : [];
+
+      const ubicacionPorDatosCO =
+        coincidenciasUbicacionCO.length === 1
+          ? coincidenciasUbicacionCO[0]
+          : null;
+
       const ubicacion =
-        ubicaciones.find(
-          (item) =>
-            String(item.id) ===
-            String(orden.ubicacionId || orden.direccionId || "")
-        ) ||
-        ubicaciones[0] ||
-        null;
+        ubicacionPorIdCO ||
+        ubicacionPorDatosCO ||
+        (
+          esClienteCorporativoCO
+            ? null
+            : (
+                ubicaciones.find(
+                  (item) => item.principal
+                ) ||
+                ubicaciones[0] ||
+                null
+              )
+        );
+
+      if (esClienteCorporativoCO && !ubicacion) {
+        alert(
+          lang === "en"
+            ? "This corporate order does not have a valid work location. Select the correct building or apartment before creating the CO report."
+            : "Esta orden corporativa no tiene una ubicación válida. Selecciona el edificio o apartamento correcto antes de generar el informe CO."
+        );
+
+        return;
+      }
 
       if (!informe) {
         const edificio =
@@ -2508,6 +2611,39 @@ export default function App() {
   };
 
   const guardarInformeCODesdeModal = async (payload) => {
+    const ordenInformeCO =
+      informeCOOrdenModal?.orden || null;
+
+    const estadoOrdenInformeCO = String(
+      ordenInformeCO?.estado || ""
+    )
+      .trim()
+      .toLowerCase();
+
+    const ordenCerradaParaTecnicoCO =
+      session?.role === "tecnico" &&
+      [
+        "completado",
+        "completada",
+        "cancelado",
+        "cancelada",
+        "cerrado",
+        "cerrada",
+        "completed",
+        "cancelled",
+        "canceled",
+      ].includes(estadoOrdenInformeCO);
+
+    if (ordenCerradaParaTecnicoCO) {
+      alert(
+        lang === "en"
+          ? "This order is closed. The CO report is read-only."
+          : "Esta orden ya está cerrada. El informe CO es de solo lectura."
+      );
+
+      return null;
+    }
+
     const actualizado = await actualizarInformeCOSupabase(
       payload.id,
       payload
@@ -2537,6 +2673,61 @@ export default function App() {
     );
 
     return actualizado;
+  };
+
+  const completarOrdenConValidacionCO = (
+    ordenOrId
+  ) => {
+    const orden =
+      typeof ordenOrId === "object"
+        ? ordenOrId
+        : ordenes.find(
+            (item) =>
+              String(item.id) === String(ordenOrId)
+          );
+
+    const ordenId =
+      orden?.id ||
+      ordenOrId;
+
+    if (!orden) {
+      completarOrden(ordenId);
+      return;
+    }
+
+    const informe =
+      obtenerInformeCOPorOrden(ordenId);
+
+    const estadoInforme = String(
+      informe?.estado || ""
+    )
+      .trim()
+      .toLowerCase();
+
+    /*
+     * El informe CO es opcional.
+     * Pero si fue iniciado, debe estar firmado
+     * antes de cerrar la orden.
+     */
+    if (
+      informe &&
+      estadoInforme !== "firmado"
+    ) {
+      setInformeCOOrdenModal({
+        orden,
+        informe,
+      });
+
+      alert(
+        lang === "en"
+          ? "This order has an unfinished CO report. The customer must sign it before the work can be completed."
+          : "Esta orden tiene un informe CO sin terminar. El cliente debe firmarlo antes de completar el trabajo."
+      );
+
+      return;
+    }
+
+    completarOrden(ordenId);
   };
 
   const cancelarOrden = (id, cancelData = {}) => {
@@ -3308,7 +3499,7 @@ const compartirOrden = async (orden, metodo) => {
   const colorEstado = (estado) => estado === "Completado" ? "bg-emerald-100 text-emerald-700 border-emerald-200" : estado === "Cancelada" ? "bg-rose-100 text-rose-700 border-rose-200" : estado === "Necesita seguimiento" ? "bg-amber-100 text-amber-800 border-amber-200" : estado === "En proceso" ? "bg-sky-100 text-sky-700 border-sky-200" : estado === "En ruta" ? "bg-cyan-100 text-cyan-700 border-cyan-200" : estado === "Asignada" ? "bg-blue-100 text-blue-700 border-blue-200" : "bg-slate-100 text-slate-700 border-slate-200";
   const colorPrioridad = (p) => PRIORIDADES.find((x) => x.value === p)?.cls || "bg-slate-100 text-slate-700 border-slate-200";
 
-  const ordenProps = { inventario, obtenerMaterial, obtenerTecnico, colorEstado, colorPrioridad, marcarEnRuta, marcarLlegada, iniciarTrabajo, marcarNecesitaSeguimiento, setFirmaOrdenModal, abrirInformeCO, obtenerInformeCOPorOrden, completarOrden, cancelarOrden, subirFoto, guardarNotaTecnico, corregirOrdenAdmin, eliminarOrdenAdmin, session, urlGoogleMaps, urlAppleMaps, urlTelefono, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, calcularCostoOrden, materialesTexto, compartirOrden, convertirCitaEnOrden, reprogramarCita, setReprogramarCitaModal, cancelarOrden: (ordenOrId) => {
+  const ordenProps = { inventario, obtenerMaterial, obtenerTecnico, colorEstado, colorPrioridad, marcarEnRuta, marcarLlegada, iniciarTrabajo, marcarNecesitaSeguimiento, setFirmaOrdenModal, abrirInformeCO, obtenerInformeCOPorOrden, completarOrden: completarOrdenConValidacionCO, cancelarOrden, subirFoto, guardarNotaTecnico, corregirOrdenAdmin, eliminarOrdenAdmin, session, urlGoogleMaps, urlAppleMaps, urlTelefono, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, calcularCostoOrden, materialesTexto, compartirOrden, convertirCitaEnOrden, reprogramarCita, setReprogramarCitaModal, cancelarOrden: (ordenOrId) => {
     const orden = typeof ordenOrId === "object" ? ordenOrId : ordenes.find((o) => o.id === ordenOrId);
     setCancelModalOrden(orden || null);
   }, t };
@@ -3525,6 +3716,26 @@ const compartirOrden = async (orden, metodo) => {
           }
           onClose={() => setInformeCOOrdenModal(null)}
           onSave={guardarInformeCODesdeModal}
+          readOnly={
+            session?.role === "tecnico" &&
+            [
+              "completado",
+              "completada",
+              "cancelado",
+              "cancelada",
+              "cerrado",
+              "cerrada",
+              "completed",
+              "cancelled",
+              "canceled",
+            ].includes(
+              String(
+                informeCOOrdenModal?.orden?.estado || ""
+              )
+                .trim()
+                .toLowerCase()
+            )
+          }
         />
 
         {session.role === "tecnico" && (() => {
@@ -5089,6 +5300,96 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
   const [verDetalles, setVerDetalles] = useState(abrirDetallesInicial);
   const informeCOActual = obtenerInformeCOPorOrden?.(orden.id) || null;
 
+  const estadoOrdenInformeCO = String(orden.estado || "")
+    .trim()
+    .toLowerCase();
+
+  const informeCOFirmado =
+    String(informeCOActual?.estado || "")
+      .trim()
+      .toLowerCase() === "firmado";
+
+  const estadoPermiteInformeCO =
+    [
+      "en sitio",
+      "en proceso",
+      "trabajo en progreso",
+      "necesita seguimiento",
+    ].includes(estadoOrdenInformeCO) ||
+    Boolean(
+      orden.horaLlegada ||
+      orden.horaInicio
+    );
+
+  const ordenCompletadaInformeCO = [
+    "completado",
+    "completada",
+    "cerrado",
+    "cerrada",
+    "completed",
+  ].includes(estadoOrdenInformeCO);
+
+  const ordenCanceladaInformeCO = [
+    "cancelado",
+    "cancelada",
+    "cancelled",
+    "canceled",
+  ].includes(estadoOrdenInformeCO);
+
+  const mostrarInformeCODentroTrabajo =
+    !ordenCanceladaInformeCO &&
+    (
+      estadoPermiteInformeCO ||
+      (
+        ordenCompletadaInformeCO &&
+        Boolean(informeCOActual)
+      )
+    );
+
+  const informeCOEnIngles =
+    String(t("customer") || "")
+      .trim()
+      .toLowerCase() === "customer";
+
+  const etiquetaInformeCODentroTrabajo =
+    informeCOFirmado
+      ? (
+          informeCOEnIngles
+            ? "View CO report"
+            : "Ver informe CO"
+        )
+      : informeCOActual
+        ? (
+            informeCOEnIngles
+              ? "Continue CO report"
+              : "Continuar informe CO"
+          )
+        : (
+            informeCOEnIngles
+              ? "Create CO report"
+              : "Generar informe CO"
+          );
+
+  const descripcionInformeCODentroTrabajo =
+    informeCOFirmado
+      ? (
+          informeCOEnIngles
+            ? "Review, print or email the signed inspection."
+            : "Consulta, imprime o envía la inspección firmada."
+        )
+      : informeCOActual
+        ? (
+            informeCOEnIngles
+              ? "Complete the pending inspection and customer signature."
+              : "Completa la inspección pendiente y la firma del cliente."
+          )
+        : (
+            informeCOEnIngles
+              ? "Record measurements, findings and customer signature."
+              : "Registra mediciones, hallazgos y firma del cliente."
+          );
+
+
   useEffect(() => {
     if (abrirDetallesInicial) setVerDetalles(true);
   }, [abrirDetallesInicial]);
@@ -5353,26 +5654,6 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
                   </a>
                 )}
 
-                <button
-                  type="button"
-                  data-co-top-button="true"
-                  onClick={() => abrirInformeCO?.(orden)}
-                  className={
-                    "flex min-w-[170px] items-center justify-center gap-2 rounded-[1.35rem] px-5 py-4 text-sm font-black text-white shadow-xl transition hover:-translate-y-0.5 " +
-                    (informeCOActual?.estado === "firmado"
-                      ? "bg-gradient-to-r from-emerald-700 to-teal-500"
-                      : "bg-gradient-to-r from-violet-700 to-fuchsia-600")
-                  }
-                >
-                  <ShieldAlert size={21} />
-                  {informeCOActual?.estado === "firmado"
-                    ? (t("customer") === "Customer"
-                        ? "CO signed"
-                        : "CO firmado")
-                    : (t("customer") === "Customer"
-                        ? "CO report"
-                        : "Informe CO")}
-                </button>
 
                 <button onClick={() => setVerDetalles(!verDetalles)} className="flex min-w-[220px] flex-1 items-center justify-center gap-3 rounded-[1.35rem] bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-4 text-lg font-black text-white shadow-xl shadow-cyan-900/25 transition hover:-translate-y-0.5">
                   <ClipboardCheck size={24} strokeWidth={2.7} />
@@ -5425,7 +5706,45 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
                 className="min-h-24 w-full rounded-2xl border border-cyan-200 bg-gradient-to-br from-blue-50 to-cyan-50 p-3 text-sm font-semibold outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
               />
 
-              <div className="flex flex-wrap gap-3 rounded-[1.75rem] border border-slate-100 bg-slate-50 p-5 shadow-inner">
+              <div
+                data-work-actions="true"
+                className="rounded-[1.75rem] border border-slate-100 bg-slate-50 p-5 shadow-inner"
+              >
+
+                {mostrarInformeCODentroTrabajo && (
+                  <button
+                    type="button"
+                    data-co-work-button="true"
+                    onClick={() => abrirInformeCO?.(orden)}
+                    className={
+                      "flex min-w-[245px] flex-1 items-center gap-3 rounded-2xl px-4 py-3 text-left text-white shadow-lg transition hover:-translate-y-0.5 " +
+                      (
+                        informeCOFirmado
+                          ? "bg-gradient-to-r from-emerald-700 to-teal-500 shadow-emerald-200"
+                          : informeCOActual
+                            ? "bg-gradient-to-r from-amber-600 to-orange-500 shadow-amber-200"
+                            : "bg-gradient-to-r from-violet-700 to-fuchsia-600 shadow-violet-200"
+                      )
+                    }
+                  >
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/20">
+                      <ShieldAlert
+                        size={21}
+                        strokeWidth={2.7}
+                      />
+                    </span>
+
+                    <span className="min-w-0">
+                      <span className="block text-sm font-black">
+                        {etiquetaInformeCODentroTrabajo}
+                      </span>
+
+                      <span className="mt-0.5 block text-[10px] font-bold leading-tight text-white/75">
+                        {descripcionInformeCODentroTrabajo}
+                      </span>
+                    </span>
+                  </button>
+                )}
                 {orden.estado === "Asignada" && (
                   <button onClick={() => marcarEnRuta(orden.id)} className="flex items-center justify-center gap-1.5 rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5">
                     <Navigation {...iconProps} />
@@ -6262,6 +6581,32 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
             const fecha = orden.fechaCompletada || orden.fechaCancelacion || orden.fechaCreacion || orden.fecha;
             const hora = orden.horaCierre || orden.horaInicio || fecha || "";
 
+            const informeCO =
+              ordenProps?.obtenerInformeCOPorOrden?.(orden.id) ||
+              null;
+
+            const informeCOFirmado =
+              String(informeCO?.estado || "")
+                .trim()
+                .toLowerCase() === "firmado";
+
+            const historialCOEnIngles =
+              String(t("customer") || "")
+                .trim()
+                .toLowerCase() === "customer";
+
+            const etiquetaHistorialCO = informeCOFirmado
+              ? (
+                  historialCOEnIngles
+                    ? "View CO report"
+                    : "Ver informe CO"
+                )
+              : (
+                  historialCOEnIngles
+                    ? "Continue CO report"
+                    : "Continuar informe CO"
+                );
+
             const cardClass = completada
               ? "border-emerald-300 bg-emerald-50"
               : "border-rose-300 bg-rose-50";
@@ -6369,6 +6714,34 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
                             <Navigation size={14} />
                             {t("map")}
                           </a>
+                        )}
+
+                        {informeCO && (
+                          <button
+                            type="button"
+                            data-history-co-button="true"
+                            onClick={() =>
+                              ordenProps?.abrirInformeCO?.(orden)
+                            }
+                            className={
+                              "flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-black text-white shadow-lg transition hover:-translate-y-0.5 " +
+                              (
+                                informeCOFirmado
+                                  ? "bg-gradient-to-r from-emerald-700 to-teal-500 shadow-emerald-200"
+                                  : "bg-gradient-to-r from-amber-600 to-orange-500 shadow-amber-200"
+                              )
+                            }
+                          >
+                            <ShieldAlert size={14} />
+
+                            <span>{etiquetaHistorialCO}</span>
+
+                            {informeCO.numeroInforme && (
+                              <span className="rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-black ring-1 ring-white/20">
+                                {informeCO.numeroInforme}
+                              </span>
+                            )}
+                          </button>
                         )}
 
                         {ordenProps?.compartirOrden && (

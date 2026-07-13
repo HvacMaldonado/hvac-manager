@@ -49,6 +49,11 @@ const COPY = {
     signerRequired: "Escribe el nombre de la persona que firma.",
     signatureRequired: "El cliente debe firmar el informe.",
     noEmail: "El cliente no tiene correo electrónico registrado.",
+    saving: "Guardando...",
+    draftSaved: "Borrador guardado correctamente.",
+    signedSaved: "Informe firmado y guardado correctamente.",
+    invalidReport: "El informe no tiene un identificador válido.",
+    saveFailed: "No se pudo guardar el informe CO.",
     reportTitle: "INFORME DE INSPECCIÓN DE MONÓXIDO DE CARBONO (CO)",
     findingsIntro:
       "Durante la inspección del sistema de calefacción se detectó la posible presencia de monóxido de carbono. Se recomienda una evaluación completa para identificar la fuente de la emisión.",
@@ -91,6 +96,11 @@ const COPY = {
     signerRequired: "Enter the name of the person signing.",
     signatureRequired: "The customer must sign the report.",
     noEmail: "The customer does not have an email address on file.",
+    saving: "Saving...",
+    draftSaved: "Draft saved successfully.",
+    signedSaved: "Signed report saved successfully.",
+    invalidReport: "The report does not have a valid identifier.",
+    saveFailed: "The CO report could not be saved.",
     reportTitle: "CARBON MONOXIDE (CO) INSPECTION REPORT",
     findingsIntro:
       "During the heating-system inspection, the possible presence of carbon monoxide was detected. A complete evaluation is recommended to identify the source of the emission.",
@@ -222,9 +232,12 @@ export default function InformeCOModal({
   tecnico,
   onClose,
   onSave,
+  readOnly = false,
 }) {
   const [form, setForm] = useState(() => buildForm(informe));
   const [saving, setSaving] = useState(false);
+  const [savingAction, setSavingAction] = useState("");
+  const [saveFeedback, setSaveFeedback] = useState("");
   const [hasSignature, setHasSignature] = useState(
     Boolean(informe?.firmaCliente)
   );
@@ -232,11 +245,65 @@ export default function InformeCOModal({
   const canvasRef = useRef(null);
   const drawingRef = useRef(false);
 
+  // CO READ ONLY FIELDS
+  useEffect(() => {
+    if (!open || !readOnly) return undefined;
+
+    const root = document.querySelector(".co-report-root");
+
+    if (!root) return undefined;
+
+    const fields = Array.from(
+      root.querySelectorAll(
+        "input, textarea, select"
+      )
+    );
+
+    const canvases = Array.from(
+      root.querySelectorAll("canvas")
+    );
+
+    const previousFields = fields.map((field) => ({
+      field,
+      disabled: field.disabled,
+    }));
+
+    const previousCanvases = canvases.map((canvas) => ({
+      canvas,
+      pointerEvents: canvas.style.pointerEvents,
+      opacity: canvas.style.opacity,
+    }));
+
+    fields.forEach((field) => {
+      field.disabled = true;
+    });
+
+    canvases.forEach((canvas) => {
+      canvas.style.pointerEvents = "none";
+      canvas.style.opacity = "0.72";
+    });
+
+    return () => {
+      previousFields.forEach(({ field, disabled }) => {
+        field.disabled = disabled;
+      });
+
+      previousCanvases.forEach(
+        ({ canvas, pointerEvents, opacity }) => {
+          canvas.style.pointerEvents = pointerEvents;
+          canvas.style.opacity = opacity;
+        }
+      );
+    };
+  }, [open, readOnly]);
+
   useEffect(() => {
     if (!open || !informe) return;
 
     setForm(buildForm(informe));
     setHasSignature(Boolean(informe.firmaCliente));
+    setSaveFeedback("");
+    setSavingAction("");
   }, [open, informe?.id, informe?.updatedAt]);
 
   useEffect(() => {
@@ -344,6 +411,9 @@ export default function InformeCOModal({
   };
 
   const saveReport = async (finalize = false) => {
+    // CO READ ONLY SAVE GUARD
+    if (readOnly) return null;
+
     if (finalize && !String(form.nombreFirmante || "").trim()) {
       alert(copy.signerRequired);
       return null;
@@ -354,14 +424,30 @@ export default function InformeCOModal({
       return null;
     }
 
+    if (!String(form.id || "").trim()) {
+      alert(copy.invalidReport);
+      setSaveFeedback(copy.invalidReport);
+      return null;
+    }
+
+    if (typeof onSave !== "function") {
+      alert(copy.saveFailed);
+      setSaveFeedback(copy.saveFailed);
+      return null;
+    }
+
+    const action = finalize ? "sign" : "draft";
+
     setSaving(true);
+    setSavingAction(action);
+    setSaveFeedback("");
 
     try {
       const payload = {
         ...form,
         estado: finalize ? "firmado" : "borrador",
         firmaCliente: finalize
-          ? canvasRef.current.toDataURL("image/png")
+          ? canvasRef.current?.toDataURL("image/png") || ""
           : form.firmaCliente,
         firmadoAt: finalize
           ? new Date().toISOString()
@@ -370,18 +456,34 @@ export default function InformeCOModal({
 
       const saved = await onSave(payload);
 
-      if (saved) {
-        setForm(buildForm(saved));
-        setHasSignature(Boolean(saved.firmaCliente));
+      if (!saved?.id) {
+        throw new Error(copy.saveFailed);
       }
+
+      setForm(buildForm(saved));
+      setHasSignature(Boolean(saved.firmaCliente));
+
+      setSaveFeedback(
+        finalize
+          ? copy.signedSaved
+          : copy.draftSaved
+      );
 
       return saved;
     } catch (error) {
       console.error("Error guardando informe CO:", error);
-      alert(error?.message || "No se pudo guardar el informe CO.");
+
+      const message =
+        error?.message ||
+        copy.saveFailed;
+
+      setSaveFeedback(message);
+      alert(message);
+
       return null;
     } finally {
       setSaving(false);
+      setSavingAction("");
     }
   };
 
@@ -1023,6 +1125,7 @@ export default function InformeCOModal({
 
             <button
               type="button"
+              data-co-readonly-allowed="true"
               onClick={onClose}
               className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10"
             >
@@ -1363,7 +1466,8 @@ export default function InformeCOModal({
 
                     <button
                       type="button"
-                      onClick={clearSignature}
+                      disabled={readOnly}
+              onClick={clearSignature}
                       className="flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-black"
                     >
                       <Eraser size={14} />
@@ -1375,30 +1479,44 @@ export default function InformeCOModal({
             </div>
           </section>
 
+          {saveFeedback && (
+            <div
+              role="status"
+              className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm font-black text-emerald-800 shadow-sm"
+            >
+              {saveFeedback}
+            </div>
+          )}
+
           <div className="sticky bottom-2 mt-3 grid gap-2 rounded-2xl border bg-white/95 p-3 shadow-2xl backdrop-blur sm:grid-cols-2 xl:grid-cols-5">
             <button
               type="button"
-              disabled={saving}
+              disabled={saving || readOnly}
               onClick={() => saveReport(false)}
               className="flex items-center justify-center gap-2 rounded-xl border px-3 py-3 text-xs font-black"
             >
               <Save size={16} />
-              {copy.save}
+              {savingAction === "draft"
+                ? copy.saving
+                : copy.save}
             </button>
 
             <button
               type="button"
-              disabled={saving}
+              disabled={saving || readOnly}
               onClick={() => saveReport(true)}
               className="flex items-center justify-center gap-2 rounded-xl bg-violet-700 px-3 py-3 text-xs font-black text-white"
             >
               <PenLine size={16} />
-              {copy.sign}
+              {savingAction === "sign"
+                ? copy.saving
+                : copy.sign}
             </button>
 
             <button
               type="button"
               disabled={saving}
+              data-co-readonly-allowed="true"
               onClick={printReport}
               className="flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-3 py-3 text-xs font-black text-white"
             >
@@ -1409,6 +1527,7 @@ export default function InformeCOModal({
             <button
               type="button"
               disabled={saving}
+              data-co-readonly-allowed="true"
               onClick={prepareEmail}
               className="flex items-center justify-center gap-2 rounded-xl bg-blue-700 px-3 py-3 text-xs font-black text-white"
             >
@@ -1418,6 +1537,7 @@ export default function InformeCOModal({
 
             <button
               type="button"
+              data-co-readonly-allowed="true"
               onClick={onClose}
               className="flex items-center justify-center gap-2 rounded-xl bg-slate-200 px-3 py-3 text-xs font-black"
             >

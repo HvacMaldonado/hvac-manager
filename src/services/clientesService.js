@@ -21,9 +21,18 @@ export async function crearClienteSupabase(cliente) {
       nombre: cliente.nombre,
       telefono: cliente.telefono || "",
       email: cliente.email || "",
-      tipo_cliente: cliente.tipoCliente || cliente.tipo_cliente || "residencial",
-      nombre_complejo: cliente.nombreComplejo || cliente.nombre_complejo || "",
-      contacto_principal: cliente.contactoPrincipal || cliente.contacto_principal || "",
+      tipo_cliente:
+        cliente.tipoCliente ||
+        cliente.tipo_cliente ||
+        "residencial",
+      nombre_complejo:
+        cliente.nombreComplejo ||
+        cliente.nombre_complejo ||
+        "",
+      contacto_principal:
+        cliente.contactoPrincipal ||
+        cliente.contacto_principal ||
+        "",
       notas: cliente.notas || "",
       activo: true,
     })
@@ -32,24 +41,41 @@ export async function crearClienteSupabase(cliente) {
 
   if (clienteError) throw clienteError;
 
+  let direccionCreada = null;
+
   if (cliente.direccion) {
-    const { error: direccionError } = await supabase
+    const {
+      data: nuevaDireccion,
+      error: direccionError,
+    } = await supabase
       .from("cliente_direcciones")
       .insert({
         cliente_id: clienteCreado.id,
-        etiqueta: cliente.tipoCliente === "corporativo" ? "Principal" : "Casa principal",
+        etiqueta:
+          cliente.tipoCliente === "corporativo"
+            ? "Principal"
+            : "Casa principal",
         direccion: cliente.direccion,
         apartamento: cliente.apartamento || "",
         edificio: cliente.edificio || "",
         codigo_acceso: cliente.codigoAcceso || "",
         principal: true,
         activo: true,
-      });
+      })
+      .select()
+      .single();
 
     if (direccionError) throw direccionError;
+
+    direccionCreada = nuevaDireccion;
   }
 
-  return clienteCreado;
+  return {
+    ...clienteCreado,
+    cliente_direcciones: direccionCreada
+      ? [direccionCreada]
+      : [],
+  };
 }
 
 
