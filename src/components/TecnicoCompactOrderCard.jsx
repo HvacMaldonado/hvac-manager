@@ -10,6 +10,7 @@ import {
   PlayCircle,
   Route,
   MapPinCheckInside,
+  ShieldAlert,
   UserCog,
 } from "lucide-react";
 
@@ -87,6 +88,8 @@ export default function TecnicoCompactOrderCard({ orden, cliente, ordenProps }) 
   const direccion = cliente?.direccion || "";
   const telefono = cliente?.telefono || "";
   const tecnico = ordenProps?.obtenerTecnico?.(orden.tecnicoId);
+  const informeCO =
+    ordenProps?.obtenerInformeCOPorOrden?.(orden.id) || null;
 
   const fecha = getOrderDateKey(orden) || "Sin fecha";
   const hora = formatTechTime(orden.horaProgramada);
@@ -272,7 +275,7 @@ export default function TecnicoCompactOrderCard({ orden, cliente, ordenProps }) 
             {accionPrincipal.label}
           </button>
 
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
             {telefono && (
               <a
                 href={ordenProps?.urlTelefono?.(telefono)}
@@ -294,6 +297,23 @@ export default function TecnicoCompactOrderCard({ orden, cliente, ordenProps }) 
                 Ruta
               </a>
             )}
+
+            <button
+              type="button"
+              data-compact-co-button="true"
+              onClick={() => ordenProps?.abrirInformeCO?.(orden)}
+              className={
+                "inline-flex h-12 items-center justify-center gap-2 rounded-2xl px-3 text-xs font-black text-white ring-1 " +
+                (informeCO?.estado === "firmado"
+                  ? "bg-emerald-500/25 ring-emerald-300/30"
+                  : "bg-violet-500/25 ring-violet-300/30")
+              }
+            >
+              <ShieldAlert size={15} />
+              {informeCO?.estado === "firmado"
+                ? "CO firmado"
+                : "Informe CO"}
+            </button>
 
             <button
               onClick={() => ordenProps?.setFirmaOrdenModal?.(orden)}
