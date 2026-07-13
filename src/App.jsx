@@ -9,6 +9,12 @@ import { obtenerMaterialesOrdenesSupabase, crearOrdenMaterialSupabase, actualiza
 import { obtenerFirmasOrdenesSupabase, guardarFirmaOrdenSupabase } from "./services/ordenFirmasService";
 import { obtenerFotosOrdenesSupabase, guardarFotoOrdenSupabase } from "./services/ordenFotosService";
 import {
+  obtenerInformesCOSupabase,
+  obtenerInformeCOPorOrdenSupabase,
+  crearBorradorInformeCOSupabase,
+  actualizarInformeCOSupabase,
+} from "./services/informesCOService";
+import {
   AlertCircle,
   AlertTriangle,
   ArrowDownToLine,
@@ -85,6 +91,7 @@ import ReportesDashboardPage from "./pages/ReportesDashboardPage.jsx";
 import TecnicoCompactOrderCard from "./components/TecnicoCompactOrderCard.jsx";
 import TecnicoCompactCitaCard from "./components/TecnicoCompactCitaCard.jsx";
 import SignatureModal from "./components/SignatureModal.jsx";
+import InformeCOModal from "./components/InformeCOModal.jsx";
 import {
   toDateKey,
   todayKey,
@@ -1455,6 +1462,8 @@ export default function App() {
   const [cancelModalOrden, setCancelModalOrden] = useState(null);
   const [reprogramarCitaModal, setReprogramarCitaModal] = useState(null);
   const [firmaOrdenModal, setFirmaOrdenModal] = useState(null);
+  const [informesCO, setInformesCO] = useState([]);
+  const [informeCOOrdenModal, setInformeCOOrdenModal] = useState(null);
   const [adminPage, setAdminPage] = useState("clientes");
   const [tecnicoVista, setTecnicoVista] = useState("agenda");
   const [ordenAgendaAbiertaId, setOrdenAgendaAbiertaId] = useState(null);
@@ -1622,6 +1631,19 @@ export default function App() {
     cargarFirmasSupabase();
   }, []);
 
+
+  useEffect(() => {
+    async function cargarInformesCOSupabase() {
+      try {
+        const informes = await obtenerInformesCOSupabase();
+        setInformesCO(informes);
+      } catch (error) {
+        console.error("Error cargando informes CO:", error);
+      }
+    }
+
+    cargarInformesCOSupabase();
+  }, []);
 
   useEffect(() => {
     async function cargarFotosSupabase() {
@@ -2374,6 +2396,147 @@ export default function App() {
       alert(JSON.stringify(error, null, 2));
       setMensaje("No se pudo guardar la firma en Supabase.");
     }
+  };
+
+  const obtenerInformeCOPorOrden = (ordenId) =>
+    informesCO.find(
+      (item) => String(item.ordenId) === String(ordenId)
+    ) || null;
+
+  const abrirInformeCO = async (orden) => {
+    try {
+      let informe = obtenerInformeCOPorOrden(orden.id);
+
+      if (!informe) {
+        informe = await obtenerInformeCOPorOrdenSupabase(orden.id);
+      }
+
+      const cliente = obtenerCliente(orden.clienteId);
+      const tecnico =
+        obtenerTecnico(orden.tecnicoId) ||
+        (session?.role === "tecnico" ? session : null);
+
+      const ubicaciones = cliente?.cliente_direcciones || [];
+
+      const ubicacion =
+        ubicaciones.find(
+          (item) =>
+            String(item.id) ===
+            String(orden.ubicacionId || orden.direccionId || "")
+        ) ||
+        ubicaciones[0] ||
+        null;
+
+      if (!informe) {
+        const edificio =
+          orden.edificioTrabajo || ubicacion?.edificio || "";
+
+        const apartamento =
+          orden.apartamentoTrabajo || ubicacion?.apartamento || "";
+
+        const etiqueta = [
+          edificio
+            ? `${lang === "en" ? "Building" : "Edificio"} ${String(edificio)
+                .replace(/^edificio\s+/i, "")
+                .replace(/^building\s+/i, "")}`
+            : "",
+          apartamento ? `Apt ${apartamento}` : "",
+        ]
+          .filter(Boolean)
+          .join(" · ");
+
+        informe = await crearBorradorInformeCOSupabase({
+          ordenId: String(orden.id),
+          clienteId: String(orden.clienteId || ""),
+          ubicacionId: String(
+            orden.ubicacionId ||
+              orden.direccionId ||
+              ubicacion?.id ||
+              ""
+          ),
+          tecnicoId: String(orden.tecnicoId || session?.id || ""),
+          idioma: lang === "en" ? "en" : "es",
+          fecha: new Date().toISOString().slice(0, 10),
+          clienteNombre: cliente?.nombre || "",
+          direccionTrabajo:
+            orden.direccionTrabajo ||
+            ubicacion?.direccion ||
+            cliente?.direccion ||
+            "",
+          ubicacionEtiqueta:
+            etiqueta ||
+            orden.ubicacionEtiqueta ||
+            ubicacion?.etiqueta ||
+            "",
+          tecnicoNombre:
+            tecnico?.nombre || session?.nombre || "",
+          alarmaActivada: true,
+          inspeccionVisual: true,
+          hallazgos: {},
+          recomendaciones: {},
+          observaciones:
+            lang === "en"
+              ? "The customer was informed of the risks associated with carbon monoxide exposure, including the possibility of serious injury or death."
+              : "El cliente fue informado de los riesgos asociados con la presencia de monóxido de carbono, incluyendo la posibilidad de lesiones graves o muerte por exposición.",
+        });
+      }
+
+      setInformesCO((current) => {
+        const exists = current.some(
+          (item) => String(item.id) === String(informe.id)
+        );
+
+        if (exists) {
+          return current.map((item) =>
+            String(item.id) === String(informe.id)
+              ? informe
+              : item
+          );
+        }
+
+        return [informe, ...current];
+      });
+
+      setInformeCOOrdenModal({
+        orden,
+        informe,
+      });
+    } catch (error) {
+      console.error("Error abriendo informe CO:", error);
+      alert(error?.message || "No se pudo abrir el informe CO.");
+    }
+  };
+
+  const guardarInformeCODesdeModal = async (payload) => {
+    const actualizado = await actualizarInformeCOSupabase(
+      payload.id,
+      payload
+    );
+
+    setInformesCO((current) =>
+      current.map((item) =>
+        String(item.id) === String(actualizado.id)
+          ? actualizado
+          : item
+      )
+    );
+
+    setInformeCOOrdenModal((current) =>
+      current
+        ? {
+            ...current,
+            informe: actualizado,
+          }
+        : current
+    );
+
+    setMensaje(
+      actualizado.estado === "firmado"
+        ? "Informe CO firmado y guardado correctamente."
+        : "Borrador del informe CO guardado correctamente."
+    );
+
+    return actualizado;
   };
 
   const cancelarOrden = (id, cancelData = {}) => {
@@ -3145,7 +3308,7 @@ const compartirOrden = async (orden, metodo) => {
   const colorEstado = (estado) => estado === "Completado" ? "bg-emerald-100 text-emerald-700 border-emerald-200" : estado === "Cancelada" ? "bg-rose-100 text-rose-700 border-rose-200" : estado === "Necesita seguimiento" ? "bg-amber-100 text-amber-800 border-amber-200" : estado === "En proceso" ? "bg-sky-100 text-sky-700 border-sky-200" : estado === "En ruta" ? "bg-cyan-100 text-cyan-700 border-cyan-200" : estado === "Asignada" ? "bg-blue-100 text-blue-700 border-blue-200" : "bg-slate-100 text-slate-700 border-slate-200";
   const colorPrioridad = (p) => PRIORIDADES.find((x) => x.value === p)?.cls || "bg-slate-100 text-slate-700 border-slate-200";
 
-  const ordenProps = { inventario, obtenerMaterial, obtenerTecnico, colorEstado, colorPrioridad, marcarEnRuta, marcarLlegada, iniciarTrabajo, marcarNecesitaSeguimiento, setFirmaOrdenModal, completarOrden, cancelarOrden, subirFoto, guardarNotaTecnico, corregirOrdenAdmin, eliminarOrdenAdmin, session, urlGoogleMaps, urlAppleMaps, urlTelefono, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, calcularCostoOrden, materialesTexto, compartirOrden, convertirCitaEnOrden, reprogramarCita, setReprogramarCitaModal, cancelarOrden: (ordenOrId) => {
+  const ordenProps = { inventario, obtenerMaterial, obtenerTecnico, colorEstado, colorPrioridad, marcarEnRuta, marcarLlegada, iniciarTrabajo, marcarNecesitaSeguimiento, setFirmaOrdenModal, abrirInformeCO, obtenerInformeCOPorOrden, completarOrden, cancelarOrden, subirFoto, guardarNotaTecnico, corregirOrdenAdmin, eliminarOrdenAdmin, session, urlGoogleMaps, urlAppleMaps, urlTelefono, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, calcularCostoOrden, materialesTexto, compartirOrden, convertirCitaEnOrden, reprogramarCita, setReprogramarCitaModal, cancelarOrden: (ordenOrId) => {
     const orden = typeof ordenOrId === "object" ? ordenOrId : ordenes.find((o) => o.id === ordenOrId);
     setCancelModalOrden(orden || null);
   }, t };
@@ -3165,7 +3328,7 @@ const compartirOrden = async (orden, metodo) => {
   ];
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-100 text-slate-900">
+    <div className="app-shell min-h-screen w-full max-w-full overflow-x-hidden bg-slate-100 text-slate-900">
       <header className="sticky top-0 z-20 border-b pl-44 border-slate-900/10 bg-slate-950/90 text-white backdrop-blur-xl shadow-lg shadow-slate-300/40"><img src="/logo-hvac-premium.png" alt="HVAC Refrigeración Maldonado R" className="absolute left-3 top-1/2 h-24 w-auto -translate-y-1/2 rounded-xl bg-white px-2 py-1 shadow-md" />
         <div className="w-full px-3 2xl:px-8 py-2.5 2xl:py-4 flex flex-col 2xl:flex-row 2xl:items-center justify-center 2xl:justify-between gap-2.5 2xl:gap-4">
           <div><p className="text-[10px] 2xl:text-xs uppercase tracking-[0.24em] 2xl:tracking-[0.3em] text-slate-300 font-black">{t("app")}</p><h1 className="text-lg 2xl:text-lg font-black tracking-tight text-white">{session.role === "admin" ? t("adminPanel") : `${t("techPanel")}: ${session.nombre}`}</h1></div>
@@ -3307,7 +3470,6 @@ const compartirOrden = async (orden, metodo) => {
               <DashboardUnificadoPage
                 t={t}
                 lang={lang}
-                lang={lang}
                 clientes={clientes}
                 ordenes={ordenes}
                 inventario={inventario}
@@ -3346,6 +3508,23 @@ const compartirOrden = async (orden, metodo) => {
           cliente={firmaOrdenModal ? obtenerCliente(firmaOrdenModal.clienteId) : null}
           onClose={() => setFirmaOrdenModal(null)}
           onSave={(firmaDataUrl) => guardarFirmaCliente(firmaOrdenModal.id, firmaDataUrl)}
+        />
+
+        <InformeCOModal
+          open={Boolean(informeCOOrdenModal)}
+          informe={informeCOOrdenModal?.informe || null}
+          cliente={
+            informeCOOrdenModal?.orden
+              ? obtenerCliente(informeCOOrdenModal.orden.clienteId)
+              : null
+          }
+          tecnico={
+            informeCOOrdenModal?.orden
+              ? obtenerTecnico(informeCOOrdenModal.orden.tecnicoId)
+              : null
+          }
+          onClose={() => setInformeCOOrdenModal(null)}
+          onSave={guardarInformeCODesdeModal}
         />
 
         {session.role === "tecnico" && (() => {
@@ -4906,8 +5085,9 @@ function abrirTraductorTexto(texto, destino = "en") {
   window.open(url, "_blank", "noopener,noreferrer");
 }
 
-function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico, colorEstado, colorPrioridad, marcarEnRuta, marcarLlegada, iniciarTrabajo, marcarNecesitaSeguimiento, completarOrden, cancelarOrden, subirFoto, guardarNotaTecnico, urlGoogleMaps, urlAppleMaps, urlTelefono, compacta = false, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, calcularCostoOrden, materialesTexto, compartirOrden, t, abrirDetallesInicial = false }) {
+function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico, colorEstado, colorPrioridad, marcarEnRuta, marcarLlegada, iniciarTrabajo, marcarNecesitaSeguimiento, completarOrden, cancelarOrden, subirFoto, guardarNotaTecnico, urlGoogleMaps, urlAppleMaps, urlTelefono, compacta = false, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, calcularCostoOrden, materialesTexto, compartirOrden, abrirInformeCO, obtenerInformeCOPorOrden, t, abrirDetallesInicial = false }) {
   const [verDetalles, setVerDetalles] = useState(abrirDetallesInicial);
+  const informeCOActual = obtenerInformeCOPorOrden?.(orden.id) || null;
 
   useEffect(() => {
     if (abrirDetallesInicial) setVerDetalles(true);
@@ -5172,6 +5352,27 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
                     {t("route")}
                   </a>
                 )}
+
+                <button
+                  type="button"
+                  data-co-top-button="true"
+                  onClick={() => abrirInformeCO?.(orden)}
+                  className={
+                    "flex min-w-[170px] items-center justify-center gap-2 rounded-[1.35rem] px-5 py-4 text-sm font-black text-white shadow-xl transition hover:-translate-y-0.5 " +
+                    (informeCOActual?.estado === "firmado"
+                      ? "bg-gradient-to-r from-emerald-700 to-teal-500"
+                      : "bg-gradient-to-r from-violet-700 to-fuchsia-600")
+                  }
+                >
+                  <ShieldAlert size={21} />
+                  {informeCOActual?.estado === "firmado"
+                    ? (t("customer") === "Customer"
+                        ? "CO signed"
+                        : "CO firmado")
+                    : (t("customer") === "Customer"
+                        ? "CO report"
+                        : "Informe CO")}
+                </button>
 
                 <button onClick={() => setVerDetalles(!verDetalles)} className="flex min-w-[220px] flex-1 items-center justify-center gap-3 rounded-[1.35rem] bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-4 text-lg font-black text-white shadow-xl shadow-cyan-900/25 transition hover:-translate-y-0.5">
                   <ClipboardCheck size={24} strokeWidth={2.7} />
