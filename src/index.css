@@ -1,1 +1,119 @@
 @import "tailwindcss";
+
+/* WORK ACTION BAR COMPACT V4 */
+[data-work-actions="true"] {
+  display: flex !important;
+  flex-flow: row nowrap !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  padding: 12px !important;
+  overflow-x: auto !important;
+}
+
+[data-work-actions="true"] > button {
+  width: auto !important;
+  min-width: 0 !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  margin: 0 !important;
+  padding: 0 16px !important;
+  border-radius: 14px !important;
+  justify-content: center !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+}
+
+/* Acción principal: Llegué / Comenzar trabajo */
+[data-work-actions="true"]
+  > button:first-of-type:not([data-co-work-button="true"]) {
+  order: 1 !important;
+  flex: 0 0 200px !important;
+}
+
+/* Informe CO */
+[data-co-work-button="true"] {
+  order: 2 !important;
+  flex: 0 0 200px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+/* Cancelar: cualquier botón que no sea el primero ni CO */
+[data-work-actions="true"]
+  > button:not([data-co-work-button="true"]):not(:first-of-type) {
+  order: 3 !important;
+  flex: 0 0 145px !important;
+}
+
+/* Ocultar la descripción secundaria para compactar CO */
+[data-co-work-button="true"]
+  > span:last-child
+  > span:last-child {
+  display: none !important;
+}
+
+[data-co-work-button="true"] > span:first-child {
+  width: 30px !important;
+  height: 30px !important;
+  flex: 0 0 30px !important;
+  border-radius: 9px !important;
+}
+
+[data-co-work-button="true"]
+  > span:last-child
+  > span:first-child {
+  margin: 0 !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+}
+
+/* En pantallas pequeñas conserva una sola fila con desplazamiento */
+@media (max-width: 650px) {
+  [data-work-actions="true"] {
+    justify-content: flex-start !important;
+    padding-bottom: 14px !important;
+  }
+
+  [data-work-actions="true"] > button {
+    height: 46px !important;
+    min-height: 46px !important;
+    padding: 0 11px !important;
+    font-size: 10px !important;
+  }
+
+  [data-work-actions="true"]
+    > button:first-of-type:not([data-co-work-button="true"]) {
+    flex-basis: 165px !important;
+  }
+
+  [data-co-work-button="true"] {
+    flex-basis: 165px !important;
+  }
+
+  [data-work-actions="true"]
+    > button:not([data-co-work-button="true"]):not(:first-of-type) {
+    flex-basis: 120px !important;
+  }
+}
+/* END WORK ACTION BAR COMPACT V4 */
+
+/* CO READ ONLY SIMPLE V1 */
+.co-report-root input:disabled,
+.co-report-root textarea:disabled,
+.co-report-root select:disabled {
+  cursor: not-allowed !important;
+  opacity: 0.72 !important;
+  color: #64748b !important;
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: none !important;
+}
+
+.co-report-root button:disabled {
+  cursor: not-allowed !important;
+  opacity: 0.45 !important;
+  transform: none !important;
+}
+/* END CO READ ONLY SIMPLE V1 */
