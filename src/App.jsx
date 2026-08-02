@@ -15,6 +15,11 @@ import {
   actualizarInformeCOSupabase,
 } from "./services/informesCOService";
 import {
+  obtenerInformeStartupPorOrdenSupabase,
+  crearBorradorInformeStartupSupabase,
+  actualizarInformeStartupSupabase,
+} from "./services/informesStartupService";
+import {
   AlertCircle,
   AlertTriangle,
   ArrowDownToLine,
@@ -92,6 +97,7 @@ import TecnicoCompactOrderCard from "./components/TecnicoCompactOrderCard.jsx";
 import TecnicoCompactCitaCard from "./components/TecnicoCompactCitaCard.jsx";
 import SignatureModal from "./components/SignatureModal.jsx";
 import InformeCOModal from "./components/InformeCOModal.jsx";
+import InformeStartupModal from "./components/InformeStartupModal.jsx";
 import {
   toDateKey,
   todayKey,
@@ -1470,6 +1476,8 @@ export default function App() {
   const [firmaOrdenModal, setFirmaOrdenModal] = useState(null);
   const [informesCO, setInformesCO] = useState([]);
   const [informeCOOrdenModal, setInformeCOOrdenModal] = useState(null);
+  const [informesStartup, setInformesStartup] = useState([]);
+  const [informeStartupOrdenModal, setInformeStartupOrdenModal] = useState(null);
   const [adminPage, setAdminPage] = useState("clientes");
   const [tecnicoVista, setTecnicoVista] = useState("agenda");
   const [ordenAgendaAbiertaId, setOrdenAgendaAbiertaId] = useState(null);
@@ -2443,6 +2451,308 @@ export default function App() {
     }
   };
 
+  const obtenerInformeStartupPorOrden = (ordenId) =>
+    informesStartup.find(
+      (item) => String(item.ordenId) === String(ordenId)
+    ) || null;
+
+  const resolverUbicacionOrden = (orden, cliente) => {
+    const ubicaciones = cliente?.cliente_direcciones || [];
+    const ubicacionId = String(
+      orden?.ubicacionId ||
+      orden?.direccionId ||
+      ""
+    ).trim();
+
+    if (ubicacionId) {
+      const porId = ubicaciones.find(
+        (item) => String(item.id) === ubicacionId
+      );
+
+      if (porId) return porId;
+    }
+
+    const normalizar = (value) =>
+      String(value || "").trim().toLowerCase();
+
+    const coincidencias = ubicaciones.filter((item) => {
+      const comparaciones = [];
+
+      if (orden?.direccionTrabajo) {
+        comparaciones.push(
+          normalizar(item.direccion) ===
+          normalizar(orden.direccionTrabajo)
+        );
+      }
+
+      if (orden?.edificioTrabajo) {
+        comparaciones.push(
+          normalizar(item.edificio) ===
+          normalizar(orden.edificioTrabajo)
+        );
+      }
+
+      if (orden?.apartamentoTrabajo) {
+        comparaciones.push(
+          normalizar(item.apartamento) ===
+          normalizar(orden.apartamentoTrabajo)
+        );
+      }
+
+      return (
+        comparaciones.length > 0 &&
+        comparaciones.every(Boolean)
+      );
+    });
+
+    if (coincidencias.length === 1) {
+      return coincidencias[0];
+    }
+
+    return (
+      ubicaciones.find((item) => item.principal) ||
+      ubicaciones[0] ||
+      null
+    );
+  };
+
+  const abrirInformeStartup = async (orden) => {
+    try {
+      let informe =
+        obtenerInformeStartupPorOrden(orden.id);
+
+      if (!informe) {
+        informe =
+          await obtenerInformeStartupPorOrdenSupabase(
+            orden.id
+          );
+      }
+
+      const cliente = obtenerCliente(orden.clienteId);
+      const tecnico =
+        obtenerTecnico(orden.tecnicoId) ||
+        (
+          session?.role === "tecnico"
+            ? session
+            : null
+        );
+
+      const ubicacion =
+        resolverUbicacionOrden(orden, cliente);
+
+      if (!ubicacion) {
+        alert(
+          lang === "en"
+            ? "This order does not have a valid service location. Add or select the correct address before creating the Start-Up Report."
+            : "Esta orden no tiene una ubicación de servicio válida. Agrega o selecciona la dirección correcta antes de crear el informe de puesta en marcha."
+        );
+        return;
+      }
+
+      if (!informe) {
+        const edificio =
+          orden.edificioTrabajo ||
+          ubicacion.edificio ||
+          "";
+
+        const apartamento =
+          orden.apartamentoTrabajo ||
+          ubicacion.apartamento ||
+          "";
+
+        const etiqueta = [
+          edificio
+            ? `${lang === "en" ? "Building" : "Edificio"} ${String(edificio)
+                .replace(/^edificio\s+/i, "")
+                .replace(/^building\s+/i, "")}`
+            : "",
+          apartamento
+            ? `Apt ${apartamento}`
+            : "",
+        ]
+          .filter(Boolean)
+          .join(" · ");
+
+        informe =
+          await crearBorradorInformeStartupSupabase({
+            ordenId: String(orden.id),
+            clienteId: String(
+              orden.clienteId || ""
+            ),
+            ubicacionId: String(
+              orden.ubicacionId ||
+              orden.direccionId ||
+              ubicacion.id ||
+              ""
+            ),
+            tecnicoId: String(
+              orden.tecnicoId ||
+              session?.id ||
+              ""
+            ),
+            idioma: lang === "en" ? "en" : "es",
+            fecha:
+              new Date()
+                .toISOString()
+                .slice(0, 10),
+            clienteNombre:
+              cliente?.nombre || "",
+            direccionTrabajo:
+              orden.direccionTrabajo ||
+              ubicacion.direccion ||
+              cliente?.direccion ||
+              "",
+            ubicacionEtiqueta:
+              etiqueta ||
+              orden.ubicacionEtiqueta ||
+              ubicacion.etiqueta ||
+              "",
+            tecnicoNombre:
+              tecnico?.nombre ||
+              session?.nombre ||
+              "",
+            contratistaInstalador:
+              "HVAC Maldonado",
+            datos: {
+              customerPhone:
+                cliente?.telefono || "",
+              building:
+                orden.edificioTrabajo ||
+                ubicacion.edificio ||
+                "",
+              apartment:
+                orden.apartamentoTrabajo ||
+                ubicacion.apartamento ||
+                "",
+            },
+          });
+      }
+
+      informe = {
+        ...informe,
+        datos: {
+          ...(informe.datos || {}),
+          customerPhone:
+            informe.datos?.customerPhone ||
+            cliente?.telefono ||
+            "",
+          building:
+            informe.datos?.building ||
+            orden.edificioTrabajo ||
+            ubicacion.edificio ||
+            "",
+          apartment:
+            informe.datos?.apartment ||
+            orden.apartamentoTrabajo ||
+            ubicacion.apartamento ||
+            "",
+        },
+      };
+
+      setInformesStartup((current) => {
+        const exists = current.some(
+          (item) =>
+            String(item.id) ===
+            String(informe.id)
+        );
+
+        if (exists) {
+          return current.map((item) =>
+            String(item.id) ===
+            String(informe.id)
+              ? informe
+              : item
+          );
+        }
+
+        return [informe, ...current];
+      });
+
+      setInformeStartupOrdenModal({
+        orden,
+        informe,
+      });
+    } catch (error) {
+      console.error(
+        "Error abriendo Start-Up Report:",
+        error
+      );
+      alert(
+        error?.message ||
+        "No se pudo abrir el Start-Up Report."
+      );
+    }
+  };
+
+  const guardarInformeStartupDesdeModal =
+    async (payload) => {
+      const ordenStartup =
+        informeStartupOrdenModal?.orden ||
+        null;
+
+      const estadoOrden = String(
+        ordenStartup?.estado || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      const ordenCerrada =
+        session?.role === "tecnico" &&
+        [
+          "completado",
+          "completada",
+          "cancelado",
+          "cancelada",
+          "cerrado",
+          "cerrada",
+          "completed",
+          "cancelled",
+          "canceled",
+        ].includes(estadoOrden);
+
+      if (ordenCerrada) {
+        alert(
+          lang === "en"
+            ? "This order is closed. The Start-Up Report is read-only."
+            : "Esta orden está cerrada. El informe de puesta en marcha es de solo lectura."
+        );
+        return null;
+      }
+
+      const actualizado =
+        await actualizarInformeStartupSupabase(
+          payload.id,
+          payload
+        );
+
+      setInformesStartup((current) =>
+        current.map((item) =>
+          String(item.id) ===
+          String(actualizado.id)
+            ? actualizado
+            : item
+        )
+      );
+
+      setInformeStartupOrdenModal(
+        (current) =>
+          current
+            ? {
+                ...current,
+                informe: actualizado,
+              }
+            : current
+      );
+
+      setMensaje(
+        actualizado.estado === "firmado"
+          ? "Start-Up Report firmado y guardado correctamente."
+          : "Borrador del Start-Up Report guardado correctamente."
+      );
+
+      return actualizado;
+    };
+
   const obtenerInformeCOPorOrden = (ordenId) =>
     informesCO.find(
       (item) => String(item.ordenId) === String(ordenId)
@@ -2765,6 +3075,38 @@ export default function App() {
         lang === "en"
           ? "This order has an unfinished CO report. The customer must sign it before the work can be completed."
           : "Esta orden tiene un informe CO sin terminar. El cliente debe firmarlo antes de completar el trabajo."
+      );
+
+      return;
+    }
+
+    const informeStartup =
+      obtenerInformeStartupPorOrden(ordenId);
+
+    const estadoInformeStartup = String(
+      informeStartup?.estado || ""
+    )
+      .trim()
+      .toLowerCase();
+
+    /*
+     * El informe Start-Up también es opcional.
+     * Si fue iniciado, debe estar firmado antes
+     * de completar la orden.
+     */
+    if (
+      informeStartup &&
+      estadoInformeStartup !== "firmado"
+    ) {
+      setInformeStartupOrdenModal({
+        orden,
+        informe: informeStartup,
+      });
+
+      alert(
+        lang === "en"
+          ? "This order has an unfinished Start-Up report. The customer must sign it before the work can be completed."
+          : "Esta orden tiene un informe Start-Up sin terminar. El cliente debe firmarlo antes de completar el trabajo."
       );
 
       return;
@@ -3572,7 +3914,7 @@ const compartirOrden = async (orden, metodo) => {
   const colorEstado = (estado) => estado === "Completado" ? "bg-emerald-100 text-emerald-700 border-emerald-200" : estado === "Cancelada" ? "bg-rose-100 text-rose-700 border-rose-200" : estado === "Necesita seguimiento" ? "bg-amber-100 text-amber-800 border-amber-200" : estado === "En proceso" ? "bg-sky-100 text-sky-700 border-sky-200" : estado === "En ruta" ? "bg-cyan-100 text-cyan-700 border-cyan-200" : estado === "Asignada" ? "bg-blue-100 text-blue-700 border-blue-200" : "bg-slate-100 text-slate-700 border-slate-200";
   const colorPrioridad = (p) => PRIORIDADES.find((x) => x.value === p)?.cls || "bg-slate-100 text-slate-700 border-slate-200";
 
-  const ordenProps = { inventario, obtenerMaterial, obtenerTecnico, colorEstado, colorPrioridad, marcarEnRuta, marcarLlegada, iniciarTrabajo, marcarNecesitaSeguimiento, setFirmaOrdenModal, abrirInformeCO, obtenerInformeCOPorOrden, completarOrden: completarOrdenConValidacionCO, cancelarOrden, subirFoto, guardarNotaTecnico, corregirOrdenAdmin, eliminarOrdenAdmin, session, urlGoogleMaps, urlAppleMaps, urlTelefono, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, calcularCostoOrden, materialesTexto, compartirOrden, convertirCitaEnOrden, reprogramarCita, setReprogramarCitaModal, cancelarOrden: (ordenOrId) => {
+  const ordenProps = { inventario, obtenerMaterial, obtenerTecnico, colorEstado, colorPrioridad, marcarEnRuta, marcarLlegada, iniciarTrabajo, marcarNecesitaSeguimiento, setFirmaOrdenModal, abrirInformeCO, obtenerInformeCOPorOrden, abrirInformeStartup, obtenerInformeStartupPorOrden, completarOrden: completarOrdenConValidacionCO, cancelarOrden, subirFoto, guardarNotaTecnico, corregirOrdenAdmin, eliminarOrdenAdmin, session, urlGoogleMaps, urlAppleMaps, urlTelefono, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, calcularCostoOrden, materialesTexto, compartirOrden, convertirCitaEnOrden, reprogramarCita, setReprogramarCitaModal, cancelarOrden: (ordenOrId) => {
     const orden = typeof ordenOrId === "object" ? ordenOrId : ordenes.find((o) => o.id === ordenOrId);
     setCancelModalOrden(orden || null);
   }, t };
@@ -3791,7 +4133,13 @@ const compartirOrden = async (orden, metodo) => {
           onSave={guardarInformeCODesdeModal}
           readOnly={
             session?.role === "tecnico" &&
-            [
+            (
+              String(
+                informeCOOrdenModal?.informe?.estado || ""
+              )
+                .trim()
+                .toLowerCase() === "firmado" ||
+              [
               "completado",
               "completada",
               "cancelado",
@@ -3807,6 +4155,49 @@ const compartirOrden = async (orden, metodo) => {
               )
                 .trim()
                 .toLowerCase()
+            )
+            )
+          }
+        />
+
+        <InformeStartupModal
+          open={Boolean(informeStartupOrdenModal)}
+          informe={
+            informeStartupOrdenModal?.informe ||
+            null
+          }
+          onClose={() =>
+            setInformeStartupOrdenModal(null)
+          }
+          onSave={
+            guardarInformeStartupDesdeModal
+          }
+          readOnly={
+            session?.role === "tecnico" &&
+            (
+              String(
+                informeStartupOrdenModal?.informe?.estado || ""
+              )
+                .trim()
+                .toLowerCase() === "firmado" ||
+              [
+              "completado",
+              "completada",
+              "cancelado",
+              "cancelada",
+              "cerrado",
+              "cerrada",
+              "completed",
+              "cancelled",
+              "canceled",
+            ].includes(
+              String(
+                informeStartupOrdenModal
+                  ?.orden?.estado || ""
+              )
+                .trim()
+                .toLowerCase()
+            )
             )
           }
         />
@@ -5369,9 +5760,16 @@ function abrirTraductorTexto(texto, destino = "en") {
   window.open(url, "_blank", "noopener,noreferrer");
 }
 
-function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico, colorEstado, colorPrioridad, marcarEnRuta, marcarLlegada, iniciarTrabajo, marcarNecesitaSeguimiento, completarOrden, cancelarOrden, subirFoto, guardarNotaTecnico, urlGoogleMaps, urlAppleMaps, urlTelefono, compacta = false, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, calcularCostoOrden, materialesTexto, compartirOrden, abrirInformeCO, obtenerInformeCOPorOrden, t, abrirDetallesInicial = false }) {
+function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico, colorEstado, colorPrioridad, marcarEnRuta, marcarLlegada, iniciarTrabajo, marcarNecesitaSeguimiento, completarOrden, cancelarOrden, subirFoto, guardarNotaTecnico, urlGoogleMaps, urlAppleMaps, urlTelefono, compacta = false, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, calcularCostoOrden, materialesTexto, compartirOrden, abrirInformeCO, obtenerInformeCOPorOrden, abrirInformeStartup, obtenerInformeStartupPorOrden, t, abrirDetallesInicial = false }) {
   const [verDetalles, setVerDetalles] = useState(abrirDetallesInicial);
   const informeCOActual = obtenerInformeCOPorOrden?.(orden.id) || null;
+  const informeStartupActual =
+    obtenerInformeStartupPorOrden?.(orden.id) || null;
+
+  const informeStartupFirmado =
+    String(informeStartupActual?.estado || "")
+      .trim()
+      .toLowerCase() === "firmado";
 
   const estadoOrdenInformeCO = String(orden.estado || "")
     .trim()
@@ -5409,14 +5807,24 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
     "canceled",
   ].includes(estadoOrdenInformeCO);
 
+  const trabajoEnProcesoParaInformes = [
+    "en proceso",
+    "trabajo en progreso",
+  ].includes(estadoOrdenInformeCO);
+
+  const puedeAbrirInformeCODentroTrabajo =
+    trabajoEnProcesoParaInformes ||
+    informeCOFirmado ||
+    (
+      ordenCompletadaInformeCO &&
+      Boolean(informeCOActual)
+    );
+
   const mostrarInformeCODentroTrabajo =
     !ordenCanceladaInformeCO &&
     (
-      estadoPermiteInformeCO ||
-      (
-        ordenCompletadaInformeCO &&
-        Boolean(informeCOActual)
-      )
+      !ordenCompletadaInformeCO ||
+      Boolean(informeCOActual)
     );
 
   const informeCOEnIngles =
@@ -5460,6 +5868,59 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
             informeCOEnIngles
               ? "Record measurements, findings and customer signature."
               : "Registra mediciones, hallazgos y firma del cliente."
+          );
+
+  const puedeAbrirInformeStartupDentroTrabajo =
+    trabajoEnProcesoParaInformes ||
+    informeStartupFirmado ||
+    (
+      ordenCompletadaInformeCO &&
+      Boolean(informeStartupActual)
+    );
+
+  const mostrarInformeStartupDentroTrabajo =
+    !ordenCanceladaInformeCO &&
+    (
+      !ordenCompletadaInformeCO ||
+      Boolean(informeStartupActual)
+    );
+
+  const etiquetaInformeStartupDentroTrabajo =
+    informeStartupFirmado
+      ? (
+          informeCOEnIngles
+            ? "View Start-Up Report"
+            : "Ver informe Start-Up"
+        )
+      : informeStartupActual
+        ? (
+            informeCOEnIngles
+              ? "Continue Start-Up Report"
+              : "Continuar informe Start-Up"
+          )
+        : (
+            informeCOEnIngles
+              ? "Create Start-Up Report"
+              : "Crear informe Start-Up"
+          );
+
+  const descripcionInformeStartupDentroTrabajo =
+    informeStartupFirmado
+      ? (
+          informeCOEnIngles
+            ? "Review the signed equipment commissioning report."
+            : "Consulta el informe firmado de puesta en marcha."
+        )
+      : informeStartupActual
+        ? (
+            informeCOEnIngles
+              ? "Continue equipment measurements, tests and customer signature."
+              : "Continúa las mediciones, pruebas y firma del cliente."
+          )
+        : (
+            informeCOEnIngles
+              ? "Document equipment installation, readings and start-up tests."
+              : "Documenta instalación, mediciones y pruebas de puesta en marcha."
           );
 
 
@@ -5779,45 +6240,173 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
                 className="min-h-24 w-full rounded-2xl border border-cyan-200 bg-gradient-to-br from-blue-50 to-cyan-50 p-3 text-sm font-semibold outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
               />
 
-              <div
-                data-work-actions="true"
-                className="rounded-[1.75rem] border border-slate-100 bg-slate-50 p-5 shadow-inner"
-              >
+              {(mostrarInformeCODentroTrabajo ||
+                mostrarInformeStartupDentroTrabajo) && (
+                <section className="rounded-[1.5rem] border border-cyan-200 bg-gradient-to-br from-slate-50 via-white to-cyan-50 p-4 shadow-sm">
+                  <div className="mb-3 flex items-start gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-700 to-cyan-500 text-white shadow-md shadow-cyan-200">
+                      <FileText size={20} strokeWidth={2.6} />
+                    </span>
 
-                {mostrarInformeCODentroTrabajo && (
-                  <button
-                    type="button"
-                    data-co-work-button="true"
-                    onClick={() => abrirInformeCO?.(orden)}
-                    className={
-                      "flex min-w-[245px] flex-1 items-center gap-3 rounded-2xl px-4 py-3 text-left text-white shadow-lg transition hover:-translate-y-0.5 " +
-                      (
-                        informeCOFirmado
-                          ? "bg-gradient-to-r from-emerald-700 to-teal-500 shadow-emerald-200"
-                          : informeCOActual
-                            ? "bg-gradient-to-r from-amber-600 to-orange-500 shadow-amber-200"
-                            : "bg-gradient-to-r from-violet-700 to-fuchsia-600 shadow-violet-200"
-                      )
-                    }
+                    <div className="min-w-0">
+                      <h3 className="text-base font-black text-slate-950">
+                        {informeCOEnIngles
+                          ? "Service reports"
+                          : "Informes del servicio"}
+                      </h3>
+
+                      <p className="text-xs font-semibold text-slate-500">
+                        {trabajoEnProcesoParaInformes
+                          ? (
+                              informeCOEnIngles
+                                ? "Complete only the reports required for this service."
+                                : "Completa solamente los informes necesarios para este servicio."
+                            )
+                          : ordenCompletadaInformeCO
+                            ? (
+                                informeCOEnIngles
+                                  ? "Available reports are read-only."
+                                  : "Los informes disponibles son de solo lectura."
+                              )
+                            : (
+                                informeCOEnIngles
+                                  ? "Start the work before completing a service report."
+                                  : "Comienza el trabajo antes de completar un informe."
+                              )}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    data-service-reports="true"
+                    className="grid gap-3 md:grid-cols-2"
                   >
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/20">
-                      <ShieldAlert
-                        size={21}
-                        strokeWidth={2.7}
-                      />
-                    </span>
+                    {mostrarInformeCODentroTrabajo && (
+                      <button
+                        type="button"
+                        data-co-work-button="true"
+                        disabled={!puedeAbrirInformeCODentroTrabajo}
+                        onClick={() => {
+                          if (puedeAbrirInformeCODentroTrabajo) {
+                            abrirInformeCO?.(orden);
+                          }
+                        }}
+                        className={
+                          "flex min-w-0 items-center gap-3 rounded-2xl px-4 py-3 text-left text-white shadow-lg transition " +
+                          (
+                            !puedeAbrirInformeCODentroTrabajo
+                              ? "cursor-not-allowed bg-gradient-to-r from-slate-400 to-slate-500 opacity-65 shadow-slate-200"
+                              : informeCOFirmado
+                                ? "bg-gradient-to-r from-emerald-700 to-teal-500 shadow-emerald-200 hover:-translate-y-0.5"
+                                : informeCOActual
+                                  ? "bg-gradient-to-r from-amber-600 to-orange-500 shadow-amber-200 hover:-translate-y-0.5"
+                                  : "bg-gradient-to-r from-violet-700 to-fuchsia-600 shadow-violet-200 hover:-translate-y-0.5"
+                          )
+                        }
+                      >
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/20">
+                          <ShieldAlert
+                            size={21}
+                            strokeWidth={2.7}
+                          />
+                        </span>
 
-                    <span className="min-w-0">
-                      <span className="block text-sm font-black">
-                        {etiquetaInformeCODentroTrabajo}
-                      </span>
+                        <span className="min-w-0">
+                          <span className="block text-sm font-black">
+                            {etiquetaInformeCODentroTrabajo}
+                          </span>
 
-                      <span className="mt-0.5 block text-[10px] font-bold leading-tight text-white/75">
-                        {descripcionInformeCODentroTrabajo}
-                      </span>
-                    </span>
-                  </button>
-                )}
+                          <span className="mt-0.5 block text-[10px] font-bold leading-tight text-white/80">
+                            {!puedeAbrirInformeCODentroTrabajo
+                              ? (
+                                  informeCOEnIngles
+                                    ? "Start the work to enable this report."
+                                    : "Comienza el trabajo para habilitar este informe."
+                                )
+                              : descripcionInformeCODentroTrabajo}
+                          </span>
+                        </span>
+                      </button>
+                    )}
+
+                    {mostrarInformeStartupDentroTrabajo && (
+                      <button
+                        type="button"
+                        data-startup-work-button="true"
+                        disabled={!puedeAbrirInformeStartupDentroTrabajo}
+                        onClick={() => {
+                          if (
+                            puedeAbrirInformeStartupDentroTrabajo
+                          ) {
+                            abrirInformeStartup?.(orden);
+                          }
+                        }}
+                        className={
+                          "flex min-w-0 items-center gap-3 rounded-2xl px-4 py-3 text-left text-white shadow-lg transition " +
+                          (
+                            !puedeAbrirInformeStartupDentroTrabajo
+                              ? "cursor-not-allowed bg-gradient-to-r from-slate-400 to-slate-500 opacity-65 shadow-slate-200"
+                              : informeStartupFirmado
+                                ? "bg-gradient-to-r from-emerald-700 to-cyan-600 shadow-emerald-200 hover:-translate-y-0.5"
+                                : informeStartupActual
+                                  ? "bg-gradient-to-r from-amber-600 to-orange-500 shadow-amber-200 hover:-translate-y-0.5"
+                                  : "bg-gradient-to-r from-blue-700 to-cyan-600 shadow-blue-200 hover:-translate-y-0.5"
+                          )
+                        }
+                      >
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/20">
+                          <ClipboardCheck
+                            size={21}
+                            strokeWidth={2.7}
+                          />
+                        </span>
+
+                        <span className="min-w-0">
+                          <span className="block text-sm font-black">
+                            {etiquetaInformeStartupDentroTrabajo}
+                          </span>
+
+                          <span className="mt-0.5 block text-[10px] font-bold leading-tight text-white/80">
+                            {!puedeAbrirInformeStartupDentroTrabajo
+                              ? (
+                                  informeCOEnIngles
+                                    ? "Start the work to enable this report."
+                                    : "Comienza el trabajo para habilitar este informe."
+                                )
+                              : descripcionInformeStartupDentroTrabajo}
+                          </span>
+                        </span>
+                      </button>
+                    )}
+                  </div>
+                </section>
+              )}
+
+              <section className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4 shadow-inner">
+                <div className="mb-3 flex items-center gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-white">
+                    <Wrench size={18} strokeWidth={2.6} />
+                  </span>
+
+                  <div>
+                    <h3 className="text-sm font-black text-slate-950">
+                      {informeCOEnIngles
+                        ? "Work actions"
+                        : "Acciones del trabajo"}
+                    </h3>
+
+                    <p className="text-[11px] font-semibold text-slate-500">
+                      {informeCOEnIngles
+                        ? "Update the current status of this service."
+                        : "Actualiza el estado actual de este servicio."}
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  data-work-actions="true"
+                  className="rounded-2xl border border-slate-100 bg-white p-3 shadow-sm"
+                >
                 {orden.estado === "Asignada" && (
                   <button onClick={() => marcarEnRuta(orden.id)} className="flex items-center justify-center gap-1.5 rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5">
                     <Navigation {...iconProps} />
@@ -5859,7 +6448,8 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
                     {t("cancel")}
                   </button>
                 )}
-              </div>
+                </div>
+              </section>
             </div>
           )}
         </div>

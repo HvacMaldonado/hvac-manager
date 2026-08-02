@@ -2,6 +2,7 @@ import {
   Ban,
   CalendarDays,
   CheckCheck,
+  ClipboardCheck,
   Clock3,
   MapPinned,
   NotebookPen,
@@ -90,6 +91,11 @@ export default function TecnicoCompactOrderCard({ orden, cliente, ordenProps }) 
   const tecnico = ordenProps?.obtenerTecnico?.(orden.tecnicoId);
   const informeCO =
     ordenProps?.obtenerInformeCOPorOrden?.(orden.id) || null;
+  const informeStartup =
+    ordenProps?.obtenerInformeStartupPorOrden?.(orden.id) || null;
+
+  const informeStartupFirmado =
+    String(informeStartup?.estado || "").toLowerCase() === "firmado";
 
   const estadoCO = String(orden.estado || "")
     .trim()
@@ -142,6 +148,20 @@ export default function TecnicoCompactOrderCard({ orden, cliente, ordenProps }) 
     : informeCO
       ? "Continuar informe CO"
       : "Generar informe CO";
+
+  const mostrarInformeStartup =
+    !estadoCanceladoInformeCO &&
+    (
+      !estadoFinalInformeCO ||
+      Boolean(informeStartup)
+    );
+
+  const etiquetaInformeStartup =
+    informeStartupFirmado
+      ? "Ver Start-Up"
+      : informeStartup
+        ? "Continuar Start-Up"
+        : "Crear Start-Up";
 
   const fecha = getOrderDateKey(orden) || "Sin fecha";
   const hora = formatTechTime(orden.horaProgramada);
@@ -366,6 +386,29 @@ export default function TecnicoCompactOrderCard({ orden, cliente, ordenProps }) 
               >
                 <ShieldAlert size={15} />
                 {etiquetaInformeCO}
+              </button>
+            )}
+
+            {mostrarInformeStartup && (
+              <button
+                type="button"
+                data-compact-startup-button="true"
+                onClick={() =>
+                  ordenProps?.abrirInformeStartup?.(orden)
+                }
+                className={
+                  "inline-flex h-12 items-center justify-center gap-2 rounded-2xl px-3 text-xs font-black text-white ring-1 " +
+                  (
+                    informeStartupFirmado
+                      ? "bg-emerald-500/25 ring-emerald-300/30"
+                      : informeStartup
+                        ? "bg-amber-500/25 ring-amber-300/30"
+                        : "bg-blue-500/25 ring-blue-300/30"
+                  )
+                }
+              >
+                <ClipboardCheck size={15} />
+                {etiquetaInformeStartup}
               </button>
             )}
 
