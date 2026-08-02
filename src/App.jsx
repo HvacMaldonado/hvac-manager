@@ -316,6 +316,9 @@ const TEXT = {
     locationUpdated: "Ubicación actualizada correctamente.",
     locationDeleted: "Ubicación eliminada correctamente.",
     requiredBuildingApartment: "Edificio y apartamento/unidad son obligatorios.",
+    corporateMainAddress: "Dirección principal de servicio",
+    corporateMainAddressHelp: "Esta dirección se guardará como la ubicación principal. Después podrás agregar apartamentos, unidades, edificios u otras propiedades.",
+    corporateAddressRequired: "La dirección principal del cliente corporativo es obligatoria.",
     generalAddress: "Dirección general",
     buildingNamePrefix: "Edificio",
     contactPerson: "Persona de contacto",
@@ -960,6 +963,9 @@ const TEXT = {
     locationUpdated: "Location updated successfully.",
     locationDeleted: "Location deleted successfully.",
     requiredBuildingApartment: "Building and apartment/unit are required.",
+    corporateMainAddress: "Main service address",
+    corporateMainAddressHelp: "This address will be saved as the primary location. You can then add apartments, units, buildings or other properties.",
+    corporateAddressRequired: "The corporate customer's main address is required.",
     generalAddress: "General address",
     buildingNamePrefix: "Building",
     contactPerson: "Contact person",
@@ -1925,6 +1931,14 @@ export default function App() {
 
     if (!phoneIsValidUS(clienteForm.telefono)) {
       return setMensaje("El teléfono debe tener exactamente 10 dígitos. Formato: ___-___-____.");
+    }
+
+    if (esCorporativo && !String(clienteForm.direccion || "").trim()) {
+      return setMensaje(
+        lang === "en"
+          ? "The corporate customer's main address is required."
+          : "La dirección principal del cliente corporativo es obligatoria."
+      );
     }
 
     const datosCliente = {

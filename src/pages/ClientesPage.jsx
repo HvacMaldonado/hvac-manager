@@ -866,17 +866,56 @@ export default function ClientesPage({
                       </div>
                     </FormSection>
                   ) : (
-                    <div className="rounded-3xl border border-dashed border-cyan-200 bg-cyan-50/70 p-4">
-                      <div className="flex items-start gap-3">
-                        <MapPinned size={20} className="mt-0.5 text-cyan-700" />
-                        <div>
-                          <p className="text-sm font-black text-slate-950">{t("separateLocations")}</p>
-                          <p className="mt-1 text-xs font-bold leading-relaxed text-slate-600">
-                            {t("corporateLocationsDescription")}
+                    <FormSection
+                      icon={MapPinned}
+                      title={t("corporateMainAddress")}
+                      tone="cyan"
+                    >
+                      <div className="relative">
+                        <input
+                          value={clienteForm.direccion}
+                          onFocus={() => setDireccionActiva(true)}
+                          onBlur={() => setTimeout(() => setDireccionActiva(false), 180)}
+                          onChange={(event) => buscarDireccionesGeoapify(event.target.value)}
+                          placeholder={t("corporateMainAddress")}
+                          autoComplete="new-password"
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                        />
+
+                        {direccionActiva && direccionSugerencias.length > 0 && (
+                          <div className="absolute left-0 right-0 z-50 mt-2 max-h-72 overflow-auto rounded-2xl border border-slate-200 bg-white shadow-xl">
+                            {direccionSugerencias.map((feature, index) => {
+                              const parts = normalizeGeoapifyAddress(feature);
+
+                              return (
+                                <button
+                                  key={`${parts.full}-${index}`}
+                                  type="button"
+                                  onMouseDown={() => seleccionarDireccionGeoapify(feature)}
+                                  className="flex w-full items-start gap-2 px-3 py-2.5 text-left text-sm font-semibold text-slate-700 hover:bg-blue-50"
+                                >
+                                  <MapPin size={15} className="mt-0.5 shrink-0 text-blue-700" />
+                                  <span>{parts.full}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {direccionCargando && (
+                          <p className="mt-2 text-xs font-semibold text-slate-500">
+                            {t("searchingAddresses")}
                           </p>
-                        </div>
+                        )}
+
+                        {direccionError && (
+                          <p className="mt-2 text-xs font-bold text-amber-700">
+                            {direccionError}
+                          </p>
+                        )}
                       </div>
-                    </div>
+
+                    </FormSection>
                   )}
                 </div>
               </div>
