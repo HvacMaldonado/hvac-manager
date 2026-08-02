@@ -1546,6 +1546,35 @@ export default function App() {
 
 
   useEffect(() => {
+    if (session?.role !== "tecnico" || tecnicos.length === 0) return;
+
+    const sesionYaValida = tecnicos.some(
+      (tecnico) => String(tecnico.id) === String(session.id)
+    );
+
+    if (sesionYaValida) return;
+
+    const nombreSesion = String(session.nombre || "").trim().toLowerCase();
+
+    const tecnicoCoincidente = tecnicos.find(
+      (tecnico) =>
+        String(tecnico.nombre || "").trim().toLowerCase() === nombreSesion
+    );
+
+    if (!tecnicoCoincidente) return;
+
+    const sesionCorregida = {
+      role: "tecnico",
+      id: tecnicoCoincidente.id,
+      nombre: tecnicoCoincidente.nombre,
+    };
+
+    setSession(sesionCorregida);
+    localStorage.setItem("hvacSession", JSON.stringify(sesionCorregida));
+  }, [tecnicos, session?.role, session?.id, session?.nombre]);
+
+
+  useEffect(() => {
     async function cargarCitasSupabase() {
       try {
         const citasSupabase = await obtenerCitasSupabase();
@@ -3379,14 +3408,44 @@ const compartirOrden = async (orden, metodo) => {
     }
   };
 
-  const actualizarTecnico = async (id, campo, valor) => {
-    setTecnicos(tecnicos.map((tec) => tec.id === id ? { ...tec, [campo]: valor } : tec));
+  const actualizarTecnico = async (id, campoOCambios, valor) => {
+    const cambiosRecibidos =
+      typeof campoOCambios === "string"
+        ? { [campoOCambios]: valor }
+        : { ...(campoOCambios || {}) };
+
+    const { id: _idIgnorado, ...cambios } = cambiosRecibidos;
+
+    if (Object.keys(cambios).length === 0) {
+      return true;
+    }
+
+    const tecnicosAnteriores = tecnicos;
+
+    setTecnicos((actuales) =>
+      actuales.map((tec) =>
+        String(tec.id) === String(id)
+          ? { ...tec, ...cambios }
+          : tec
+      )
+    );
 
     try {
-      await actualizarTecnicoSupabase(id, { [campo]: valor });
+      await actualizarTecnicoSupabase(id, cambios);
+      setMensaje("Técnico actualizado correctamente.");
+      return true;
     } catch (error) {
       console.error("Error actualizando técnico en Supabase:", error);
-      setMensaje("No se pudo actualizar el técnico en Supabase.");
+      setTecnicos(tecnicosAnteriores);
+
+      const detalle =
+        error?.message ||
+        error?.details ||
+        error?.hint ||
+        "Error desconocido";
+
+      setMensaje(`No se pudo actualizar el técnico en Supabase: ${detalle}`);
+      return false;
     }
   };
 
@@ -3493,8 +3552,8 @@ const compartirOrden = async (orden, metodo) => {
 
   const ordenesActivasAdmin = ordenes.map(normalizeOrden).filter((o) => !["Completado", "Cancelada"].includes(o.estado));
   const historialAdmin = ordenes.map(normalizeOrden).filter((o) => ["Completado", "Cancelada"].includes(o.estado));
-  const ordenesActivasTecnico = session?.role === "tecnico" ? ordenes.map(normalizeOrden).filter((o) => o.tecnicoId === session.id && !["Completado", "Cancelada"].includes(o.estado)) : [];
-  const historialTecnico = session?.role === "tecnico" ? ordenes.map(normalizeOrden).filter((o) => o.tecnicoId === session.id && ["Completado", "Cancelada"].includes(o.estado)) : [];
+  const ordenesActivasTecnico = session?.role === "tecnico" ? ordenes.map(normalizeOrden).filter((o) => String(o.tecnicoId) === String(session.id) && !["Completado", "Cancelada"].includes(o.estado)) : [];
+  const historialTecnico = session?.role === "tecnico" ? ordenes.map(normalizeOrden).filter((o) => String(o.tecnicoId) === String(session.id) && ["Completado", "Cancelada"].includes(o.estado)) : [];
 
   const colorEstado = (estado) => estado === "Completado" ? "bg-emerald-100 text-emerald-700 border-emerald-200" : estado === "Cancelada" ? "bg-rose-100 text-rose-700 border-rose-200" : estado === "Necesita seguimiento" ? "bg-amber-100 text-amber-800 border-amber-200" : estado === "En proceso" ? "bg-sky-100 text-sky-700 border-sky-200" : estado === "En ruta" ? "bg-cyan-100 text-cyan-700 border-cyan-200" : estado === "Asignada" ? "bg-blue-100 text-blue-700 border-blue-200" : "bg-slate-100 text-slate-700 border-slate-200";
   const colorPrioridad = (p) => PRIORIDADES.find((x) => x.value === p)?.cls || "bg-slate-100 text-slate-700 border-slate-200";

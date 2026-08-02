@@ -377,9 +377,12 @@ export default function TecnicosPage({ t, tecnicos, actualizarTecnico, guardarTe
   const activos = filtrados.filter((tec) => tec.activo !== false);
   const dadosDeBaja = filtrados.filter((tec) => tec.activo === false);
 
-  const guardarEdicion = (form) => {
-    Object.entries(form).forEach(([campo, valor]) => actualizarTecnico(form.id, campo, valor));
-    setEditando(null);
+  const guardarEdicion = async (form) => {
+    const guardado = await actualizarTecnico(form.id, form);
+
+    if (guardado) {
+      setEditando(null);
+    }
   };
 
   const eliminarTecnico = async (tec) => {
