@@ -271,7 +271,7 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
             <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-lg shadow-slate-200/70">
               <div className="overflow-x-auto [-webkit-overflow-scrolling:touch]">
                 <div className="min-w-[980px]">
-                  <div className="grid grid-cols-[1.25fr_0.75fr_0.9fr_0.75fr_0.65fr_280px] gap-3 bg-slate-950 px-4 py-3 text-[10px] font-black uppercase tracking-wide text-white">
+                  <div className="grid grid-cols-[1.25fr_0.75fr_0.9fr_0.75fr_0.65fr_450px] gap-3 bg-slate-950 px-4 py-3 text-[10px] font-black uppercase tracking-wide text-white">
                     <span>{t("customer")}</span>
                     <span>{t("status")}</span>
                     <span>{t("technician")}</span>
@@ -288,7 +288,7 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
                       const fecha = formatReportDate(orden.fechaCompletada || orden.fechaCreacion || orden.fecha);
 
                       return (
-                        <article key={`compact-${orden.id}`} className="grid grid-cols-[1.25fr_0.75fr_0.9fr_0.75fr_0.65fr_280px] items-center gap-3 px-4 py-3 text-sm transition hover:bg-blue-50/70">
+                        <article key={`compact-${orden.id}`} className="grid grid-cols-[1.25fr_0.75fr_0.9fr_0.75fr_0.65fr_450px] items-center gap-3 px-4 py-3 text-sm transition hover:bg-blue-50/70">
                           <div className="min-w-0">
                             <p className="truncate font-black text-slate-950">{cliente?.nombre || t("deletedCustomer")}</p>
                             <p className="truncate text-xs font-semibold text-slate-500">{orden.problema || t("workOrderFallback")}</p>
@@ -311,6 +311,27 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
                           </button>
 
                           <div className="flex justify-end items-stretch gap-3">
+                            {ordenProps?.obtenerInformeCOPorOrden?.(orden.id) && (
+                              <ActionButton
+                                icon={Eye}
+                                label="CO"
+                                onClick={() =>
+                                  ordenProps?.abrirInformeCO?.(orden)
+                                }
+                                className="min-w-[70px] px-3 bg-red-700 text-white hover:bg-red-600"
+                              />
+                            )}
+
+                            {ordenProps?.obtenerInformeStartupPorOrden?.(orden.id) && (
+                              <ActionButton
+                                icon={Eye}
+                                label="Start-Up"
+                                onClick={() =>
+                                  ordenProps?.abrirInformeStartup?.(orden)
+                                }
+                                className="min-w-[92px] px-3 bg-blue-700 text-white hover:bg-blue-600"
+                              />
+                            )}
                             <ActionButton icon={Eye} label="" onClick={() => setDetalleOrden(orden)} className="min-w-[70px] px-4 bg-slate-950 text-white hover:bg-slate-800" />
                             <ActionButton icon={Printer} label="" onClick={() => compartirOrden?.(orden, "imprimir")} className="min-w-[70px] px-4 bg-cyan-100 text-cyan-800 hover:bg-cyan-200" />
                             <ActionButton icon={Share2} label="" onClick={() => compartirOrden?.(orden, "mensaje")} className="min-w-[70px] px-4 bg-blue-50 text-blue-700 hover:bg-blue-100" />
@@ -448,6 +469,32 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
                         <Printer size={15} />
                         {t("print")}
                       </button>
+
+                      {ordenProps?.obtenerInformeCOPorOrden?.(orden.id) && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            ordenProps?.abrirInformeCO?.(orden)
+                          }
+                          className="relative col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-red-700 to-orange-600 px-3 text-sm font-black text-white shadow-sm transition hover:from-red-600 hover:to-orange-500"
+                        >
+                          <Eye size={15} />
+                          CO
+                        </button>
+                      )}
+
+                      {ordenProps?.obtenerInformeStartupPorOrden?.(orden.id) && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            ordenProps?.abrirInformeStartup?.(orden)
+                          }
+                          className="relative col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-3 text-sm font-black text-white shadow-sm transition hover:from-blue-500 hover:to-cyan-400"
+                        >
+                          <Eye size={15} />
+                          Start-Up
+                        </button>
+                      )}
                     </div>
 
                     <button

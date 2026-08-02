@@ -6,7 +6,9 @@ import {
   ClipboardCheck,
   Eraser,
   Languages,
+  Printer,
   Save,
+  Share2,
   Signature,
   X,
 } from "lucide-react";
@@ -42,6 +44,10 @@ const UI = {
     saved: "Informe guardado correctamente.",
     saveFailed: "No se pudo guardar el informe de puesta en marcha.",
     readOnly: "Este informe es de solo lectura.",
+    print: "Imprimir / PDF",
+    share: "Compartir",
+    popupBlocked: "Permite ventanas emergentes para imprimir el informe.",
+    shareFailed: "No se pudo abrir el menú para compartir.",
     yes: "Sí",
     no: "No",
   },
@@ -75,6 +81,10 @@ const UI = {
     saved: "Report saved successfully.",
     saveFailed: "The Start-Up Report could not be saved.",
     readOnly: "This report is read-only.",
+    print: "Print / PDF",
+    share: "Share",
+    popupBlocked: "Allow pop-up windows to print the report.",
+    shareFailed: "The sharing menu could not be opened.",
     yes: "Yes",
     no: "No",
   },
@@ -615,6 +625,369 @@ export default function InformeStartupModal({
     }
   };
 
+  const escapePrintHtml = (value) =>
+    String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+
+  const normalizePrintField = (field) => {
+    if (Array.isArray(field)) {
+      return {
+        key: field[0],
+        label: idioma === "en" ? field[2] : field[1],
+        type: field[3] || "text",
+        options: [],
+      };
+    }
+
+    return {
+      key: field.key,
+      label:
+        field.label?.[idioma] ||
+        field.label?.es ||
+        field.key,
+      type: field.type || "text",
+      options: field.options || [],
+    };
+  };
+
+  const getPrintValue = (rawField) => {
+    const field = normalizePrintField(rawField);
+    const value = form.datos?.[field.key];
+
+    if (field.type === "checkbox") {
+      return value ? copy.yes : copy.no;
+    }
+
+    if (field.type === "radio") {
+      const option = field.options.find(
+        (item) => item[0] === value
+      );
+
+      return option?.[1] || value || "—";
+    }
+
+    return value === undefined ||
+      value === null ||
+      value === ""
+      ? "—"
+      : String(value);
+  };
+
+  const generarDocumentoImprimible = () => {
+    const paginas = [
+      ...PAGE_ONE,
+      ...PAGE_TWO,
+    ];
+
+    const secciones = paginas
+      .map((section) => {
+        const rows = (section.fields || [])
+          .map((rawField) => {
+            const field = normalizePrintField(rawField);
+
+            return `
+              <div class="field">
+                <span class="field-label">
+                  ${escapePrintHtml(field.label)}
+                </span>
+                <span class="field-value">
+                  ${escapePrintHtml(getPrintValue(rawField))}
+                </span>
+              </div>
+            `;
+          })
+          .join("");
+
+        return `
+          <section class="report-section">
+            <h2>
+              ${escapePrintHtml(
+                section.title?.[idioma] ||
+                section.title?.es ||
+                ""
+              )}
+            </h2>
+            <div class="fields">${rows}</div>
+          </section>
+        `;
+      })
+      .join("");
+
+    const firmaValida =
+      String(form.firmaCliente || "").startsWith("data:image/")
+        ? form.firmaCliente
+        : "";
+
+    return `<!doctype html>
+<html lang="${idioma}">
+<head>
+  <meta charset="utf-8" />
+  <title>${escapePrintHtml(
+    form.numeroInforme || "START-UP"
+  )}</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 8px;
+      color: #0f172a;
+      background: white;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 8px;
+      line-height: 1.15;
+    }
+    .header {
+      border: 2px solid #0f172a;
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 5px;
+    }
+    .brand {
+      padding: 7px 10px;
+      color: white;
+      background: linear-gradient(135deg, #020617, #172554, #0e7490);
+    }
+    .brand small {
+      display: block;
+      color: #67e8f9;
+      font-weight: 800;
+      letter-spacing: 2px;
+    }
+    .brand h1 {
+      margin: 2px 0 1px;
+      font-size: 15px;
+    }
+    .brand p { margin: 0; opacity: .75; }
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .meta div {
+      min-height: 29px;
+      padding: 4px 6px;
+      border-top: 1px solid #cbd5e1;
+    }
+    .meta div:not(:nth-child(3n + 1)) {
+      border-left: 1px solid #cbd5e1;
+    }
+    .meta label, .field-label {
+      display: block;
+      margin-bottom: 3px;
+      color: #64748b;
+      font-size: 6px;
+      font-weight: 800;
+      letter-spacing: .55px;
+      text-transform: uppercase;
+    }
+    .meta strong { font-size: 8px; }
+    .report-section {
+      margin-bottom: 4px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      break-inside: auto;
+      overflow: hidden;
+    }
+    .report-section h2 {
+      margin: 0;
+      padding: 3px 6px;
+      color: white;
+      background: #172554;
+      font-size: 8px;
+    }
+    .fields {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .field {
+      min-height: 20px;
+      padding: 3px 5px;
+      border-top: 1px solid #e2e8f0;
+    }
+    .field:not(:nth-child(3n + 1)) {
+      border-left: 1px solid #e2e8f0;
+    }
+    .field-value {
+      display: block;
+      font-weight: 700;
+      white-space: pre-wrap;
+    }
+    .signature {
+      page-break-inside: avoid;
+      margin-top: 5px;
+      padding: 6px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      break-inside: avoid;
+    }
+    .signature img {
+      display: block;
+      max-width: 300px;
+      max-height: 70px;
+      margin-top: 3px;
+      object-fit: contain;
+    }
+    .footer {
+      margin-top: 4px;
+      color: #64748b;
+      text-align: center;
+      font-size: 6px;
+    }
+    @page { size: letter portrait; margin: 6mm; }
+    @media print {
+      body { padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="brand">
+      <small>HVAC MALDONADO</small>
+      <h1>${escapePrintHtml(copy.title)}</h1>
+      <p>${escapePrintHtml(copy.subtitle)} · ${escapePrintHtml(
+        form.numeroInforme || "START-UP"
+      )}</p>
+    </div>
+
+    <div class="meta">
+      <div>
+        <label>${escapePrintHtml(copy.date)}</label>
+        <strong>${escapePrintHtml(form.fecha || "—")}</strong>
+      </div>
+      <div>
+        <label>${escapePrintHtml(copy.customer)}</label>
+        <strong>${escapePrintHtml(form.clienteNombre || "—")}</strong>
+      </div>
+      <div>
+        <label>${escapePrintHtml(copy.address)}</label>
+        <strong>${escapePrintHtml(form.direccionTrabajo || "—")}</strong>
+      </div>
+      <div>
+        <label>${escapePrintHtml(copy.building)} / ${escapePrintHtml(copy.apartment)}</label>
+        <strong>${escapePrintHtml([
+          form.datos?.building,
+          form.datos?.apartment,
+        ].filter(Boolean).join(" · ") || "—")}</strong>
+      </div>
+      <div>
+        <label>${escapePrintHtml(copy.contractor)}</label>
+        <strong>${escapePrintHtml(
+          form.contratistaInstalador || "HVAC Maldonado"
+        )}</strong>
+      </div>
+      <div>
+        <label>${escapePrintHtml(copy.technician)}</label>
+        <strong>${escapePrintHtml(form.tecnicoNombre || "—")}</strong>
+      </div>
+    </div>
+  </header>
+
+  ${secciones}
+
+  <section class="signature">
+    <strong>${escapePrintHtml(copy.signature)}</strong>
+    <p>${escapePrintHtml(form.nombreFirmante || "—")}</p>
+    ${firmaValida
+      ? `<img src="${firmaValida}" alt="Signature" />`
+      : ""}
+    <p>${escapePrintHtml(form.firmadoAt || "")}</p>
+  </section>
+
+  <div class="footer">
+    HVAC Maldonado · ${escapePrintHtml(
+      form.numeroInforme || "START-UP"
+    )}
+  </div>
+</body>
+</html>`;
+  };
+
+  const imprimirInforme = () => {
+    const popup = window.open(
+      "",
+      "_blank",
+      "width=1000,height=800"
+    );
+
+    if (!popup) {
+      alert(copy.popupBlocked);
+      return;
+    }
+
+    popup.document.open();
+    popup.document.write(generarDocumentoImprimible());
+    popup.document.close();
+
+    popup.addEventListener(
+      "load",
+      () => {
+        setTimeout(() => {
+          popup.focus();
+          popup.print();
+        }, 250);
+      },
+      { once: true }
+    );
+  };
+
+  const compartirInforme = async () => {
+    const titulo = `${copy.title} ${
+      form.numeroInforme || ""
+    }`.trim();
+
+    const resumen = [
+      titulo,
+      `${copy.customer}: ${form.clienteNombre || "—"}`,
+      `${copy.address}: ${form.direccionTrabajo || "—"}`,
+      `${copy.technician}: ${form.tecnicoNombre || "—"}`,
+      `${copy.date}: ${form.fecha || "—"}`,
+    ].join("\n");
+
+    try {
+      const html = generarDocumentoImprimible();
+      const file = new File(
+        [html],
+        `${form.numeroInforme || "START-UP"}.html`,
+        { type: "text/html" }
+      );
+
+      if (
+        navigator.share &&
+        navigator.canShare?.({ files: [file] })
+      ) {
+        await navigator.share({
+          title: titulo,
+          text: resumen,
+          files: [file],
+        });
+        return;
+      }
+
+      if (navigator.share) {
+        await navigator.share({
+          title: titulo,
+          text: resumen,
+        });
+        return;
+      }
+
+      window.location.href =
+        `mailto:?subject=${encodeURIComponent(titulo)}` +
+        `&body=${encodeURIComponent(resumen)}`;
+    } catch (error) {
+      if (error?.name !== "AbortError") {
+        console.error(
+          "Error compartiendo informe Start-Up:",
+          error
+        );
+        alert(copy.shareFailed);
+      }
+    }
+  };
+
   const sections = page === 1 ? PAGE_ONE : PAGE_TWO;
 
   return (
@@ -658,6 +1031,24 @@ export default function InformeStartupModal({
               >
                 <Languages size={15} />
                 {idioma === "en" ? "ES" : "EN"}
+              </button>
+
+              <button
+                type="button"
+                onClick={imprimirInforme}
+                className="inline-flex items-center gap-2 rounded-xl bg-cyan-300 px-3 py-2 text-xs font-black text-slate-950 shadow-sm"
+              >
+                <Printer size={15} />
+                {copy.print}
+              </button>
+
+              <button
+                type="button"
+                onClick={compartirInforme}
+                className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-xs font-black text-white ring-1 ring-white/15"
+              >
+                <Share2 size={15} />
+                {copy.share}
               </button>
 
               <button

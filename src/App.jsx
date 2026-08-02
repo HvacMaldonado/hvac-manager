@@ -93,6 +93,8 @@ import HerramientasPage from "./pages/HerramientasPage.jsx";
 import ReportesClientesPage from "./pages/ReportesClientesPage.jsx";
 import ReportesInventarioPage from "./pages/ReportesInventarioPage.jsx";
 import ReportesDashboardPage from "./pages/ReportesDashboardPage.jsx";
+import InformesStartupPage from "./pages/InformesStartupPage.jsx";
+import InformesCOPage from "./pages/InformesCOPage.jsx";
 import TecnicoCompactOrderCard from "./components/TecnicoCompactOrderCard.jsx";
 import TecnicoCompactCitaCard from "./components/TecnicoCompactCitaCard.jsx";
 import SignatureModal from "./components/SignatureModal.jsx";
@@ -4084,6 +4086,10 @@ const compartirOrden = async (orden, metodo) => {
                 obtenerCliente={obtenerCliente}
                 obtenerTecnico={obtenerTecnico}
                 exportarCSV={exportarCSV}
+                informesStartup={informesStartup}
+                abrirInformeStartup={abrirInformeStartup}
+                informesCO={informesCO}
+                abrirInformeCO={abrirInformeCO}
               />
             )}
             {adminPage === "configuracion" && <ConfiguracionPage t={t} adminPassword={adminPassword} setAdminPassword={setAdminPassword} setMensaje={setMensaje} />}
@@ -4132,13 +4138,15 @@ const compartirOrden = async (orden, metodo) => {
           onClose={() => setInformeCOOrdenModal(null)}
           onSave={guardarInformeCODesdeModal}
           readOnly={
-            session?.role === "tecnico" &&
+            session?.role === "admin" ||
             (
-              String(
-                informeCOOrdenModal?.informe?.estado || ""
-              )
-                .trim()
-                .toLowerCase() === "firmado" ||
+              session?.role === "tecnico" &&
+              (
+                String(
+                  informeCOOrdenModal?.informe?.estado || ""
+                )
+                  .trim()
+                  .toLowerCase() === "firmado" ||
               [
               "completado",
               "completada",
@@ -4155,7 +4163,8 @@ const compartirOrden = async (orden, metodo) => {
               )
                 .trim()
                 .toLowerCase()
-            )
+              )
+              )
             )
           }
         />
@@ -4173,13 +4182,15 @@ const compartirOrden = async (orden, metodo) => {
             guardarInformeStartupDesdeModal
           }
           readOnly={
-            session?.role === "tecnico" &&
+            session?.role === "admin" ||
             (
-              String(
-                informeStartupOrdenModal?.informe?.estado || ""
-              )
-                .trim()
-                .toLowerCase() === "firmado" ||
+              session?.role === "tecnico" &&
+              (
+                String(
+                  informeStartupOrdenModal?.informe?.estado || ""
+                )
+                  .trim()
+                  .toLowerCase() === "firmado" ||
               [
               "completado",
               "completada",
@@ -4197,7 +4208,8 @@ const compartirOrden = async (orden, metodo) => {
               )
                 .trim()
                 .toLowerCase()
-            )
+              )
+              )
             )
           }
         />
@@ -6597,6 +6609,10 @@ function DashboardUnificadoPage({
   obtenerCliente,
   obtenerTecnico,
   exportarCSV,
+  informesStartup = [],
+  abrirInformeStartup,
+  informesCO = [],
+  abrirInformeCO,
 }) {
   const [tab, setTab] = useState("general");
 
@@ -6608,6 +6624,16 @@ function DashboardUnificadoPage({
     { id: "general", label: t("general") || "General", count: activas },
     { id: "clientes", label: t("customers") || "Clientes", count: clientes.length },
     { id: "inventario", label: t("inventoryShort") || "Inventario", count: inventario.length },
+    {
+      id: "co",
+      label: lang === "en" ? "CO Reports" : "Informes CO",
+      count: informesCO.length,
+    },
+    {
+      id: "startup",
+      label: lang === "en" ? "Start-Up Reports" : "Informes Start-Up",
+      count: informesStartup.length,
+    },
     { id: "tecnicos", label: t("technicians") || "Técnicos", count: tecnicos.length },
   ];
 
@@ -6643,7 +6669,7 @@ function DashboardUnificadoPage({
           </div>
         </div>
 
-        <div className="grid gap-2 bg-blue-50/60 p-2 sm:grid-cols-4">
+        <div className="grid gap-2 bg-blue-50/60 p-2 sm:grid-cols-2 xl:grid-cols-6">
           {tabs.map((item) => {
             const active = tab === item.id;
 
@@ -6700,6 +6726,24 @@ function DashboardUnificadoPage({
           herramientas={herramientas}
           obtenerTecnico={obtenerTecnico}
           exportarCSV={exportarCSV}
+        />
+      )}
+
+      {tab === "co" && (
+        <InformesCOPage
+          lang={lang}
+          informes={informesCO}
+          ordenes={ordenes}
+          abrirInforme={abrirInformeCO}
+        />
+      )}
+
+      {tab === "startup" && (
+        <InformesStartupPage
+          lang={lang}
+          informes={informesStartup}
+          ordenes={ordenes}
+          abrirInforme={abrirInformeStartup}
         />
       )}
 
