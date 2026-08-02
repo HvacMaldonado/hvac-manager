@@ -73,7 +73,12 @@ export async function actualizarTecnicoSupabase(id, cambios) {
   if ("fechaIngreso" in cambios) payload.fecha_ingreso = cambios.fechaIngreso || null;
   if ("fechaSalida" in cambios) payload.fecha_salida = cambios.fechaSalida || null;
   if ("pagoHora" in cambios) payload.pago_hora = Number(cambios.pagoHora || 0);
+  if ("colorTema" in cambios) payload.color_tema = cambios.colorTema || "";
   if ("activo" in cambios) payload.activo = cambios.activo;
+
+  if (Object.keys(payload).length === 0) {
+    return null;
+  }
 
   const { data, error } = await supabase
     .from("tecnicos")
