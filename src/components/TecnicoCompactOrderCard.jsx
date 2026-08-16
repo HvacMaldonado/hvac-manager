@@ -58,6 +58,20 @@ function getTechnicianFlowState(orden) {
     };
   }
 
+  if (orden.estado === "Pausada") {
+    return {
+      label: "Trabajo pausado",
+      tone: "bg-violet-100 text-violet-800 border-violet-200",
+    };
+  }
+
+  if (orden.estado === "Necesita seguimiento") {
+    return {
+      label: "Necesita seguimiento",
+      tone: "bg-amber-100 text-amber-800 border-amber-200",
+    };
+  }
+
   if (orden.estado === "Trabajo en progreso" || orden.horaInicio) {
     return {
       label: "Trabajo en progreso",
@@ -111,6 +125,7 @@ export default function TecnicoCompactOrderCard({ orden, cliente, ordenProps }) 
       "trabajo en progreso",
       "en trabajo",
       "necesita seguimiento",
+      "pausada",
     ].includes(estadoCO) ||
     Boolean(
       orden.horaLlegada ||
@@ -188,6 +203,20 @@ export default function TecnicoCompactOrderCard({ orden, cliente, ordenProps }) 
         onClick: null,
         className: "from-emerald-600 to-cyan-600",
         disabled: true,
+      };
+    }
+
+    if (
+      orden.estado === "Pausada" ||
+      orden.estado === "Necesita seguimiento"
+    ) {
+      return {
+        label: "Reanudar trabajo",
+        hint: `Continúa desde ${Number(orden.duracionHoras || 0).toFixed(2)} h acumuladas.`,
+        icon: PlayCircle,
+        onClick: () =>
+          ordenProps?.reanudarTrabajo?.(orden.id),
+        className: "from-blue-700 to-cyan-600",
       };
     }
 
@@ -346,6 +375,27 @@ export default function TecnicoCompactOrderCard({ orden, cliente, ordenProps }) 
             <AccionIcon size={25} strokeWidth={2.7} />
             {accionPrincipal.label}
           </button>
+
+        {(orden.estado === "En proceso" ||
+          orden.estado === "Trabajo en progreso") && (
+          <button
+            type="button"
+            onClick={() =>
+              ordenProps?.pausarTrabajo?.(orden.id)
+            }
+            className="flex w-full items-center justify-center gap-3 rounded-3xl border border-violet-200 bg-violet-50 px-5 py-4 text-sm font-black text-violet-800 shadow-md transition hover:-translate-y-0.5 hover:bg-violet-100"
+          >
+            <Clock3 size={20} />
+            <span className="text-left">
+              <span className="block">
+                Pausar trabajo
+              </span>
+              <span className="mt-0.5 block text-[10px] font-bold text-violet-600">
+                Detiene el conteo y permite atender otra orden.
+              </span>
+            </span>
+          </button>
+        )}
 
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
             {telefono && (

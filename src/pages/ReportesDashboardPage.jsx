@@ -199,24 +199,71 @@ export default function ReportesDashboardPage({ t = (key) => key, lang = "es", c
     const calcularHoras = (inicio, fin) => {
       if (!inicio || !fin) return 0;
 
-      const start = new Date(inicio);
-      const end = new Date(fin);
+      const inicioMs = new Date(inicio).getTime();
+      const finMs = new Date(fin).getTime();
 
       if (
-        Number.isNaN(start.getTime()) ||
-        Number.isNaN(end.getTime()) ||
-        end <= start
+        !Number.isFinite(inicioMs) ||
+        !Number.isFinite(finMs) ||
+        finMs < inicioMs
       ) {
         return 0;
       }
 
-      const horas = (end - start) / 3600000;
+      const horas =
+        (finMs - inicioMs) / 3600000;
 
-      if (horas > MAX_HORAS_TRABAJO_ORDEN) {
+      if (
+        horas < 0 ||
+        horas > MAX_HORAS_TRABAJO_ORDEN
+      ) {
         return 0;
       }
 
-      return horas;
+      return Number(horas.toFixed(2));
+    };
+
+    const calcularHorasOrden = (orden) => {
+      const tieneSesionesTrabajo =
+        (orden?.historialAdmin || []).some(
+          (evento) =>
+            evento?.campo === "sesionTrabajo"
+        );
+
+      if (tieneSesionesTrabajo) {
+        const guardadas =
+          Number(orden?.duracionHoras || 0);
+
+        if (
+          !Number.isFinite(guardadas) ||
+          guardadas <= 0 ||
+          guardadas > MAX_HORAS_TRABAJO_ORDEN
+        ) {
+          return 0;
+        }
+
+        return Number(
+          guardadas.toFixed(2)
+        );
+      }
+
+      const guardadas =
+        Number(orden?.duracionHoras || 0);
+
+      if (
+        Number.isFinite(guardadas) &&
+        guardadas > 0 &&
+        guardadas <= MAX_HORAS_TRABAJO_ORDEN
+      ) {
+        return Number(
+          guardadas.toFixed(2)
+        );
+      }
+
+      return calcularHoras(
+        orden?.horaInicio,
+        orden?.horaCierre
+      );
     };
 
     const tecnicoStats = tecnicos.map((tec) => {
@@ -226,7 +273,7 @@ export default function ReportesDashboardPage({ t = (key) => key, lang = "es", c
       const canceladas = rows.filter((o) => o.estado === "Cancelada").length;
 
       const horasTrabajo = rowsCompletadas.reduce((sum, orden) => {
-        return sum + calcularHoras(orden.horaInicio, orden.horaCierre);
+        return sum + calcularHorasOrden(orden);
       }, 0);
 
       const horasTraslado = rowsCompletadas.reduce((sum, orden) => {

@@ -91,53 +91,93 @@ function getFinancialWeekRange(offset = 0) {
 }
 
 function getValidatedWorkHours(orden, maxHours = 16) {
-  if (!orden?.horaInicio || !orden?.horaCierre) {
-    return {
-      horas: 0,
-      revision: true,
-    };
+  const inicioMs = orden?.horaInicio
+    ? new Date(orden.horaInicio).getTime()
+    : Number.NaN;
+
+  const cierreMs = orden?.horaCierre
+    ? new Date(orden.horaCierre).getTime()
+    : Number.NaN;
+
+  const timestampsValidos =
+    Number.isFinite(inicioMs) &&
+    Number.isFinite(cierreMs) &&
+    cierreMs >= inicioMs;
+
+  const calculadas = timestampsValidos
+    ? Math.max(
+        0,
+        (cierreMs - inicioMs) / 3600000
+      )
+    : 0;
+
+  const guardadas =
+    Number(orden?.duracionHoras || 0);
+
+  const tieneSesionesTrabajo =
+    (orden?.historialAdmin || []).some(
+      (evento) =>
+        evento?.campo === "sesionTrabajo"
+    );
+
+  /*
+   * Si existen sesiones, duracionHoras ya contiene
+   * únicamente el tiempo efectivamente trabajado.
+   * El espacio entre pausa y reanudación no se cuenta.
+   */
+  let horas = tieneSesionesTrabajo
+    ? (
+        Number.isFinite(guardadas)
+          ? guardadas
+          : 0
+      )
+    : (
+        Number.isFinite(guardadas) &&
+        guardadas > 0
+          ? guardadas
+          : calculadas
+      );
+
+  horas = Number(
+    Math.max(0, horas).toFixed(2)
+  );
+
+  const motivos = [];
+
+  if (!timestampsValidos) {
+    motivos.push("Fechas incompletas o inválidas");
   }
 
-  const inicio = new Date(orden.horaInicio);
-  const cierre = new Date(orden.horaCierre);
-
-  if (
-    Number.isNaN(inicio.getTime()) ||
-    Number.isNaN(cierre.getTime()) ||
-    cierre <= inicio
-  ) {
-    return {
-      horas: 0,
-      revision: true,
-    };
+  if (horas <= 0) {
+    motivos.push("Sin horas válidas");
   }
 
-  const calculadas = (cierre - inicio) / 3600000;
-  const guardadas = Number(orden.duracionHoras || 0);
-
-  const horas =
-    Number.isFinite(guardadas) && guardadas > 0
-      ? guardadas
-      : calculadas;
+  if (horas > maxHours) {
+    motivos.push(`Más de ${maxHours} h`);
+  }
 
   if (
-    !Number.isFinite(horas) ||
-    horas <= 0 ||
-    horas > maxHours ||
+    !tieneSesionesTrabajo &&
     calculadas > maxHours
   ) {
-    return {
-      horas: 0,
-      revision: true,
-    };
+    motivos.push(
+      `Intervalo continuo mayor de ${maxHours} h`
+    );
   }
 
-  const horasRedondeadas =
-    Math.round((horas + Number.EPSILON) * 100) / 100;
+  const revision =
+    motivos.length > 0;
 
   return {
-    horas: horasRedondeadas,
-    revision: false,
+    horas: revision ? 0 : horas,
+    revision,
+    motivo: motivos.join(" · "),
+    guardadas:
+      Number.isFinite(guardadas)
+        ? guardadas
+        : 0,
+    calculadas,
+    tieneSesionesTrabajo,
   };
 }
 

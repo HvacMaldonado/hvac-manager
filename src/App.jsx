@@ -679,6 +679,9 @@ const TEXT = {
     completed: "Completado",
     cancelled: "Cancelada",
     needsFollowUp: "Necesita seguimiento",
+    paused: "Pausada",
+    pauseWork: "Pausar trabajo",
+    resumeWork: "Reanudar trabajo",
     time: "Hora",
     map: "Mapa",
     noAddress: "Sin dirección",
@@ -1326,6 +1329,9 @@ const TEXT = {
     completed: "Completed",
     cancelled: "Canceladas",
     needsFollowUp: "Follow-up needed",
+    paused: "Paused",
+    pauseWork: "Pause work",
+    resumeWork: "Resume work",
     time: "Time",
     map: "Map",
     noAddress: "No address",
@@ -2319,6 +2325,273 @@ export default function App() {
     setMensaje("Cita reprogramada correctamente.");
   };
 
+  const obtenerEventosSesionTrabajo = (orden) =>
+    (orden?.historialAdmin || []).filter(
+      (evento) => evento?.campo === "sesionTrabajo"
+    );
+
+  const tieneSesionesTrabajo = (orden) =>
+    obtenerEventosSesionTrabajo(orden).length > 0;
+
+  const tienePausasTrabajo = (orden) =>
+    obtenerEventosSesionTrabajo(orden).some(
+      (evento) => evento?.accion === "pausa"
+    );
+
+  const calcularHorasExactasSesion = (inicio, fin) => {
+    if (!inicio || !fin) return Number.NaN;
+
+    const inicioMs = new Date(inicio).getTime();
+    const finMs = new Date(fin).getTime();
+
+    if (!Number.isFinite(inicioMs) || !Number.isFinite(finMs)) {
+      return Number.NaN;
+    }
+
+    return Math.max(0, (finMs - inicioMs) / 3600000);
+  };
+
+  const obtenerInicioTramoActivo = (orden) => {
+    const reanudaciones = obtenerEventosSesionTrabajo(orden)
+      .filter(
+        (evento) =>
+          evento?.accion === "reanudacion" &&
+          evento?.fecha
+      )
+      .sort(
+        (a, b) =>
+          new Date(a.fecha).getTime() -
+          new Date(b.fecha).getTime()
+      );
+
+    const ultimaReanudacion =
+      reanudaciones[reanudaciones.length - 1];
+
+    return (
+      ultimaReanudacion?.fecha ||
+      orden?.horaInicio ||
+      ""
+    );
+  };
+
+  const pausarTrabajo = async (id, motivoDirecto = "") => {
+    const orden = ordenes.find(
+      (o) => String(o.id) === String(id)
+    );
+
+    if (!orden) return false;
+
+    const estaTrabajando =
+      ["En proceso", "Trabajo en progreso", "En trabajo"].includes(
+        orden.estado
+      );
+
+    if (!estaTrabajando) {
+      setMensaje(
+        "Solo puedes pausar una orden que tenga el trabajo en proceso."
+      );
+      return false;
+    }
+
+    const motivo = String(
+      motivoDirecto ||
+      window.prompt(
+        "Motivo de la pausa:\n\n" +
+        "Ejemplos:\n" +
+        "- Emergencia en otro cliente\n" +
+        "- Falta de material\n" +
+        "- Esperando autorización\n" +
+        "- Cliente solicitó pausa\n" +
+        "- Otro"
+      ) ||
+      ""
+    ).trim();
+
+    if (!motivo) {
+      setMensaje("Debes indicar el motivo de la pausa.");
+      return false;
+    }
+
+    const fechaPausa = new Date().toISOString();
+    const inicioTramo = obtenerInicioTramoActivo(orden);
+
+    const horasTramo = calcularHorasExactasSesion(
+      inicioTramo,
+      fechaPausa
+    );
+
+    if (!Number.isFinite(horasTramo)) {
+      setMensaje(
+        "No se pudo calcular el tramo de trabajo. Revisa la hora de inicio."
+      );
+      return false;
+    }
+
+    const horasPrevias = tieneSesionesTrabajo(orden)
+      ? Number(orden.duracionHoras || 0)
+      : 0;
+
+    const totalAcumulado =
+      Math.max(0, horasPrevias) +
+      Math.max(0, horasTramo);
+
+    const totalTexto = totalAcumulado.toFixed(2);
+
+    const historialAdmin = [
+      ...(orden.historialAdmin || []),
+      {
+        fecha: fechaPausa,
+        usuario:
+          session?.nombre ||
+          session?.usuario ||
+          "Técnico",
+        rol: session?.role || "tecnico",
+        campo: "sesionTrabajo",
+        nombreCampo: "Sesión de trabajo",
+        accion: "pausa",
+        inicioTramo,
+        finTramo: fechaPausa,
+        horasTramo: horasTramo.toFixed(2),
+        acumulado: totalTexto,
+        motivo,
+      },
+    ];
+
+    const cambios = {
+      estado: "Pausada",
+      duracionHoras: totalTexto,
+      historialAdmin,
+    };
+
+    try {
+      await actualizarOrdenSupabase(id, cambios);
+
+      setOrdenes((actuales) =>
+        actuales.map((o) =>
+          String(o.id) === String(id)
+            ? { ...o, ...cambios }
+            : o
+        )
+      );
+
+      setMensaje(
+        `Trabajo pausado correctamente. Tiempo acumulado: ${totalTexto} h. Ya puedes atender otra orden.`
+      );
+
+      setOrdenActivaModal(null);
+
+      return true;
+    } catch (error) {
+      console.error(
+        "Error pausando trabajo en Supabase:",
+        error
+      );
+
+      alert(JSON.stringify(error, null, 2));
+
+      setMensaje(
+        "No se pudo guardar la pausa del trabajo."
+      );
+
+      return false;
+    }
+  };
+
+  const reanudarTrabajo = async (id) => {
+    const orden = ordenes.find(
+      (o) => String(o.id) === String(id)
+    );
+
+    if (!orden) return false;
+
+    if (
+      !["Pausada", "Necesita seguimiento"].includes(
+        orden.estado
+      )
+    ) {
+      setMensaje(
+        "Esta orden no está pausada ni pendiente de seguimiento."
+      );
+      return false;
+    }
+
+    const otraOrdenActiva =
+      encontrarOtraOrdenOperativaActiva(orden);
+
+    if (otraOrdenActiva) {
+      setMensaje("");
+
+      setOrdenActivaModal({
+        ordenActiva: otraOrdenActiva,
+        ordenIntentada: orden,
+      });
+
+      return false;
+    }
+
+    const fechaReanudacion = new Date().toISOString();
+
+    const historialAdmin = [
+      ...(orden.historialAdmin || []),
+      {
+        fecha: fechaReanudacion,
+        usuario:
+          session?.nombre ||
+          session?.usuario ||
+          "Técnico",
+        rol: session?.role || "tecnico",
+        campo: "sesionTrabajo",
+        nombreCampo: "Sesión de trabajo",
+        accion: "reanudacion",
+        acumulado: Number(
+          orden.duracionHoras || 0
+        ).toFixed(2),
+        motivo: "Trabajo reanudado.",
+      },
+    ];
+
+    const cambios = {
+      estado: "En proceso",
+      ...(orden.horaInicio
+        ? {}
+        : { horaInicio: fechaReanudacion }),
+      historialAdmin,
+    };
+
+    try {
+      await actualizarOrdenSupabase(id, cambios);
+
+      setOrdenes((actuales) =>
+        actuales.map((o) =>
+          String(o.id) === String(id)
+            ? { ...o, ...cambios }
+            : o
+        )
+      );
+
+      setMensaje(
+        `Trabajo reanudado. Continúa desde ${Number(
+          orden.duracionHoras || 0
+        ).toFixed(2)} h acumuladas.`
+      );
+
+      return true;
+    } catch (error) {
+      console.error(
+        "Error reanudando trabajo en Supabase:",
+        error
+      );
+
+      alert(JSON.stringify(error, null, 2));
+
+      setMensaje(
+        "No se pudo reanudar el trabajo."
+      );
+
+      return false;
+    }
+  };
+
   const encontrarOtraOrdenOperativaActiva = (ordenActual) => {
     if (!ordenActual?.tecnicoId) return null;
 
@@ -2329,7 +2602,7 @@ export default function App() {
         return false;
       }
 
-      if (["Completado", "Cancelada", "Necesita seguimiento"].includes(o.estado)) {
+      if (["Completado", "Cancelada", "Necesita seguimiento", "Pausada"].includes(o.estado)) {
         return false;
       }
 
@@ -2353,7 +2626,7 @@ export default function App() {
 
     return (
       `Ya tienes otra orden activa. ` +
-      `Debes terminar, cancelar o marcar seguimiento en la orden #${otraOrden?.id}` +
+      `Debes pausar, terminar, cancelar o marcar seguimiento en la orden #${otraOrden?.id}` +
       `${clienteOtraOrden?.nombre ? ` de ${clienteOtraOrden.nombre}` : ""} ` +
       `antes de continuar con otro cliente.`
     );
@@ -2422,6 +2695,13 @@ export default function App() {
     const orden = ordenes.find((o) => String(o.id) === String(id));
     if (!orden) return;
 
+    if (
+      orden.estado === "Pausada" ||
+      orden.estado === "Necesita seguimiento"
+    ) {
+      return reanudarTrabajo(id);
+    }
+
     const otraOrdenActiva = encontrarOtraOrdenOperativaActiva(orden);
 
     if (otraOrdenActiva) {
@@ -2451,43 +2731,139 @@ export default function App() {
   };
 
   const marcarNecesitaSeguimiento = async (id) => {
-    const orden = ordenes.find((o) => o.id === id);
+    const orden = ordenes.find(
+      (o) => String(o.id) === String(id)
+    );
+
     if (!orden) return;
 
-    if (["Completado", "Cancelada"].includes(orden.estado)) {
-      return setMensaje("Esta orden ya está cerrada y no se puede modificar.");
+    if (
+      ["Completado", "Cancelada"].includes(
+        orden.estado
+      )
+    ) {
+      return setMensaje(
+        "Esta orden ya está cerrada y no se puede modificar."
+      );
     }
 
-    const motivo = prompt(
-      "Motivo por el que no se pudo completar:\n\nEjemplos: Técnico enfermo, faltó tiempo, falta material, cliente pidió continuar después, otro."
+    const motivo = window.prompt(
+      "Motivo por el que no se pudo completar:\n\n" +
+      "Ejemplos: Técnico enfermo, faltó tiempo, " +
+      "falta material, cliente pidió continuar después, otro."
     );
 
     if (!motivo || !motivo.trim()) {
-      return setMensaje("Debes escribir un motivo para marcar la orden como necesita seguimiento.");
+      return setMensaje(
+        "Debes escribir un motivo para marcar la orden como necesita seguimiento."
+      );
     }
 
-    const fechaSugerida = prompt("Fecha sugerida para regresar (opcional, formato YYYY-MM-DD):", "");
+    const fechaSugerida = window.prompt(
+      "Fecha sugerida para regresar (opcional, formato YYYY-MM-DD):",
+      ""
+    );
+
+    const ahora = new Date().toISOString();
+
+    const historialAdmin = [
+      ...(orden.historialAdmin || []),
+    ];
 
     const cambios = {
       estado: "Necesita seguimiento",
       seguimientoMotivo: motivo.trim(),
-      seguimientoFechaSugerida: fechaSugerida || "",
-      seguimientoFechaRegistro: new Date().toISOString(),
+      seguimientoFechaSugerida:
+        fechaSugerida || "",
+      seguimientoFechaRegistro: ahora,
     };
 
-    setOrdenes(ordenes.map((o) => (
-      o.id === id ? { ...o, ...cambios } : o
-    )));
+    const estabaTrabajando =
+      ["En proceso", "Trabajo en progreso", "En trabajo"].includes(
+        orden.estado
+      ) &&
+      Boolean(orden.horaInicio);
+
+    if (estabaTrabajando) {
+      const inicioTramo =
+        obtenerInicioTramoActivo(orden);
+
+      const horasTramo =
+        calcularHorasExactasSesion(
+          inicioTramo,
+          ahora
+        );
+
+      if (Number.isFinite(horasTramo)) {
+        const horasPrevias =
+          tieneSesionesTrabajo(orden)
+            ? Number(orden.duracionHoras || 0)
+            : 0;
+
+        const acumuladas =
+          Math.max(0, horasPrevias) +
+          Math.max(0, horasTramo);
+
+        cambios.duracionHoras =
+          acumuladas.toFixed(2);
+
+        historialAdmin.push({
+          fecha: ahora,
+          usuario:
+            session?.nombre ||
+            session?.usuario ||
+            "Técnico",
+          rol: session?.role || "tecnico",
+          campo: "sesionTrabajo",
+          nombreCampo: "Sesión de trabajo",
+          accion: "pausa",
+          inicioTramo,
+          finTramo: ahora,
+          horasTramo:
+            horasTramo.toFixed(2),
+          acumulado:
+            acumuladas.toFixed(2),
+          motivo:
+            `Seguimiento: ${motivo.trim()}`,
+        });
+      }
+    }
+
+    cambios.historialAdmin = historialAdmin;
 
     try {
-      await actualizarOrdenSupabase(id, cambios);
-      setMensaje("Orden marcada como Necesita seguimiento. Seguirá apareciendo en órdenes activas.");
+      await actualizarOrdenSupabase(
+        id,
+        cambios
+      );
+
+      setOrdenes((actuales) =>
+        actuales.map((o) =>
+          String(o.id) === String(id)
+            ? { ...o, ...cambios }
+            : o
+        )
+      );
+
+      setMensaje(
+        estabaTrabajando
+          ? "Trabajo detenido y orden marcada como Necesita seguimiento. El tiempo quedó guardado."
+          : "Orden marcada como Necesita seguimiento."
+      );
     } catch (error) {
-      console.error("Error guardando seguimiento en Supabase:", error);
+      console.error(
+        "Error guardando seguimiento en Supabase:",
+        error
+      );
+
       alert(JSON.stringify(error, null, 2));
-      setMensaje("No se pudo guardar el seguimiento en Supabase.");
+
+      setMensaje(
+        "No se pudo guardar el seguimiento en Supabase."
+      );
     }
   };
+
   const guardarFirmaCliente = async (ordenId, firmaDataUrl) => {
     if (!firmaDataUrl) {
       alert("No hay firma para guardar.");
@@ -3318,70 +3694,164 @@ export default function App() {
   };
 
   const completarOrden = async (id) => {
-    const orden = ordenes.find((o) => o.id === id);
+    const orden = ordenes.find(
+      (o) => String(o.id) === String(id)
+    );
+
     if (!orden) return;
 
-    if (!orden.inventarioDescontado && !descontarInventario(orden)) return;
+    if (orden.estado === "Pausada") {
+      setMensaje(
+        "La orden está pausada. Reanuda el trabajo antes de completarla."
+      );
+      return;
+    }
+
+    if (
+      !orden.inventarioDescontado &&
+      !descontarInventario(orden)
+    ) {
+      return;
+    }
 
     const cierre = new Date().toISOString();
-    const inicio = orden.horaInicio || cierre;
 
-    const horasCalculadasTexto = calcularHoras(inicio, cierre);
-    const horasCalculadas = Number(horasCalculadasTexto || 0);
+    /*
+     * horaInicio conserva el primer inicio real de la orden
+     * para auditoría.
+     *
+     * Si hubo pausas/reanudaciones, el tramo activo actual
+     * empieza en la última reanudación.
+     */
+    const inicioOriginal =
+      orden.horaInicio || cierre;
+
+    const usaSesiones =
+      tieneSesionesTrabajo(orden);
+
+    const inicioTramoActual =
+      usaSesiones
+        ? obtenerInicioTramoActivo(orden)
+        : inicioOriginal;
+
+    const horasTramoActual =
+      calcularHorasExactasSesion(
+        inicioTramoActual,
+        cierre
+      );
+
+    const horasPrevias =
+      usaSesiones
+        ? Number(orden.duracionHoras || 0)
+        : 0;
+
+    const horasCalculadas =
+      Math.max(
+        0,
+        Number.isFinite(horasPrevias)
+          ? horasPrevias
+          : 0
+      ) +
+      Math.max(
+        0,
+        Number.isFinite(horasTramoActual)
+          ? horasTramoActual
+          : 0
+      );
+
+    const horasCalculadasTexto =
+      horasCalculadas.toFixed(2);
 
     const duracionAnomala =
       !Number.isFinite(horasCalculadas) ||
-      horasCalculadas < 0 ||
+      horasCalculadas <= 0 ||
       horasCalculadas > 16;
 
     if (duracionAnomala) {
-      const continuar = window.confirm(
-        `ATENCIÓN: esta orden registra aproximadamente ${Number.isFinite(horasCalculadas) ? horasCalculadas.toFixed(2) : "—"} horas continuas.
-
-` +
-        `El máximo automático permitido para nómina es 16 horas.
-
-` +
-        `La orden puede cerrarse, pero se guardará con 0.00 horas de nómina hasta que el administrador revise y corrija las horas.
-
-` +
-        `¿Deseas cerrar la orden?`
-      );
+      const continuar =
+        window.confirm(
+          `ATENCIÓN: esta orden registra aproximadamente ${Number.isFinite(horasCalculadas) ? horasCalculadas.toFixed(2) : "—"} horas reales de trabajo.\n\n` +
+          `El máximo automático permitido para nómina es 16 horas.\n\n` +
+          `La orden puede cerrarse, pero se guardará con 0.00 horas de nómina hasta que el administrador revise y corrija las horas.\n\n` +
+          `¿Deseas cerrar la orden?`
+        );
 
       if (!continuar) return;
     }
 
-    const duracionTraslado = orden.duracionTraslado || (
-      orden.horaEnRuta && orden.horaLlegada
-        ? calcularHoras(orden.horaEnRuta, orden.horaLlegada)
-        : ""
-    );
+    const duracionTraslado =
+      orden.duracionTraslado ||
+      (
+        orden.horaEnRuta &&
+        orden.horaLlegada
+          ? calcularHoras(
+              orden.horaEnRuta,
+              orden.horaLlegada
+            )
+          : ""
+      );
 
-    const historialAdmin = [...(orden.historialAdmin || [])];
+    const historialAdmin = [
+      ...(orden.historialAdmin || []),
+    ];
+
+    if (
+      usaSesiones &&
+      Number.isFinite(horasTramoActual)
+    ) {
+      historialAdmin.push({
+        fecha: cierre,
+        usuario:
+          session?.nombre ||
+          session?.usuario ||
+          "Técnico",
+        rol: session?.role || "tecnico",
+        campo: "sesionTrabajo",
+        nombreCampo: "Sesión de trabajo",
+        accion: "cierre",
+        inicioTramo: inicioTramoActual,
+        finTramo: cierre,
+        horasTramo:
+          horasTramoActual.toFixed(2),
+        acumulado:
+          horasCalculadasTexto,
+        motivo: "Orden completada.",
+      });
+    }
 
     if (duracionAnomala) {
       historialAdmin.push({
-        fecha: new Date().toISOString(),
-        usuario: session?.nombre || session?.usuario || "Sistema",
+        fecha: cierre,
+        usuario:
+          session?.nombre ||
+          session?.usuario ||
+          "Sistema",
         rol: session?.role || "tecnico",
         campo: "duracionHoras",
         nombreCampo: "Horas de trabajo",
-        anterior: Number.isFinite(horasCalculadas)
+        anterior: Number.isFinite(
+          horasCalculadas
+        )
           ? `${horasCalculadas.toFixed(2)} h calculadas`
           : "Duración inválida",
         nuevo: "0.00 h",
-        motivo: "Duración superior al límite automático de 16 horas. Requiere revisión administrativa.",
+        motivo:
+          "Duración fuera del límite automático de 16 horas. Requiere revisión administrativa.",
       });
     }
 
     const cambiosOrdenCompletada = {
       estado: "Completado",
-      horaInicio: inicio,
+      horaInicio: inicioOriginal,
       horaCierre: cierre,
-      duracionHoras: duracionAnomala ? "0.00" : horasCalculadasTexto,
+      duracionHoras:
+        duracionAnomala
+          ? "0.00"
+          : horasCalculadasTexto,
       duracionTraslado,
       fechaCompletada: cierre,
-      costoMateriales: calcularCostoOrden(orden),
+      costoMateriales:
+        calcularCostoOrden(orden),
       inventarioDescontado: true,
       historialAdmin,
     };
@@ -3389,28 +3859,46 @@ export default function App() {
     setOrdenes((actuales) =>
       actuales.map((o) =>
         String(o.id) === String(id)
-          ? { ...o, ...cambiosOrdenCompletada }
+          ? {
+              ...o,
+              ...cambiosOrdenCompletada,
+            }
           : o
       )
     );
 
     try {
-      await actualizarOrdenSupabase(id, cambiosOrdenCompletada);
+      await actualizarOrdenSupabase(
+        id,
+        cambiosOrdenCompletada
+      );
     } catch (error) {
-      console.error("Error completando orden en Supabase:", error);
+      console.error(
+        "Error completando orden en Supabase:",
+        error
+      );
+
       alert(JSON.stringify(error, null, 2));
-      setMensaje("La orden se completó localmente, pero no se pudo actualizar en Supabase.");
+
+      setMensaje(
+        "La orden se completó localmente, pero no se pudo actualizar en Supabase."
+      );
     }
 
     if (duracionAnomala) {
       setMensaje(
         "Orden cerrada. Las horas quedaron en revisión administrativa y no se incluirán automáticamente en nómina."
       );
+    } else if (usaSesiones) {
+      setMensaje(
+        `Orden completada. Tiempo real trabajado: ${horasCalculadasTexto} h. Las pausas no se incluyeron.`
+      );
     }
 
-    const capturarConfirmacion = window.confirm(
-      "Orden completada. ¿Deseas capturar firma y calificación del cliente?"
-    );
+    const capturarConfirmacion =
+      window.confirm(
+        "Orden completada. ¿Deseas capturar firma y calificación del cliente?"
+      );
 
     if (capturarConfirmacion) {
       setFirmaOrdenModal({
@@ -4034,7 +4522,7 @@ input.login-glass-input:-webkit-autofill:active{
       <div class="meta">
         <div style="font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.18em;color:#64748b">${t("order")}</div><div class="id">#${escapeHtml(ordenIdCorto)}</div>
         <div style="margin-top:10px">
-          <span class="badge ${orden.estado === "Completado" ? "ok" : orden.estado === "Cancelada" ? "bad" : ""}">${escapeHtml(({ Pendiente: t("pending"), Asignada: t("assigned"), "En ruta": t("onRoute"), "En proceso": t("inProgress"), Completado: t("completed"), Cancelada: t("cancelled"), "Necesita seguimiento": t("needsFollowUp") }[orden.estado] || orden.estado || t("pending")))}</span>
+          <span class="badge ${orden.estado === "Completado" ? "ok" : orden.estado === "Cancelada" ? "bad" : ""}">${escapeHtml(({ Pendiente: t("pending"), Asignada: t("assigned"), "En ruta": t("onRoute"), "En proceso": t("inProgress"), Completado: t("completed"), Cancelada: t("cancelled"), "Necesita seguimiento": t("needsFollowUp"), "Pausada": t("paused") }[orden.estado] || orden.estado || t("pending")))}</span>
         </div>
         <div style="margin-top:10px;color:#64748b;font-weight:900">${escapeHtml(fecha)}</div>
       </div>
@@ -4378,10 +4866,10 @@ const compartirOrden = async (orden, metodo) => {
   const ordenesActivasTecnico = session?.role === "tecnico" ? ordenes.map(normalizeOrden).filter((o) => String(o.tecnicoId) === String(session.id) && !["Completado", "Cancelada"].includes(o.estado)) : [];
   const historialTecnico = session?.role === "tecnico" ? ordenes.map(normalizeOrden).filter((o) => String(o.tecnicoId) === String(session.id) && ["Completado", "Cancelada"].includes(o.estado)) : [];
 
-  const colorEstado = (estado) => estado === "Completado" ? "bg-emerald-100 text-emerald-700 border-emerald-200" : estado === "Cancelada" ? "bg-rose-100 text-rose-700 border-rose-200" : estado === "Necesita seguimiento" ? "bg-amber-100 text-amber-800 border-amber-200" : estado === "En proceso" ? "bg-sky-100 text-sky-700 border-sky-200" : estado === "En ruta" ? "bg-cyan-100 text-cyan-700 border-cyan-200" : estado === "Asignada" ? "bg-blue-100 text-blue-700 border-blue-200" : "bg-slate-100 text-slate-700 border-slate-200";
+  const colorEstado = (estado) => estado === "Completado" ? "bg-emerald-100 text-emerald-700 border-emerald-200" : estado === "Cancelada" ? "bg-rose-100 text-rose-700 border-rose-200" : estado === "Necesita seguimiento" ? "bg-amber-100 text-amber-800 border-amber-200" : estado === "Pausada" ? "bg-violet-100 text-violet-800 border-violet-200" : estado === "En proceso" ? "bg-sky-100 text-sky-700 border-sky-200" : estado === "En ruta" ? "bg-cyan-100 text-cyan-700 border-cyan-200" : estado === "Asignada" ? "bg-blue-100 text-blue-700 border-blue-200" : "bg-slate-100 text-slate-700 border-slate-200";
   const colorPrioridad = (p) => PRIORIDADES.find((x) => x.value === p)?.cls || "bg-slate-100 text-slate-700 border-slate-200";
 
-  const ordenProps = { inventario, obtenerMaterial, obtenerTecnico, colorEstado, colorPrioridad, marcarEnRuta, marcarLlegada, iniciarTrabajo, marcarNecesitaSeguimiento, setFirmaOrdenModal, abrirInformeCO, obtenerInformeCOPorOrden, abrirInformeStartup, obtenerInformeStartupPorOrden, completarOrden: completarOrdenConValidacionCO, cancelarOrden, subirFoto, guardarNotaTecnico, editarOrdenAdmin, guardarPrecioCobradoAdmin, corregirOrdenAdmin, eliminarOrdenAdmin, session, urlGoogleMaps, urlAppleMaps, urlTelefono, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, calcularCostoOrden, materialesTexto, compartirOrden, convertirCitaEnOrden, reprogramarCita, setReprogramarCitaModal, cancelarOrden: (ordenOrId) => {
+  const ordenProps = { inventario, obtenerMaterial, obtenerTecnico, colorEstado, colorPrioridad, marcarEnRuta, marcarLlegada, iniciarTrabajo, pausarTrabajo, reanudarTrabajo, marcarNecesitaSeguimiento, setFirmaOrdenModal, abrirInformeCO, obtenerInformeCOPorOrden, abrirInformeStartup, obtenerInformeStartupPorOrden, completarOrden: completarOrdenConValidacionCO, cancelarOrden, subirFoto, guardarNotaTecnico, editarOrdenAdmin, guardarPrecioCobradoAdmin, corregirOrdenAdmin, eliminarOrdenAdmin, session, urlGoogleMaps, urlAppleMaps, urlTelefono, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, calcularCostoOrden, materialesTexto, compartirOrden, convertirCitaEnOrden, reprogramarCita, setReprogramarCitaModal, cancelarOrden: (ordenOrId) => {
     const orden = typeof ordenOrId === "object" ? ordenOrId : ordenes.find((o) => o.id === ordenOrId);
     setCancelModalOrden(orden || null);
   }, t };
@@ -4675,7 +5163,7 @@ const compartirOrden = async (orden, metodo) => {
                     <p className="mt-1">
                       {modalEnIngles
                         ? "Return to the active order and either complete it, cancel it, or mark it as Needs follow-up. After that, you can continue with the next customer."
-                        : "Regresa a la orden activa y complétala, cancélala o márcala como Necesita seguimiento. Después podrás continuar con el siguiente cliente."}
+                        : "Regresa a la orden activa y páusala, complétala, cancélala o márcala como Necesita seguimiento. Después podrás continuar con el siguiente cliente."}
                     </p>
                   </div>
 
@@ -6368,7 +6856,7 @@ function abrirTraductorTexto(texto, destino = "en") {
   window.open(url, "_blank", "noopener,noreferrer");
 }
 
-function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico, colorEstado, colorPrioridad, marcarEnRuta, marcarLlegada, iniciarTrabajo, marcarNecesitaSeguimiento, completarOrden, cancelarOrden, subirFoto, guardarNotaTecnico, urlGoogleMaps, urlAppleMaps, urlTelefono, compacta = false, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, calcularCostoOrden, materialesTexto, compartirOrden, abrirInformeCO, obtenerInformeCOPorOrden, abrirInformeStartup, obtenerInformeStartupPorOrden, t, abrirDetallesInicial = false }) {
+function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico, colorEstado, colorPrioridad, marcarEnRuta, marcarLlegada, iniciarTrabajo, pausarTrabajo, reanudarTrabajo, marcarNecesitaSeguimiento, completarOrden, cancelarOrden, subirFoto, guardarNotaTecnico, urlGoogleMaps, urlAppleMaps, urlTelefono, compacta = false, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, calcularCostoOrden, materialesTexto, compartirOrden, abrirInformeCO, obtenerInformeCOPorOrden, abrirInformeStartup, obtenerInformeStartupPorOrden, t, abrirDetallesInicial = false }) {
   const [verDetalles, setVerDetalles] = useState(abrirDetallesInicial);
   const informeCOActual = obtenerInformeCOPorOrden?.(orden.id) || null;
   const informeStartupActual =
@@ -6421,7 +6909,7 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
   ].includes(estadoOrdenInformeCO);
 
   const puedeAbrirInformeCODentroTrabajo =
-    trabajoEnProcesoParaInformes ||
+    orden.estado === "Pausada" || trabajoEnProcesoParaInformes ||
     informeCOFirmado ||
     (
       ordenCompletadaInformeCO &&
@@ -6479,7 +6967,7 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
           );
 
   const puedeAbrirInformeStartupDentroTrabajo =
-    trabajoEnProcesoParaInformes ||
+    orden.estado === "Pausada" || trabajoEnProcesoParaInformes ||
     informeStartupFirmado ||
     (
       ordenCompletadaInformeCO &&
@@ -7038,6 +7526,14 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
 
                 {orden.estado === "En proceso" && (
                   <>
+                    <button
+                      onClick={() => pausarTrabajo(orden.id)}
+                      className="flex items-center justify-center gap-1.5 rounded-2xl bg-violet-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-violet-200 transition hover:-translate-y-0.5"
+                    >
+                      <Timer {...iconProps} />
+                      {t("pauseWork")}
+                    </button>
+
                     <button onClick={() => completarOrden(orden.id)} className="flex items-center justify-center gap-1.5 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-emerald-200 transition hover:-translate-y-0.5">
                       <CheckCircle2 {...iconProps} />
                       {t("finishWork")}
@@ -7048,6 +7544,16 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
                       {t("requiresFollowUp")}
                     </button>
                   </>
+                )}
+
+                {orden.estado === "Pausada" && (
+                  <button
+                    onClick={() => reanudarTrabajo(orden.id)}
+                    className="flex items-center justify-center gap-1.5 rounded-2xl bg-blue-700 px-4 py-3 text-sm font-black text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5"
+                  >
+                    <PlayCircle {...iconProps} />
+                    {t("resumeWork")}
+                  </button>
                 )}
 
                 {orden.estado !== "Completado" && orden.estado !== "Cancelada" && (
@@ -7385,6 +7891,10 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
     }
 
     const calculadas = (cierre - inicio) / 3600000;
+    const tieneSesionesTrabajo = (orden.historialAdmin || []).some(
+      (evento) => evento?.campo === "sesionTrabajo"
+    );
+
     const guardadas = Number(orden.duracionHoras || 0);
 
     const horas =
@@ -7396,7 +7906,7 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
       !Number.isFinite(horas) ||
       horas <= 0 ||
       horas > MAX_HORAS_TRABAJO_ORDEN ||
-      calculadas > MAX_HORAS_TRABAJO_ORDEN
+      (!tieneSesionesTrabajo && calculadas > MAX_HORAS_TRABAJO_ORDEN)
     ) {
       return {
         horas: 0,
