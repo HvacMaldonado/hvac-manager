@@ -194,32 +194,50 @@ export default function ReportesDashboardPage({ t = (key) => key, lang = "es", c
       };
     });
 
+    const MAX_HORAS_TRABAJO_ORDEN = 16;
+
     const calcularHoras = (inicio, fin) => {
       if (!inicio || !fin) return 0;
 
       const start = new Date(inicio);
       const end = new Date(fin);
 
-      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) return 0;
+      if (
+        Number.isNaN(start.getTime()) ||
+        Number.isNaN(end.getTime()) ||
+        end <= start
+      ) {
+        return 0;
+      }
 
-      return (end - start) / 3600000;
+      const horas = (end - start) / 3600000;
+
+      if (horas > MAX_HORAS_TRABAJO_ORDEN) {
+        return 0;
+      }
+
+      return horas;
     };
 
     const tecnicoStats = tecnicos.map((tec) => {
       const rows = ordenesFiltradas.filter((o) => String(o.tecnicoId) === String(tec.id));
-      const completadas = rows.filter((o) => o.estado === "Completado").length;
+      const rowsCompletadas = rows.filter((o) => o.estado === "Completado");
+      const completadas = rowsCompletadas.length;
       const canceladas = rows.filter((o) => o.estado === "Cancelada").length;
 
-      const horasTrabajo = rows.reduce((sum, orden) => {
+      const horasTrabajo = rowsCompletadas.reduce((sum, orden) => {
         return sum + calcularHoras(orden.horaInicio, orden.horaCierre);
       }, 0);
 
-      const horasTraslado = rows.reduce((sum, orden) => {
+      const horasTraslado = rowsCompletadas.reduce((sum, orden) => {
         return sum + calcularHoras(orden.horaEnRuta, orden.horaLlegada);
       }, 0);
 
-      const pagoPorHora = Number(tec.pagoPorHora || 0);
-      const pagoTotal = (horasTrabajo + horasTraslado) * pagoPorHora;
+      const pagoPorHora = Number(tec.pagoHora || tec.pagoPorHora || 0);
+
+      // La nómina paga únicamente horas reales de trabajo.
+      // El traslado se mantiene como métrica operativa.
+      const pagoTotal = horasTrabajo * pagoPorHora;
 
       return {
         id: tec.id,
