@@ -92,11 +92,13 @@ export async function actualizarOrdenSupabase(id, cambios) {
   const payload = {};
 
   if ("clienteId" in cambios) payload.cliente_id = cambios.clienteId || null;
+
   if ("ubicacionId" in cambios) {
     payload.direccion_id = cambios.ubicacionId || null;
   } else if ("direccionId" in cambios) {
     payload.direccion_id = cambios.direccionId || null;
   }
+
   if ("origenCitaId" in cambios) payload.cita_id = cambios.origenCitaId || null;
   if ("problema" in cambios) payload.problema = cambios.problema || "";
   if ("prioridad" in cambios) payload.prioridad = cambios.prioridad || "Media";
@@ -118,14 +120,67 @@ export async function actualizarOrdenSupabase(id, cambios) {
   if ("fechaCompletada" in cambios) payload.fecha_completada = cambios.fechaCompletada || null;
   if ("historialAdmin" in cambios) payload.historial_admin = cambios.historialAdmin || [];
 
+  if (Object.keys(payload).length > 0) {
+    const { error } = await supabase
+      .from("ordenes")
+      .update(payload)
+      .eq("id", id);
+
+    if (error) throw error;
+  }
+
+  // La asignación del técnico vive en orden_tecnicos,
+  // no directamente en la tabla ordenes.
+  if ("tecnicoId" in cambios) {
+    const tecnicoId = cambios.tecnicoId ? String(cambios.tecnicoId) : "";
+
+    if (tecnicoId) {
+      const { data: asignaciones, error: buscarError } = await supabase
+        .from("orden_tecnicos")
+        .select("id")
+        .eq("orden_id", String(id))
+        .eq("rol", "principal")
+        .limit(1);
+
+      if (buscarError) throw buscarError;
+
+      if (asignaciones && asignaciones.length > 0) {
+        const { error: actualizarTecnicoError } = await supabase
+          .from("orden_tecnicos")
+          .update({ tecnico_id: tecnicoId })
+          .eq("id", asignaciones[0].id);
+
+        if (actualizarTecnicoError) throw actualizarTecnicoError;
+      } else {
+        const { error: insertarTecnicoError } = await supabase
+          .from("orden_tecnicos")
+          .insert({
+            orden_id: String(id),
+            tecnico_id: tecnicoId,
+            rol: "principal",
+          });
+
+        if (insertarTecnicoError) throw insertarTecnicoError;
+      }
+    } else {
+      const { error: quitarTecnicoError } = await supabase
+        .from("orden_tecnicos")
+        .delete()
+        .eq("orden_id", String(id))
+        .eq("rol", "principal");
+
+      if (quitarTecnicoError) throw quitarTecnicoError;
+    }
+  }
+
   const { data, error } = await supabase
     .from("ordenes")
-    .update(payload)
-    .eq("id", id)
     .select("*, orden_tecnicos(*)")
+    .eq("id", id)
     .single();
 
   if (error) throw error;
+
   return mapOrden(data);
 }
 

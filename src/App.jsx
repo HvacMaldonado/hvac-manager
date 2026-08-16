@@ -3330,6 +3330,126 @@ export default function App() {
     }
   };
 
+  const editarOrdenAdmin = async (id, datos) => {
+    const orden = ordenes.find((o) => String(o.id) === String(id));
+
+    if (!orden) {
+      setMensaje("No se encontró la orden.");
+      return false;
+    }
+
+    const cambiosOrden = {
+      clienteId: String(datos?.clienteId || ""),
+      ubicacionId: String(datos?.ubicacionId || ""),
+      tecnicoId: String(datos?.tecnicoId || ""),
+      problema: String(datos?.problema || "").trim(),
+      prioridad: datos?.prioridad || "Media",
+      fechaProgramada: datos?.fechaProgramada || "",
+      horaProgramada: datos?.horaProgramada || "",
+    };
+
+    if (
+      !cambiosOrden.clienteId ||
+      !cambiosOrden.ubicacionId ||
+      !cambiosOrden.tecnicoId ||
+      !cambiosOrden.problema
+    ) {
+      setMensaje("Cliente, ubicación, técnico y problema son obligatorios.");
+      return false;
+    }
+
+    if (
+      cambiosOrden.fechaProgramada &&
+      cambiosOrden.horaProgramada &&
+      existeConflictoHorario({
+        tecnicoId: cambiosOrden.tecnicoId,
+        fecha: cambiosOrden.fechaProgramada,
+        hora: cambiosOrden.horaProgramada,
+        ignorarOrdenId: id,
+      })
+    ) {
+      setMensaje("El técnico ya tiene otra cita u orden en esa fecha y hora.");
+      return false;
+    }
+
+    const campos = [
+      ["clienteId", "Cliente"],
+      ["ubicacionId", "Ubicación"],
+      ["fechaProgramada", "Fecha programada"],
+      ["horaProgramada", "Hora programada"],
+      ["problema", "Problema reportado"],
+      ["tecnicoId", "Técnico asignado"],
+      ["prioridad", "Prioridad"],
+    ];
+
+    const historialNuevo = [...(orden.historialAdmin || [])];
+    let huboCambios = false;
+
+    const valorLegible = (campo, valor) => {
+      if (campo === "clienteId") {
+        return obtenerCliente(valor)?.nombre || String(valor || "");
+      }
+
+      if (campo === "tecnicoId") {
+        return obtenerTecnico(valor)?.nombre || String(valor || "");
+      }
+
+      return String(valor || "");
+    };
+
+    campos.forEach(([campo, nombreCampo]) => {
+      const anterior = String(orden[campo] || "");
+      const nuevo = String(cambiosOrden[campo] || "");
+
+      if (anterior === nuevo) return;
+
+      huboCambios = true;
+
+      historialNuevo.push({
+        fecha: new Date().toISOString(),
+        usuario: session?.nombre || session?.usuario || "Admin",
+        rol: session?.role || "admin",
+        campo,
+        nombreCampo,
+        anterior: valorLegible(campo, anterior),
+        nuevo: valorLegible(campo, nuevo),
+        motivo: "Edición administrativa de orden activa",
+      });
+    });
+
+    if (!huboCambios) {
+      setMensaje("No se detectaron cambios en la orden.");
+      return true;
+    }
+
+    try {
+      await actualizarOrdenSupabase(id, {
+        ...cambiosOrden,
+        historialAdmin: historialNuevo,
+      });
+
+      setOrdenes((actuales) =>
+        actuales.map((o) =>
+          String(o.id) === String(id)
+            ? {
+                ...o,
+                ...cambiosOrden,
+                historialAdmin: historialNuevo,
+              }
+            : o
+        )
+      );
+
+      setMensaje("Orden actualizada correctamente.");
+      return true;
+    } catch (error) {
+      console.error("Error editando orden como admin:", error);
+      alert(JSON.stringify(error, null, 2));
+      setMensaje("No se pudo actualizar la orden en Supabase.");
+      return false;
+    }
+  };
+
   const corregirOrdenAdmin = async (id) => {
     const orden = ordenes.find((o) => String(o.id) === String(id));
     if (!orden) return;
@@ -3916,7 +4036,7 @@ const compartirOrden = async (orden, metodo) => {
   const colorEstado = (estado) => estado === "Completado" ? "bg-emerald-100 text-emerald-700 border-emerald-200" : estado === "Cancelada" ? "bg-rose-100 text-rose-700 border-rose-200" : estado === "Necesita seguimiento" ? "bg-amber-100 text-amber-800 border-amber-200" : estado === "En proceso" ? "bg-sky-100 text-sky-700 border-sky-200" : estado === "En ruta" ? "bg-cyan-100 text-cyan-700 border-cyan-200" : estado === "Asignada" ? "bg-blue-100 text-blue-700 border-blue-200" : "bg-slate-100 text-slate-700 border-slate-200";
   const colorPrioridad = (p) => PRIORIDADES.find((x) => x.value === p)?.cls || "bg-slate-100 text-slate-700 border-slate-200";
 
-  const ordenProps = { inventario, obtenerMaterial, obtenerTecnico, colorEstado, colorPrioridad, marcarEnRuta, marcarLlegada, iniciarTrabajo, marcarNecesitaSeguimiento, setFirmaOrdenModal, abrirInformeCO, obtenerInformeCOPorOrden, abrirInformeStartup, obtenerInformeStartupPorOrden, completarOrden: completarOrdenConValidacionCO, cancelarOrden, subirFoto, guardarNotaTecnico, corregirOrdenAdmin, eliminarOrdenAdmin, session, urlGoogleMaps, urlAppleMaps, urlTelefono, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, calcularCostoOrden, materialesTexto, compartirOrden, convertirCitaEnOrden, reprogramarCita, setReprogramarCitaModal, cancelarOrden: (ordenOrId) => {
+  const ordenProps = { inventario, obtenerMaterial, obtenerTecnico, colorEstado, colorPrioridad, marcarEnRuta, marcarLlegada, iniciarTrabajo, marcarNecesitaSeguimiento, setFirmaOrdenModal, abrirInformeCO, obtenerInformeCOPorOrden, abrirInformeStartup, obtenerInformeStartupPorOrden, completarOrden: completarOrdenConValidacionCO, cancelarOrden, subirFoto, guardarNotaTecnico, editarOrdenAdmin, corregirOrdenAdmin, eliminarOrdenAdmin, session, urlGoogleMaps, urlAppleMaps, urlTelefono, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, calcularCostoOrden, materialesTexto, compartirOrden, convertirCitaEnOrden, reprogramarCita, setReprogramarCitaModal, cancelarOrden: (ordenOrId) => {
     const orden = typeof ordenOrId === "object" ? ordenOrId : ordenes.find((o) => o.id === ordenOrId);
     setCancelModalOrden(orden || null);
   }, t };
@@ -4070,7 +4190,7 @@ const compartirOrden = async (orden, metodo) => {
             {adminPage === "tecnicos" && <TecnicosPage t={t} tecnicos={tecnicos} actualizarTecnico={actualizarTecnico} guardarTecnico={guardarTecnico} darDeBajaTecnico={darDeBajaTecnico} setTecnicos={setTecnicos} ordenes={ordenes} citas={citas} herramientas={herramientas} />}
             {adminPage === "citas" && <CitasPage t={t} citas={citas} setCitas={setCitas} citaForm={citaForm} setCitaForm={setCitaForm} crearCita={crearCita} convertirCitaEnOrden={convertirCitaEnOrden} clientes={clientes} tecnicos={tecnicosActivos} obtenerCliente={obtenerCliente} obtenerTecnico={obtenerTecnico} />}
             {adminPage === "calendario" && <CalendarioPage t={t} lang={lang} citas={citas} ordenes={ordenes} clientes={clientes} tecnicos={tecnicosActivos} obtenerCliente={obtenerCliente} obtenerTecnico={obtenerTecnico} urlAppleMaps={urlAppleMaps} urlTelefono={urlTelefono} />}
-            {adminPage === "ordenes" && <OrdenesPage t={t} ordenes={ordenesActivasAdmin} obtenerCliente={obtenerCliente} ordenProps={ordenProps} crearOrden={crearOrden} ordenForm={ordenForm} setOrdenForm={setOrdenForm} busquedaClienteOrden={busquedaClienteOrden} setBusquedaClienteOrden={setBusquedaClienteOrden} clientesFiltradosOrden={clientesFiltradosOrden} tecnicos={tecnicosActivos} />}
+            {adminPage === "ordenes" && <OrdenesPage t={t} clientes={clientes} ordenes={ordenesActivasAdmin} obtenerCliente={obtenerCliente} ordenProps={ordenProps} crearOrden={crearOrden} ordenForm={ordenForm} setOrdenForm={setOrdenForm} busquedaClienteOrden={busquedaClienteOrden} setBusquedaClienteOrden={setBusquedaClienteOrden} clientesFiltradosOrden={clientesFiltradosOrden} tecnicos={tecnicosActivos} />}
             {adminPage === "historial" && <HistorialPage t={t} lang={lang} ordenes={historialAdmin} obtenerCliente={obtenerCliente} ordenProps={ordenProps} />}
             {adminPage === "inventario" && <InventarioGeneralPage t={t} inventario={inventario} inventarioForm={inventarioForm} setInventarioForm={setInventarioForm} agregarInventario={agregarInventario} actualizarInventario={actualizarInventario} setInventario={setInventario} eliminarInventario={eliminarInventario} />}
             {adminPage === "herramientas" && <HerramientasPage t={t} herramientas={herramientas} herramientaForm={herramientaForm} setHerramientaForm={setHerramientaForm} agregarHerramienta={agregarHerramienta} actualizarHerramienta={actualizarHerramienta} setHerramientas={setHerramientas} tecnicos={tecnicosActivos} obtenerTecnico={obtenerTecnico} tecnicoHerramientasSeleccionado={tecnicoHerramientasSeleccionado} setTecnicoHerramientasSeleccionado={setTecnicoHerramientasSeleccionado} eliminarHerramienta={eliminarHerramienta} />}

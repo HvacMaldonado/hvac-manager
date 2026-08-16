@@ -11,6 +11,7 @@ import {
   MapPinned,
   Navigation,
   Phone,
+  Pencil,
   Search,
   Send,
   ShieldCheck,
@@ -164,7 +165,7 @@ function PriorityChips({ value, onChange, t = (key) => key }) {
   );
 }
 
-export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, crearOrden, ordenForm, setOrdenForm, busquedaClienteOrden, setBusquedaClienteOrden, clientesFiltradosOrden, tecnicos }) {
+export default function OrdenesPage({ t, clientes = [], ordenes, obtenerCliente, ordenProps, crearOrden, ordenForm, setOrdenForm, busquedaClienteOrden, setBusquedaClienteOrden, clientesFiltradosOrden, tecnicos }) {
   const [mostrarClientes, setMostrarClientes] = useState(false);
   const [periodoOrdenes, setPeriodoOrdenes] = useState("semana");
 
@@ -489,6 +490,8 @@ export default function OrdenesPage({ t, ordenes, obtenerCliente, ordenProps, cr
           ordenes={ordenes}
           obtenerCliente={obtenerCliente}
           ordenProps={ordenProps}
+          clientes={clientes}
+          tecnicos={tecnicos}
           periodo={periodoOrdenes}
           t={t}
         />
@@ -627,7 +630,7 @@ function themeNameLabel(name, t = (key) => key) {
   return map[name] || name;
 }
 
-function AdminOrdenesRegistro({ ordenes, obtenerCliente, ordenProps, periodo, t = (key) => key }) {
+function AdminOrdenesRegistro({ ordenes, obtenerCliente, ordenProps, clientes = [], tecnicos = [], periodo, t = (key) => key }) {
   const grupos = useMemo(() => {
     const porTecnico = {};
 
@@ -752,6 +755,8 @@ function AdminOrdenesRegistro({ ordenes, obtenerCliente, ordenProps, periodo, t 
                       orden={orden}
                       cliente={obtenerCliente(orden.clienteId)}
                       ordenProps={ordenProps}
+                      clientes={clientes}
+                      tecnicos={tecnicos}
                       t={t}
                     />
                   ))}
@@ -765,8 +770,352 @@ function AdminOrdenesRegistro({ ordenes, obtenerCliente, ordenProps, periodo, t 
   );
 }
 
-function AdminOrdenRow({ orden, cliente, ordenProps, t = (key) => key }) {
+
+function EditarOrdenAdminModal({
+  orden,
+  clientes = [],
+  tecnicos = [],
+  ordenProps,
+  onClose,
+  t = (key) => key,
+}) {
+  const ingles = String(t("customer") || "").toLowerCase() === "customer";
+
+  const copy = {
+    title: ingles ? "Edit order" : "Editar orden",
+    subtitle: ingles
+      ? "Correct administrative information without deleting or recreating the order."
+      : "Corrige la información administrativa sin borrar ni recrear la orden.",
+    customer: ingles ? "Customer" : "Cliente",
+    location: ingles ? "Work location" : "Ubicación del trabajo",
+    selectLocation: ingles ? "Select location" : "Seleccionar ubicación",
+    date: ingles ? "Scheduled date" : "Fecha programada",
+    time: ingles ? "Scheduled time" : "Hora programada",
+    problem: ingles ? "Reported problem" : "Problema reportado",
+    technician: ingles ? "Assigned technician" : "Técnico asignado",
+    priority: ingles ? "Priority" : "Prioridad",
+    cancel: ingles ? "Cancel" : "Cancelar",
+    save: ingles ? "Save changes" : "Guardar cambios",
+    saving: ingles ? "Saving..." : "Guardando...",
+    required: ingles
+      ? "Customer, location, technician and problem are required."
+      : "Cliente, ubicación, técnico y problema son obligatorios.",
+  };
+
+  const [guardando, setGuardando] = useState(false);
+
+  const [form, setForm] = useState({
+    clienteId: String(orden.clienteId || ""),
+    ubicacionId: String(orden.ubicacionId || orden.direccionId || ""),
+    fechaProgramada: orden.fechaProgramada || "",
+    horaProgramada: orden.horaProgramada || "",
+    problema: orden.problema || "",
+    tecnicoId: String(orden.tecnicoId || ""),
+    prioridad: orden.prioridad || "Media",
+  });
+
+  const clienteSeleccionado = clientes.find(
+    (c) => String(c.id) === String(form.clienteId)
+  );
+
+  const ubicaciones = clienteSeleccionado?.cliente_direcciones || [];
+
+  const etiquetaUbicacion = (u) => {
+    if (!u) return "";
+
+    const partes = [];
+
+    if (u.etiqueta) partes.push(u.etiqueta);
+    if (u.edificio) partes.push(`${ingles ? "Building" : "Edificio"} ${u.edificio}`);
+    if (u.apartamento) partes.push(`Apt ${u.apartamento}`);
+    if (u.direccion) partes.push(u.direccion);
+
+    return partes.filter(Boolean).join(" · ") || String(u.id || "");
+  };
+
+  const cambiarCliente = (clienteId) => {
+    const nuevoCliente = clientes.find(
+      (c) => String(c.id) === String(clienteId)
+    );
+
+    const ubicacionesNuevoCliente =
+      nuevoCliente?.cliente_direcciones || [];
+
+    const principal =
+      ubicacionesNuevoCliente.find((u) => u.principal) ||
+      ubicacionesNuevoCliente[0];
+
+    const tipo =
+      nuevoCliente?.tipoCliente ||
+      nuevoCliente?.tipo_cliente ||
+      "residencial";
+
+    setForm((actual) => ({
+      ...actual,
+      clienteId: String(clienteId || ""),
+      ubicacionId:
+        tipo === "corporativo"
+          ? ""
+          : String(principal?.id || ""),
+    }));
+  };
+
+  const guardar = async () => {
+    if (
+      !form.clienteId ||
+      !form.ubicacionId ||
+      !form.tecnicoId ||
+      !String(form.problema || "").trim()
+    ) {
+      alert(copy.required);
+      return;
+    }
+
+    setGuardando(true);
+
+    try {
+      const ok = await ordenProps?.editarOrdenAdmin?.(
+        orden.id,
+        form
+      );
+
+      if (ok !== false) {
+        onClose();
+      }
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/65 p-3 backdrop-blur-sm">
+      <button
+        type="button"
+        aria-label={copy.cancel}
+        className="absolute inset-0 cursor-default"
+        onClick={onClose}
+      />
+
+      <section className="relative z-10 max-h-[94vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] border border-white/20 bg-white shadow-2xl shadow-slate-950/40">
+        <div className="sticky top-0 z-20 flex items-start justify-between gap-4 border-b border-white/10 bg-gradient-to-r from-slate-950 via-blue-950 to-cyan-900 px-5 py-4 text-white">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-cyan-300">
+              {ingles ? "Administrative edition" : "Edición administrativa"}
+            </p>
+
+            <h2 className="mt-1 flex items-center gap-2 text-xl font-black">
+              <Pencil size={19} />
+              {copy.title} #{orden.id}
+            </h2>
+
+            <p className="mt-1 max-w-xl text-xs text-slate-300">
+              {copy.subtitle}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-white ring-1 ring-white/20 transition hover:bg-white/20"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="space-y-4 p-5">
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="block">
+              <span className="mb-1 block text-xs font-black uppercase tracking-wide text-slate-500">
+                {copy.customer}
+              </span>
+
+              <select
+                value={form.clienteId}
+                onChange={(e) => cambiarCliente(e.target.value)}
+                className="w-full rounded-2xl border border-slate-300 bg-white p-3 text-sm font-bold text-slate-800 outline-none transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100"
+              >
+                <option value="">
+                  {ingles ? "Select customer" : "Seleccionar cliente"}
+                </option>
+
+                {[...clientes]
+                  .sort((a, b) =>
+                    String(a.nombre || "").localeCompare(
+                      String(b.nombre || "")
+                    )
+                  )
+                  .map((c) => (
+                    <option key={c.id} value={String(c.id)}>
+                      {c.nombre} {c.telefono ? `· ${c.telefono}` : ""}
+                    </option>
+                  ))}
+              </select>
+            </label>
+
+            <label className="block">
+              <span className="mb-1 block text-xs font-black uppercase tracking-wide text-slate-500">
+                {copy.location}
+              </span>
+
+              <select
+                value={form.ubicacionId}
+                onChange={(e) =>
+                  setForm((actual) => ({
+                    ...actual,
+                    ubicacionId: e.target.value,
+                  }))
+                }
+                className="w-full rounded-2xl border border-slate-300 bg-white p-3 text-sm font-bold text-slate-800 outline-none transition focus:border-cyan-700 focus:ring-4 focus:ring-cyan-100"
+              >
+                <option value="">{copy.selectLocation}</option>
+
+                {ubicaciones.map((u) => (
+                  <option key={u.id} value={String(u.id)}>
+                    {etiquetaUbicacion(u)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <label className="block">
+              <span className="mb-1 block text-xs font-black uppercase tracking-wide text-slate-500">
+                {copy.date}
+              </span>
+
+              <input
+                type="date"
+                value={form.fechaProgramada}
+                onChange={(e) =>
+                  setForm((actual) => ({
+                    ...actual,
+                    fechaProgramada: e.target.value,
+                  }))
+                }
+                className="w-full rounded-2xl border border-slate-300 bg-white p-3 text-sm font-bold outline-none transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-1 block text-xs font-black uppercase tracking-wide text-slate-500">
+                {copy.time}
+              </span>
+
+              <input
+                type="time"
+                value={form.horaProgramada}
+                onChange={(e) =>
+                  setForm((actual) => ({
+                    ...actual,
+                    horaProgramada: e.target.value,
+                  }))
+                }
+                className="w-full rounded-2xl border border-slate-300 bg-white p-3 text-sm font-bold outline-none transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100"
+              />
+            </label>
+          </div>
+
+          <label className="block">
+            <span className="mb-1 block text-xs font-black uppercase tracking-wide text-slate-500">
+              {copy.problem}
+            </span>
+
+            <textarea
+              value={form.problema}
+              onChange={(e) =>
+                setForm((actual) => ({
+                  ...actual,
+                  problema: e.target.value,
+                }))
+              }
+              className="min-h-28 w-full rounded-2xl border border-slate-300 bg-white p-3 text-sm outline-none transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100"
+            />
+          </label>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="block">
+              <span className="mb-1 block text-xs font-black uppercase tracking-wide text-slate-500">
+                {copy.technician}
+              </span>
+
+              <select
+                value={form.tecnicoId}
+                onChange={(e) =>
+                  setForm((actual) => ({
+                    ...actual,
+                    tecnicoId: e.target.value,
+                  }))
+                }
+                className="w-full rounded-2xl border border-slate-300 bg-white p-3 text-sm font-bold outline-none transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100"
+              >
+                <option value="">
+                  {ingles ? "Select technician" : "Seleccionar técnico"}
+                </option>
+
+                {tecnicos
+                  .filter((tec) => tec.activo !== false)
+                  .map((tec) => (
+                    <option key={tec.id} value={String(tec.id)}>
+                      {tec.nombre}
+                    </option>
+                  ))}
+              </select>
+            </label>
+
+            <label className="block">
+              <span className="mb-1 block text-xs font-black uppercase tracking-wide text-slate-500">
+                {copy.priority}
+              </span>
+
+              <select
+                value={form.prioridad}
+                onChange={(e) =>
+                  setForm((actual) => ({
+                    ...actual,
+                    prioridad: e.target.value,
+                  }))
+                }
+                className="w-full rounded-2xl border border-slate-300 bg-white p-3 text-sm font-bold outline-none transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100"
+              >
+                {PRIORIDADES.map((p) => (
+                  <option key={p.value} value={p.value}>
+                    {t(p.labelKey)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <div className="flex flex-col-reverse gap-2 border-t border-slate-200 pt-4 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={guardando}
+              className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-300 bg-white px-5 text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+            >
+              {copy.cancel}
+            </button>
+
+            <button
+              type="button"
+              onClick={guardar}
+              disabled={guardando}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-800 via-blue-700 to-cyan-600 px-5 text-sm font-black text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <CheckCircle2 size={17} />
+              {guardando ? copy.saving : copy.save}
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function AdminOrdenRow({ orden, cliente, ordenProps, clientes = [], tecnicos = [], t = (key) => key }) {
   const [shareOpen, setShareOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   const tecnico = ordenProps.obtenerTecnico(orden.tecnicoId);
   const direccion = orden.direccionTrabajo || cliente?.direccion || "";
@@ -898,17 +1247,41 @@ function AdminOrdenRow({ orden, cliente, ordenProps, t = (key) => key }) {
             )}
           </div>
           {ordenProps?.session?.role === "admin" && (
-            <button
-              type="button"
-              onClick={() => ordenProps?.eliminarOrdenAdmin?.(orden)}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-rose-50 px-3 text-xs font-black text-rose-700 ring-1 ring-rose-100 transition hover:bg-rose-100"
-            >
-              <Trash2 size={15} />
-              {t("delete")}
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => setEditOpen(true)}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-blue-50 px-3 text-xs font-black text-blue-700 ring-1 ring-blue-100 transition hover:bg-blue-100"
+              >
+                <Pencil size={15} />
+                {String(t("customer") || "").toLowerCase() === "customer"
+                  ? "Edit"
+                  : "Editar"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => ordenProps?.eliminarOrdenAdmin?.(orden)}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-rose-50 px-3 text-xs font-black text-rose-700 ring-1 ring-rose-100 transition hover:bg-rose-100"
+              >
+                <Trash2 size={15} />
+                {t("delete")}
+              </button>
+            </>
           )}
         </div>
       </div>
+      {editOpen && (
+        <EditarOrdenAdminModal
+          orden={orden}
+          clientes={clientes}
+          tecnicos={tecnicos}
+          ordenProps={ordenProps}
+          onClose={() => setEditOpen(false)}
+          t={t}
+        />
+      )}
+
     </article>
   );
 }
