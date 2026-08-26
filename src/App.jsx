@@ -4371,7 +4371,34 @@ export default function App() {
   const materialesTexto = (orden) => (orden.materialesUsados || []).filter((m) => m.inventarioId && Number(m.cantidad) > 0).map((m) => `${obtenerMaterial(m.inventarioId)?.nombre || "Material"} (${m.cantidad} ${obtenerMaterial(m.inventarioId)?.unidad || ""})`).join("; ");
 
   const crearTextoOrden = (orden) => {
-    const c = obtenerCliente(orden.clienteId);
+    const clienteBase = obtenerCliente(orden.clienteId);
+
+    const c = {
+      ...(clienteBase || {}),
+      direccion:
+        orden.direccionTrabajo ||
+        clienteBase?.direccion ||
+        "",
+      apartamento:
+        orden.apartamentoTrabajo ||
+        clienteBase?.apartamento ||
+        "",
+      edificio:
+        orden.edificioTrabajo ||
+        clienteBase?.edificio ||
+        "",
+      codigoAcceso:
+        orden.codigoAccesoTrabajo ||
+        clienteBase?.codigoAcceso ||
+        "",
+      ubicacionEtiqueta:
+        orden.ubicacionEtiqueta ||
+        "",
+      notasUbicacion:
+        orden.notasUbicacion ||
+        "",
+    };
+
     const tec = obtenerTecnico(orden.tecnicoId);
     const fecha = formatReportDate(orden.fechaCompletada || orden.fechaCreacion || orden.fecha);
     const ordenIdCompleto = String(orden.id || "");
@@ -4390,7 +4417,11 @@ export default function App() {
       `Nombre: ${c?.nombre || ""}`,
       `Teléfono: ${formatPhoneDisplay(c?.telefono || "")}`,
       `Dirección: ${c?.direccion || ""}`,
-      `Apt: ${c?.apartamento || "—"} | Edificio: ${c?.edificio || "—"} | Calle: ${c?.calle || "—"} | Access Code: ${c?.codigoAcceso || "—"}`,
+      `Ubicación: ${c?.ubicacionEtiqueta || "—"}`,
+      `Apartamento / oficina: ${c?.apartamento || "—"}`,
+      `Edificio: ${c?.edificio || "—"}`,
+      `Código / llave: ${c?.codigoAcceso || "—"}`,
+      `Notas de ubicación: ${c?.notasUbicacion || "—"}`,
       "",
       "TÉCNICO",
       `Nombre: ${tec?.nombre || "Sin técnico"}`,
@@ -4408,7 +4439,34 @@ export default function App() {
   };
 
   const crearReporteHTML = (orden) => {
-    const c = obtenerCliente(orden.clienteId);
+    const clienteBase = obtenerCliente(orden.clienteId);
+
+    const c = {
+      ...(clienteBase || {}),
+      direccion:
+        orden.direccionTrabajo ||
+        clienteBase?.direccion ||
+        "",
+      apartamento:
+        orden.apartamentoTrabajo ||
+        clienteBase?.apartamento ||
+        "",
+      edificio:
+        orden.edificioTrabajo ||
+        clienteBase?.edificio ||
+        "",
+      codigoAcceso:
+        orden.codigoAccesoTrabajo ||
+        clienteBase?.codigoAcceso ||
+        "",
+      ubicacionEtiqueta:
+        orden.ubicacionEtiqueta ||
+        "",
+      notasUbicacion:
+        orden.notasUbicacion ||
+        "",
+    };
+
     const tec = obtenerTecnico(orden.tecnicoId);
     const fecha = formatReportDate(orden.fechaCompletada || orden.fechaCreacion || orden.fecha);
     const ordenIdCompleto = String(orden.id || "");
@@ -4534,14 +4592,11 @@ input.login-glass-input:-webkit-autofill:active{
         <div class="row"><div class="label">${t("name")}</div><div class="value">${escapeHtml(c?.nombre || "")}</div></div>
         <div class="row"><div class="label">${t("phone")}</div><div class="value">${escapeHtml(formatPhoneDisplay(c?.telefono || ""))}</div></div>
         <div class="row"><div class="label">${t("address")}</div><div class="value">${escapeHtml(c?.direccion || "")}</div></div>
-        <div class="row">
-          <div class="label">Access</div>
-          <div class="value">
-            Apt: ${escapeHtml(c?.apartamento || "—")}<br/>
-            ${t("building")}: ${escapeHtml(c?.edificio || "—")}<br/>
-            ${t("accessCode")}: ${escapeHtml(c?.codigoAcceso || "—")}
-          </div>
-        </div>
+        <div class="row"><div class="label">Ubicación</div><div class="value">${escapeHtml(c?.ubicacionEtiqueta || "—")}</div></div>
+        <div class="row"><div class="label">Apt/oficina</div><div class="value">${escapeHtml(c?.apartamento || "—")}</div></div>
+        <div class="row"><div class="label">${t("building")}</div><div class="value">${escapeHtml(c?.edificio || "—")}</div></div>
+        <div class="row"><div class="label">Código/llave</div><div class="value">${escapeHtml(c?.codigoAcceso || "—")}</div></div>
+        <div class="row"><div class="label">Notas acceso</div><div class="value">${escapeHtml(c?.notasUbicacion || "—")}</div></div>
       </div>
     </section>
 

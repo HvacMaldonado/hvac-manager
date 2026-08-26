@@ -67,6 +67,36 @@ export default function OrderDetailModal({ open, onClose, orden, cliente, tecnic
   const materiales = orden.materiales || orden.materialesUsados || [];
   const fotosCount = ["antes", "durante", "despues"].filter((k) => orden.fotos?.[k]).length;
 
+  /*
+   * La orden conserva una copia de la ubicación utilizada cuando fue creada.
+   * Esa copia tiene prioridad sobre la dirección general actual del cliente.
+   */
+  const clienteOrden = {
+    ...(cliente || {}),
+    direccion:
+      orden.direccionTrabajo ||
+      cliente?.direccion ||
+      "",
+    apartamento:
+      orden.apartamentoTrabajo ||
+      cliente?.apartamento ||
+      "",
+    edificio:
+      orden.edificioTrabajo ||
+      cliente?.edificio ||
+      "",
+    codigoAcceso:
+      orden.codigoAccesoTrabajo ||
+      cliente?.codigoAcceso ||
+      "",
+    ubicacionEtiqueta:
+      orden.ubicacionEtiqueta ||
+      "",
+    notasUbicacion:
+      orden.notasUbicacion ||
+      "",
+  };
+
   return (
     <div className="fixed inset-0 z-[950] flex items-center justify-center bg-slate-950/75 p-3 backdrop-blur-sm">
       <div className="max-h-[94vh] w-full max-w-7xl overflow-hidden rounded-3xl border border-white/20 bg-white shadow-2xl shadow-slate-950/50">
@@ -98,13 +128,72 @@ export default function OrderDetailModal({ open, onClose, orden, cliente, tecnic
               </div>
 
               <div className="grid gap-4 lg:grid-cols-2">
-                <SectionCard title="Cliente" icon={MapPin}>
-                  <p className="text-xl font-black text-slate-950">{cliente?.nombre || "Cliente eliminado"}</p>
-                  <p className="mt-1 text-sm font-bold text-slate-600">{formatPhoneDisplay(cliente?.telefono)}</p>
-                  <p className="mt-2 text-sm text-slate-600">{cliente?.direccion || "Sin dirección"}</p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    Apt {cliente?.apartamento || "—"} · Edificio {cliente?.edificio || "—"} · Código {cliente?.codigoAcceso || "—"}
+                <SectionCard title="Cliente y ubicación del servicio" icon={MapPin}>
+                  <p className="text-xl font-black text-slate-950">
+                    {clienteOrden?.nombre || "Cliente eliminado"}
                   </p>
+
+                  <p className="mt-1 text-sm font-bold text-slate-600">
+                    {formatPhoneDisplay(clienteOrden?.telefono)}
+                  </p>
+
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                    <div className="col-span-2 rounded-2xl border border-blue-100 bg-blue-50/70 p-3">
+                      <p className="text-[10px] font-black uppercase tracking-wide text-blue-700">
+                        Dirección del servicio
+                      </p>
+                      <p className="mt-1 font-bold text-slate-800">
+                        {clienteOrden.direccion || "Sin dirección"}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                      <p className="text-[10px] font-black uppercase tracking-wide text-slate-500">
+                        Ubicación
+                      </p>
+                      <p className="mt-1 font-black text-slate-900">
+                        {clienteOrden.ubicacionEtiqueta || "—"}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                      <p className="text-[10px] font-black uppercase tracking-wide text-slate-500">
+                        Apartamento / oficina
+                      </p>
+                      <p className="mt-1 font-black text-slate-900">
+                        {clienteOrden.apartamento || "—"}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                      <p className="text-[10px] font-black uppercase tracking-wide text-slate-500">
+                        Edificio
+                      </p>
+                      <p className="mt-1 font-black text-slate-900">
+                        {clienteOrden.edificio || "—"}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3">
+                      <p className="text-[10px] font-black uppercase tracking-wide text-amber-700">
+                        Código / llave
+                      </p>
+                      <p className="mt-1 font-black text-slate-900">
+                        {clienteOrden.codigoAcceso || "—"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {clienteOrden.notasUbicacion && (
+                    <div className="mt-2 rounded-2xl border border-cyan-200 bg-cyan-50 p-3">
+                      <p className="text-[10px] font-black uppercase tracking-wide text-cyan-700">
+                        Notas de la ubicación
+                      </p>
+                      <p className="mt-1 whitespace-pre-wrap text-sm font-bold text-slate-700">
+                        {clienteOrden.notasUbicacion}
+                      </p>
+                    </div>
+                  )}
                 </SectionCard>
 
                 <SectionCard title="Técnico" icon={UserCog}>
@@ -170,15 +259,15 @@ export default function OrderDetailModal({ open, onClose, orden, cliente, tecnic
                 <p className="mb-3 text-sm font-black uppercase tracking-wide text-blue-700">Acciones rápidas</p>
 
                 <div className="grid grid-cols-2 gap-2">
-                  {cliente?.telefono && (
-                    <a href={ordenProps?.urlTelefono?.(cliente.telefono) || `tel:${cliente.telefono}`} className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-emerald-700 px-3 text-sm font-black text-white shadow-sm">
+                  {clienteOrden?.telefono && (
+                    <a href={ordenProps?.urlTelefono?.(clienteOrden.telefono) || `tel:${clienteOrden.telefono}`} className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-emerald-700 px-3 text-sm font-black text-white shadow-sm">
                       <Phone size={16} />
                       Llamar
                     </a>
                   )}
 
-                  {cliente?.direccion && (
-                    <a href={ordenProps?.urlAppleMaps?.(cliente.direccion)} target="_blank" rel="noreferrer" className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-slate-950 px-3 text-sm font-black text-white shadow-sm">
+                  {clienteOrden?.direccion && (
+                    <a href={ordenProps?.urlAppleMaps?.(clienteOrden.direccion)} target="_blank" rel="noreferrer" className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-slate-950 px-3 text-sm font-black text-white shadow-sm">
                       <Navigation size={16} />
                       Mapa
                     </a>
@@ -222,13 +311,13 @@ export default function OrderDetailModal({ open, onClose, orden, cliente, tecnic
         </main>
       </div>
 
-      <PrintableOrderReport orden={orden} cliente={cliente} tecnico={tecnico} t={ordenProps?.t || ((key) => key)} />
+      <PrintableOrderReport orden={orden} cliente={clienteOrden} tecnico={tecnico} t={ordenProps?.t || ((key) => key)} />
 
       <PhotoEvidenceModal
         open={showPhotos}
         onClose={() => setShowPhotos(false)}
         orden={orden}
-        cliente={cliente}
+        cliente={clienteOrden}
         tecnico={tecnico}
       />
     </div>

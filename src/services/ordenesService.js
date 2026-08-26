@@ -8,6 +8,14 @@ function mapOrden(row) {
     clienteId: row.cliente_id || "",
     ubicacionId: row.direccion_id || "",
     direccionId: row.direccion_id || "",
+
+    ubicacionEtiqueta: row.ubicacion_etiqueta || "",
+    direccionTrabajo: row.direccion_trabajo || "",
+    apartamentoTrabajo: row.apartamento_trabajo || "",
+    edificioTrabajo: row.edificio_trabajo || "",
+    codigoAccesoTrabajo: row.codigo_acceso_trabajo || "",
+    notasUbicacion: row.notas_ubicacion || "",
+
     origenCitaId: row.cita_id || "",
     tecnicoId: tecnicoAsignado?.tecnico_id || "",
     problema: row.problema || "",
@@ -52,6 +60,14 @@ export async function crearOrdenSupabase(orden) {
     .insert({
       cliente_id: orden.clienteId || null,
       direccion_id: orden.ubicacionId || orden.direccionId || null,
+
+      ubicacion_etiqueta: orden.ubicacionEtiqueta || "",
+      direccion_trabajo: orden.direccionTrabajo || "",
+      apartamento_trabajo: orden.apartamentoTrabajo || "",
+      edificio_trabajo: orden.edificioTrabajo || "",
+      codigo_acceso_trabajo: orden.codigoAccesoTrabajo || "",
+      notas_ubicacion: orden.notasUbicacion || "",
+
       cita_id: orden.origenCitaId || null,
       problema: orden.problema || "",
       prioridad: orden.prioridad || "Media",
@@ -97,6 +113,30 @@ export async function actualizarOrdenSupabase(id, cambios) {
     payload.direccion_id = cambios.ubicacionId || null;
   } else if ("direccionId" in cambios) {
     payload.direccion_id = cambios.direccionId || null;
+  }
+
+  if ("ubicacionEtiqueta" in cambios) {
+    payload.ubicacion_etiqueta = cambios.ubicacionEtiqueta || "";
+  }
+
+  if ("direccionTrabajo" in cambios) {
+    payload.direccion_trabajo = cambios.direccionTrabajo || "";
+  }
+
+  if ("apartamentoTrabajo" in cambios) {
+    payload.apartamento_trabajo = cambios.apartamentoTrabajo || "";
+  }
+
+  if ("edificioTrabajo" in cambios) {
+    payload.edificio_trabajo = cambios.edificioTrabajo || "";
+  }
+
+  if ("codigoAccesoTrabajo" in cambios) {
+    payload.codigo_acceso_trabajo = cambios.codigoAccesoTrabajo || "";
+  }
+
+  if ("notasUbicacion" in cambios) {
+    payload.notas_ubicacion = cambios.notasUbicacion || "";
   }
 
   if ("origenCitaId" in cambios) payload.cita_id = cambios.origenCitaId || null;
