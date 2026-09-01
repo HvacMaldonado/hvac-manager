@@ -258,6 +258,21 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
   const [estadoFiltro, setEstadoFiltro] = useState("todos");
   const [ordenFecha, setOrdenFecha] = useState("recientes");
   const [vistaHistorial, setVistaHistorial] = useState("compacta");
+
+  const [periodoHistorial, setPeriodoHistorial] = useState("periodo");
+
+  const [anoHistorial, setAnoHistorial] = useState(
+    () => new Date().getFullYear()
+  );
+
+  const [mesHistorial, setMesHistorial] = useState(
+    () => new Date().getMonth()
+  );
+
+  const [paginaHistorial, setPaginaHistorial] = useState(1);
+
+  const ORDENES_POR_PAGINA = 20;
+
   const [semanaFinanzasOffset, setSemanaFinanzasOffset] = useState(0);
   const [precioDrafts, setPrecioDrafts] = useState({});
   const [guardandoPrecioId, setGuardandoPrecioId] = useState(null);
@@ -282,6 +297,13 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
     session,
   } = ordenProps;
 
+  const getFechaHistorial = (orden) =>
+    orden.fechaCompletada ||
+    orden.fechaCancelacion ||
+    orden.fechaCreacion ||
+    orden.fecha ||
+    "";
+
   const historialFiltrado = useMemo(() => {
     const q = busqueda.toLowerCase().trim();
 
@@ -300,23 +322,173 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
         orden.prioridad,
         orden.cancelReason,
         orden.notasTecnico,
-      ].some((v) => String(v || "").toLowerCase().includes(q));
+      ].some((v) =>
+        String(v || "")
+          .toLowerCase()
+          .includes(q)
+      );
 
-      const matchEstado = estadoFiltro === "todos" || orden.estado === estadoFiltro;
+      const matchEstado =
+        estadoFiltro === "todos" ||
+        orden.estado === estadoFiltro;
 
-      return matchTexto && matchEstado;
+      let matchPeriodo = true;
+
+      if (periodoHistorial !== "todos") {
+        const rawFecha = getFechaHistorial(orden);
+        const fecha = new Date(rawFecha);
+
+        if (Number.isNaN(fecha.getTime())) {
+          matchPeriodo = false;
+        } else {
+          const mismoAno =
+            fecha.getFullYear() === anoHistorial;
+
+          const mismoMes =
+            mesHistorial === "todo" ||
+            fecha.getMonth() === mesHistorial;
+
+          matchPeriodo = mismoAno && mismoMes;
+        }
+      }
+
+      return (
+        matchTexto &&
+        matchEstado &&
+        matchPeriodo
+      );
     });
 
     lista = [...lista].sort((a, b) => {
-      const aDate = new Date(a.fechaCompletada || a.fechaCreacion || a.fecha || 0).getTime();
-      const bDate = new Date(b.fechaCompletada || b.fechaCreacion || b.fecha || 0).getTime();
+      const aDate =
+        new Date(getFechaHistorial(a)).getTime() || 0;
 
-      if (ordenFecha === "antiguos") return aDate - bDate;
+      const bDate =
+        new Date(getFechaHistorial(b)).getTime() || 0;
+
+      if (ordenFecha === "antiguos") {
+        return aDate - bDate;
+      }
+
       return bDate - aDate;
     });
 
     return lista;
-  }, [ordenes, busqueda, estadoFiltro, ordenFecha, obtenerCliente, obtenerTecnico]);
+  }, [
+    ordenes,
+    busqueda,
+    estadoFiltro,
+    ordenFecha,
+    periodoHistorial,
+    anoHistorial,
+    mesHistorial,
+    obtenerCliente,
+    obtenerTecnico,
+  ]);
+
+  const mesesHistorial = Array.from(
+    { length: 12 },
+    (_, index) => ({
+      index,
+      label: new Date(2026, index, 1).toLocaleDateString(
+        lang === "en" ? "en-US" : "es-US",
+        {
+          month: "short",
+        }
+      ),
+    })
+  );
+
+  const anosConHistorial = Array.from(
+    new Set([
+      new Date().getFullYear(),
+      anoHistorial,
+      ...ordenes
+        .map((orden) => {
+          const fecha = new Date(
+            getFechaHistorial(orden)
+          );
+
+          return Number.isNaN(fecha.getTime())
+            ? null
+            : fecha.getFullYear();
+        })
+        .filter((ano) => Number.isInteger(ano)),
+    ])
+  ).sort((a, b) => b - a);
+
+  const totalPaginasHistorial = Math.max(
+    1,
+    Math.ceil(
+      historialFiltrado.length /
+      ORDENES_POR_PAGINA
+    )
+  );
+
+  const paginaHistorialSegura = Math.min(
+    paginaHistorial,
+    totalPaginasHistorial
+  );
+
+  const inicioPaginaHistorial =
+    (paginaHistorialSegura - 1) *
+    ORDENES_POR_PAGINA;
+
+  const historialPaginado = historialFiltrado.slice(
+    inicioPaginaHistorial,
+    inicioPaginaHistorial +
+      ORDENES_POR_PAGINA
+  );
+
+  const finPaginaHistorial = Math.min(
+    inicioPaginaHistorial +
+      historialPaginado.length,
+    historialFiltrado.length
+  );
+
+  const seleccionarTodoHistorial = () => {
+    setPeriodoHistorial("todos");
+    setPaginaHistorial(1);
+  };
+
+  const seleccionarAnoHistorial = (ano) => {
+    setPeriodoHistorial("periodo");
+    setAnoHistorial(ano);
+    setPaginaHistorial(1);
+  };
+
+  const cambiarAnoHistorial = (cantidad) => {
+    setPeriodoHistorial("periodo");
+    setAnoHistorial((actual) => actual + cantidad);
+    setPaginaHistorial(1);
+  };
+
+  const seleccionarMesHistorial = (mes) => {
+    setPeriodoHistorial("periodo");
+    setMesHistorial(mes);
+    setPaginaHistorial(1);
+  };
+
+  const etiquetaPeriodoHistorial =
+    periodoHistorial === "todos"
+      ? (
+          lang === "en"
+            ? "All history"
+            : "Todo el historial"
+        )
+      : mesHistorial === "todo"
+        ? String(anoHistorial)
+        : new Date(
+            anoHistorial,
+            mesHistorial,
+            1
+          ).toLocaleDateString(
+            lang === "en" ? "en-US" : "es-US",
+            {
+              month: "long",
+              year: "numeric",
+            }
+          );
 
   const completadas = ordenes.filter((o) => o.estado === "Completado").length;
   const canceladas = ordenes.filter((o) => o.estado === "Cancelada").length;
@@ -921,80 +1093,154 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
         );
       })()}
 
-      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-md shadow-slate-300/60 backdrop-blur">
-        <div className="bg-slate-950 p-5 text-white">
+      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="px-5 py-4">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-slate-300">{t("history")}</p>
-              <h2 className="mt-1 flex items-center gap-2 text-2xl font-black">
-                <FileText size={24} />
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">
+                {t("history")}
+              </p>
+
+              <h2 className="mt-1 flex items-center gap-2 text-2xl font-black text-slate-950">
+                <FileText size={23} className="text-slate-500" />
                 {t("historyTitle")}
               </h2>
-              <p className="mt-1 text-sm text-slate-300">
+
+              <p className="mt-1 max-w-2xl text-sm font-medium text-slate-500">
                 {t("historyDescription")}
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 xl:justify-end">
-              <MiniMetric icon={ClipboardList} label={t("total")} value={ordenes.length} />
-              <MiniMetric icon={CheckCircle2} label={t("completed")} value={completadas} tone="from-emerald-800 to-teal-600" />
-              <MiniMetric icon={XCircle} label={t("cancelled")} value={canceladas} tone="from-rose-800 to-red-700" />
-              <MiniMetric icon={DollarSign} label={t("materials")} value={`$${totalMateriales.toFixed(2)}`} tone="from-slate-800 to-slate-950" />
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap xl:justify-end">
+              <div className="flex min-w-[124px] items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-slate-500 ring-1 ring-slate-200">
+                  <ClipboardList size={15} />
+                </div>
+
+                <div className="min-w-0">
+                  <p className="text-sm font-black leading-none text-slate-950">
+                    {ordenes.length}
+                  </p>
+                  <p className="mt-1 text-[9px] font-black uppercase tracking-wide text-slate-400">
+                    {t("total")}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex min-w-[124px] items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50/60 px-3 py-2">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 ring-1 ring-emerald-200">
+                  <CheckCircle2 size={15} />
+                </div>
+
+                <div className="min-w-0">
+                  <p className="text-sm font-black leading-none text-slate-950">
+                    {completadas}
+                  </p>
+                  <p className="mt-1 text-[9px] font-black uppercase tracking-wide text-emerald-700/70">
+                    {t("completed")}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex min-w-[124px] items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50/50 px-3 py-2">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-rose-600 ring-1 ring-rose-200">
+                  <XCircle size={15} />
+                </div>
+
+                <div className="min-w-0">
+                  <p className="text-sm font-black leading-none text-slate-950">
+                    {canceladas}
+                  </p>
+                  <p className="mt-1 text-[9px] font-black uppercase tracking-wide text-rose-700/70">
+                    {t("cancelled")}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex min-w-[132px] items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-slate-500 ring-1 ring-slate-200">
+                  <DollarSign size={15} />
+                </div>
+
+                <div className="min-w-0">
+                  <p className="text-sm font-black leading-none text-slate-950">
+                    ${totalMateriales.toFixed(2)}
+                  </p>
+                  <p className="mt-1 text-[9px] font-black uppercase tracking-wide text-slate-400">
+                    {t("materials")}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="grid gap-3 bg-[radial-gradient(circle_at_top_right,_#22d3ee33,_transparent_28%),linear-gradient(135deg,_#f8fafc_0%,_#eff6ff_48%,_#e0f7ff_100%)] p-4 lg:grid-cols-[1fr_180px_180px]">
-          <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              placeholder={t("searchHistoryPlaceholder")}
-              className="w-full rounded-2xl border border-slate-300 bg-white py-3 pl-10 pr-3 text-sm outline-none shadow-sm transition focus:border-blue-700 focus:ring-4 focus:ring-blue-100"
-            />
+        <div className="border-t border-slate-200 bg-slate-50/70 p-3">
+          <div className="grid gap-2 lg:grid-cols-[1fr_180px_180px]">
+            <div className="relative">
+              <Search
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+
+              <input
+                value={busqueda}
+                onChange={(e) => {
+                  setBusqueda(e.target.value);
+                  setPaginaHistorial(1);
+                }}
+                placeholder={t("searchHistoryPlaceholder")}
+                className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm font-medium text-slate-800 outline-none shadow-sm transition focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
+              />
+            </div>
+
+            <select
+              value={estadoFiltro}
+              onChange={(e) => {
+                setEstadoFiltro(e.target.value);
+                setPaginaHistorial(1);
+              }}
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-700 outline-none shadow-sm transition focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
+            >
+              <option value="todos">{t("all")}</option>
+              <option value="Completado">{t("completed")}</option>
+              <option value="Cancelada">{t("cancelled")}</option>
+            </select>
+
+            <select
+              value={ordenFecha}
+              onChange={(e) => {
+                setOrdenFecha(e.target.value);
+                setPaginaHistorial(1);
+              }}
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-bold text-slate-700 outline-none shadow-sm transition focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
+            >
+              <option value="recientes">{t("mostRecent")}</option>
+              <option value="antiguos">{t("oldest")}</option>
+            </select>
           </div>
-
-          <select
-            value={estadoFiltro}
-            onChange={(e) => setEstadoFiltro(e.target.value)}
-            className="rounded-2xl border border-slate-300 bg-white px-3 py-3 text-sm font-bold text-slate-700 outline-none shadow-sm focus:border-blue-700 focus:ring-4 focus:ring-blue-100"
-          >
-            <option value="todos">{t("all")}</option>
-            <option value="Completado">{t("completed")}</option>
-            <option value="Cancelada">{t("cancelled")}</option>
-          </select>
-
-          <select
-            value={ordenFecha}
-            onChange={(e) => setOrdenFecha(e.target.value)}
-            className="rounded-2xl border border-slate-300 bg-white px-3 py-3 text-sm font-bold text-slate-700 outline-none shadow-sm focus:border-blue-700 focus:ring-4 focus:ring-blue-100"
-          >
-            <option value="recientes">{t("mostRecent")}</option>
-            <option value="antiguos">{t("oldest")}</option>
-          </select>
         </div>
       </div>
 
       {session?.role === "admin" && (
-        <section className="overflow-hidden rounded-3xl border border-emerald-200 bg-white shadow-xl shadow-emerald-100/60">
-          <div className="bg-gradient-to-r from-slate-950 via-emerald-950 to-teal-800 p-5 text-white">
+        <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-200 bg-white px-5 py-4">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-emerald-300">
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-slate-400">
                   {financeCopy.eyebrow}
                 </p>
 
-                <h2 className="mt-1 flex items-center gap-2 text-2xl font-black">
-                  <DollarSign size={24} />
+                <h2 className="mt-1 flex items-center gap-2 text-2xl font-black text-slate-950">
+                  <DollarSign size={23} className="text-slate-500" />
                   {financeCopy.title}
                 </h2>
 
-                <p className="mt-1 text-sm text-emerald-50/75">
+                <p className="mt-1 text-sm font-medium text-slate-500">
                   {financeCopy.description}
                 </p>
 
-                <p className="mt-3 inline-flex rounded-full bg-white/10 px-4 py-2 text-xs font-black ring-1 ring-white/15">
+                <p className="mt-3 inline-flex rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-black text-slate-700">
                   {formatoFechaFinanzas(rangoSemanaFinanzas.inicio)}
                   {" — "}
                   {formatoFechaFinanzas(finVisibleSemana)}
@@ -1005,7 +1251,7 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
                 <button
                   type="button"
                   onClick={() => setSemanaFinanzasOffset((v) => v - 1)}
-                  className="rounded-2xl bg-white/10 px-3 py-2 text-xs font-black text-white ring-1 ring-white/15 hover:bg-white/20"
+                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 shadow-sm transition hover:bg-slate-50"
                 >
                   ‹ {financeCopy.previous}
                 </button>
@@ -1013,7 +1259,7 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
                 <button
                   type="button"
                   onClick={() => setSemanaFinanzasOffset(0)}
-                  className="rounded-2xl bg-emerald-300 px-3 py-2 text-xs font-black text-slate-950"
+                  className="rounded-xl bg-slate-900 px-3 py-2 text-xs font-black text-white shadow-sm transition hover:bg-slate-800"
                 >
                   {financeCopy.current}
                 </button>
@@ -1021,7 +1267,7 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
                 <button
                   type="button"
                   onClick={() => setSemanaFinanzasOffset((v) => v + 1)}
-                  className="rounded-2xl bg-white/10 px-3 py-2 text-xs font-black text-white ring-1 ring-white/15 hover:bg-white/20"
+                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 shadow-sm transition hover:bg-slate-50"
                 >
                   {financeCopy.next} ›
                 </button>
@@ -1029,44 +1275,123 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
             </div>
           </div>
 
-          <div className="grid gap-2 bg-emerald-50/50 p-4 sm:grid-cols-2 xl:grid-cols-5">
-            <MiniMetric
-              icon={ClipboardList}
-              label={financeCopy.orders}
-              value={ordenesFinanzasSemana.length}
-            />
+          <div className="grid gap-2 bg-slate-50/70 p-4 sm:grid-cols-2 xl:grid-cols-5">
 
-            <MiniMetric
-              icon={DollarSign}
-              label={financeCopy.billed}
-              value={`$${resumenFinanzasSemana.cobrado.toFixed(2)}`}
-              tone="from-emerald-800 to-teal-600"
-            />
+            <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-500 ring-1 ring-slate-200">
+                <ClipboardList size={16} />
+              </div>
 
-            <MiniMetric
-              icon={ReceiptText}
-              label={financeCopy.materials}
-              value={`$${resumenFinanzasSemana.materiales.toFixed(2)}`}
-              tone="from-slate-800 to-slate-950"
-            />
+              <div className="min-w-0">
+                <p className="text-base font-black leading-none text-slate-950">
+                  {ordenesFinanzasSemana.length}
+                </p>
 
-            <MiniMetric
-              icon={Users}
-              label={financeCopy.labor}
-              value={`$${resumenFinanzasSemana.manoObra.toFixed(2)}`}
-              tone="from-blue-800 to-indigo-700"
-            />
+                <p className="mt-1 text-[9px] font-black uppercase tracking-wide text-slate-400">
+                  {financeCopy.orders}
+                </p>
+              </div>
+            </div>
 
-            <MiniMetric
-              icon={BarChart3}
-              label={financeCopy.result}
-              value={`$${resultadoFinanzasSemana.toFixed(2)}`}
-              tone={
-                resultadoFinanzasSemana >= 0
-                  ? "from-cyan-800 to-blue-700"
-                  : "from-rose-800 to-red-700"
+            <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/60 px-3 py-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 ring-1 ring-emerald-200">
+                <DollarSign size={16} />
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-base font-black leading-none text-slate-950">
+                  ${resumenFinanzasSemana.cobrado.toFixed(2)}
+                </p>
+
+                <p className="mt-1 text-[9px] font-black uppercase tracking-wide text-emerald-700/70">
+                  {financeCopy.billed}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-500 ring-1 ring-slate-200">
+                <ReceiptText size={16} />
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-base font-black leading-none text-slate-950">
+                  ${resumenFinanzasSemana.materiales.toFixed(2)}
+                </p>
+
+                <p className="mt-1 text-[9px] font-black uppercase tracking-wide text-slate-400">
+                  {financeCopy.materials}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-500 ring-1 ring-slate-200">
+                <Users size={16} />
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-base font-black leading-none text-slate-950">
+                  ${resumenFinanzasSemana.manoObra.toFixed(2)}
+                </p>
+
+                <p className="mt-1 text-[9px] font-black uppercase tracking-wide text-slate-400">
+                  {financeCopy.labor}
+                </p>
+              </div>
+            </div>
+
+            <div
+              className={
+                "flex items-center gap-3 rounded-2xl border px-3 py-3 " +
+                (
+                  resultadoFinanzasSemana >= 0
+                    ? "border-emerald-200 bg-emerald-50/60"
+                    : "border-rose-200 bg-rose-50/60"
+                )
               }
-            />
+            >
+              <div
+                className={
+                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white ring-1 " +
+                  (
+                    resultadoFinanzasSemana >= 0
+                      ? "text-emerald-600 ring-emerald-200"
+                      : "text-rose-600 ring-rose-200"
+                  )
+                }
+              >
+                <BarChart3 size={16} />
+              </div>
+
+              <div className="min-w-0">
+                <p
+                  className={
+                    "text-base font-black leading-none " +
+                    (
+                      resultadoFinanzasSemana >= 0
+                        ? "text-emerald-800"
+                        : "text-rose-800"
+                    )
+                  }
+                >
+                  ${resultadoFinanzasSemana.toFixed(2)}
+                </p>
+
+                <p
+                  className={
+                    "mt-1 text-[9px] font-black uppercase tracking-wide " +
+                    (
+                      resultadoFinanzasSemana >= 0
+                        ? "text-emerald-700/70"
+                        : "text-rose-700/70"
+                    )
+                  }
+                >
+                  {financeCopy.result}
+                </p>
+              </div>
+            </div>
           </div>
 
           {resumenFinanzasSemana.revisionHoras > 0 && (
@@ -1252,43 +1577,213 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
         </section>
       )}
 
-      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-md shadow-slate-300/60 backdrop-blur">
-        <div className="bg-slate-950 px-4 py-3 text-white">
-          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 bg-white px-4 py-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-[11px] font-black uppercase tracking-[0.25em] text-slate-300">{t("orderRecords")}</p>
-              <h3 className="text-lg font-black">{t("completedAndCancelled")}</h3>
+              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">
+                {t("orderRecords")}
+              </p>
+
+              <h3 className="mt-1 text-lg font-black text-slate-950">
+                {t("completedAndCancelled")}
+              </h3>
+
+              <p className="mt-1 text-xs font-semibold capitalize text-slate-500">
+                {etiquetaPeriodoHistorial}
+                {" · "}
+                {historialFiltrado.length}
+                {" "}
+                {lang === "en" ? "orders" : "órdenes"}
+              </p>
             </div>
+
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex rounded-2xl bg-white/10 p-1 ring-1 ring-white/20">
+              <div className="flex rounded-xl border border-slate-200 bg-slate-50 p-1">
                 <button
                   type="button"
-                  onClick={() => setVistaHistorial("compacta")}
-                  className={`rounded-xl px-3 py-1.5 text-xs font-black transition ${
-                    vistaHistorial === "compacta" ? "bg-cyan-300 text-slate-950" : "text-white/80 hover:bg-white/10"
-                  }`}
+                  onClick={() =>
+                    setVistaHistorial("compacta")
+                  }
+                  className={
+                    "rounded-lg px-3 py-1.5 text-xs font-black transition " +
+                    (
+                      vistaHistorial === "compacta"
+                        ? "bg-slate-900 text-white shadow-sm"
+                        : "text-slate-600 hover:bg-white"
+                    )
+                  }
                 >
                   {t("compact") || "Compacta"}
                 </button>
+
                 <button
                   type="button"
-                  onClick={() => setVistaHistorial("detallada")}
-                  className={`rounded-xl px-3 py-1.5 text-xs font-black transition ${
-                    vistaHistorial === "detallada" ? "bg-cyan-300 text-slate-950" : "text-white/80 hover:bg-white/10"
-                  }`}
+                  onClick={() =>
+                    setVistaHistorial("detallada")
+                  }
+                  className={
+                    "rounded-lg px-3 py-1.5 text-xs font-black transition " +
+                    (
+                      vistaHistorial === "detallada"
+                        ? "bg-slate-900 text-white shadow-sm"
+                        : "text-slate-600 hover:bg-white"
+                    )
+                  }
                 >
                   {t("detailed") || "Detallada"}
                 </button>
               </div>
 
-              <span className="w-fit rounded-full bg-white/10 px-3 py-1 text-xs font-black ring-1 ring-white/20">
-                {historialFiltrado.length} {t("records")}
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-black text-slate-600">
+                20 / {lang === "en" ? "page" : "página"}
               </span>
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <button
+                type="button"
+                onClick={seleccionarTodoHistorial}
+                className={
+                  "w-fit rounded-xl px-4 py-2 text-xs font-black transition " +
+                  (
+                    periodoHistorial === "todos"
+                      ? "bg-slate-900 text-white shadow-sm"
+                      : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  )
+                }
+              >
+                {lang === "en"
+                  ? "All history"
+                  : "Todos"}
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    cambiarAnoHistorial(-1)
+                  }
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-lg font-black text-slate-600 transition hover:bg-slate-50"
+                  aria-label={
+                    lang === "en"
+                      ? "Previous year"
+                      : "Año anterior"
+                  }
+                >
+                  ‹
+                </button>
+
+                <div className="min-w-[100px] text-center">
+                  <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">
+                    {lang === "en"
+                      ? "Year"
+                      : "Año"}
+                  </p>
+
+                  <p className="text-sm font-black text-slate-950">
+                    {anoHistorial}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    cambiarAnoHistorial(1)
+                  }
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-lg font-black text-slate-600 transition hover:bg-slate-50"
+                  aria-label={
+                    lang === "en"
+                      ? "Next year"
+                      : "Año siguiente"
+                  }
+                >
+                  ›
+                </button>
+              </div>
+            </div>
+
+            {anosConHistorial.length > 1 && (
+              <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1">
+                {anosConHistorial.map((ano) => (
+                  <button
+                    key={ano}
+                    type="button"
+                    onClick={() =>
+                      seleccionarAnoHistorial(ano)
+                    }
+                    className={
+                      "min-w-[72px] shrink-0 rounded-xl px-3 py-2 text-xs font-black transition " +
+                      (
+                        periodoHistorial !== "todos" &&
+                        anoHistorial === ano
+                          ? "bg-slate-900 text-white"
+                          : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                      )
+                    }
+                  >
+                    {ano}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1">
+              <button
+                type="button"
+                onClick={() =>
+                  seleccionarMesHistorial("todo")
+                }
+                className={
+                  "min-w-[102px] shrink-0 rounded-xl px-3 py-2 text-xs font-black transition " +
+                  (
+                    periodoHistorial !== "todos" &&
+                    mesHistorial === "todo"
+                      ? "bg-slate-900 text-white shadow-sm"
+                      : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                  )
+                }
+              >
+                {lang === "en"
+                  ? "Full year"
+                  : "Todo el año"}
+              </button>
+
+              {mesesHistorial.map((mes) => {
+                const activo =
+                  periodoHistorial !== "todos" &&
+                  mesHistorial === mes.index;
+
+                return (
+                  <button
+                    key={mes.index}
+                    type="button"
+                    onClick={() =>
+                      seleccionarMesHistorial(
+                        mes.index
+                      )
+                    }
+                    className={
+                      "min-w-[64px] shrink-0 rounded-xl px-2 py-2 text-xs font-black capitalize transition " +
+                      (
+                        activo
+                          ? "bg-slate-900 text-white shadow-sm"
+                          : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                      )
+                    }
+                  >
+                    {mes.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
 
-        <div className="space-y-6 bg-[radial-gradient(circle_at_top_right,_#22d3ee26,_transparent_28%),linear-gradient(135deg,_#f8fafc_0%,_#eef6ff_45%,_#f8fafc_100%)] p-5">
+        <div className="space-y-4 bg-slate-50/60 p-4">
           {historialFiltrado.length === 0 && (
             <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm font-semibold text-slate-500">
               {t("noHistoryOrders")}
@@ -1309,7 +1804,7 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
                   </div>
 
                   <div className="divide-y divide-slate-200">
-                    {historialFiltrado.map((orden) => {
+                    {historialPaginado.map((orden) => {
                       const cliente = obtenerCliente(orden.clienteId);
                       const tecnico = obtenerTecnico?.(orden.tecnicoId);
                       const fotosCount = ["antes", "durante", "despues"].filter((k) => orden.fotos?.[k]).length;
@@ -1373,7 +1868,7 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
             </div>
           )}
 
-          {vistaHistorial === "detallada" && historialFiltrado.map((orden) => {
+          {vistaHistorial === "detallada" && historialPaginado.map((orden) => {
             const cliente = obtenerCliente(orden.clienteId);
             const tecnico = obtenerTecnico?.(orden.tecnicoId);
             const direccionHistorial = orden.direccionTrabajo || cliente?.direccion || "";
@@ -1555,6 +2050,78 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
               </article>
             );
           })}
+          {historialFiltrado.length > 0 && (
+            <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs font-bold text-slate-500">
+                {lang === "en"
+                  ? "Showing"
+                  : "Mostrando"}
+                {" "}
+                {inicioPaginaHistorial + 1}
+                {"–"}
+                {finPaginaHistorial}
+                {" "}
+                {lang === "en" ? "of" : "de"}
+                {" "}
+                {historialFiltrado.length}
+              </p>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={
+                    paginaHistorialSegura <= 1
+                  }
+                  onClick={() =>
+                    setPaginaHistorial(
+                      Math.max(
+                        1,
+                        paginaHistorialSegura - 1
+                      )
+                    )
+                  }
+                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  ‹ {lang === "en"
+                    ? "Previous"
+                    : "Anterior"}
+                </button>
+
+                <span className="min-w-[110px] rounded-xl bg-slate-900 px-3 py-2 text-center text-xs font-black text-white">
+                  {lang === "en"
+                    ? "Page"
+                    : "Página"}
+                  {" "}
+                  {paginaHistorialSegura}
+                  {" "}
+                  {lang === "en" ? "of" : "de"}
+                  {" "}
+                  {totalPaginasHistorial}
+                </span>
+
+                <button
+                  type="button"
+                  disabled={
+                    paginaHistorialSegura >=
+                    totalPaginasHistorial
+                  }
+                  onClick={() =>
+                    setPaginaHistorial(
+                      Math.min(
+                        totalPaginasHistorial,
+                        paginaHistorialSegura + 1
+                      )
+                    )
+                  }
+                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {lang === "en"
+                    ? "Next"
+                    : "Siguiente"} ›
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

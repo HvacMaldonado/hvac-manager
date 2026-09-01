@@ -3563,7 +3563,7 @@ export default function App() {
       return;
     }
 
-    completarOrden(ordenId);
+    return completarOrden(ordenId);
   };
 
   const cancelarOrden = (id, cancelData = {}) => {
@@ -3699,6 +3699,10 @@ export default function App() {
     );
 
     if (!orden) return;
+
+    // Si el cierre remoto falla, restauramos cualquier descuento
+    // de inventario realizado durante este intento.
+    const inventarioAntesDelCierre = inventario;
 
     if (orden.estado === "Pausada") {
       setMensaje(
@@ -3856,21 +3860,49 @@ export default function App() {
       historialAdmin,
     };
 
-    setOrdenes((actuales) =>
-      actuales.map((o) =>
-        String(o.id) === String(id)
-          ? {
-              ...o,
-              ...cambiosOrdenCompletada,
-            }
-          : o
-      )
+    setMensaje(
+      lang === "en"
+        ? "Saving order. Please wait..."
+        : "Guardando orden. Por favor espera..."
     );
 
     try {
-      await actualizarOrdenSupabase(
-        id,
-        cambiosOrdenCompletada
+      /*
+       * IMPORTANTE:
+       * La orden NO se marca como completada en React hasta que
+       * Supabase confirme que el cierre realmente quedó guardado.
+       */
+      const ordenGuardada =
+        await actualizarOrdenSupabase(
+          id,
+          cambiosOrdenCompletada
+        );
+
+      const cierreConfirmado =
+        ordenGuardada &&
+        ordenGuardada.estado === "Completado" &&
+        Boolean(ordenGuardada.horaCierre) &&
+        Boolean(ordenGuardada.fechaCompletada);
+
+      if (!cierreConfirmado) {
+        throw new Error(
+          "Supabase respondió, pero la orden no quedó confirmada como Completado."
+        );
+      }
+
+      /*
+       * Solo después de la confirmación remota actualizamos
+       * la interfaz y movemos la orden al historial.
+       */
+      setOrdenes((actuales) =>
+        actuales.map((o) =>
+          String(o.id) === String(id)
+            ? {
+                ...o,
+                ...cambiosOrdenCompletada,
+              }
+            : o
+        )
       );
     } catch (error) {
       console.error(
@@ -3878,26 +3910,65 @@ export default function App() {
         error
       );
 
-      alert(JSON.stringify(error, null, 2));
+      // El intento de cierre no debe alterar inventario local.
+      setInventario(inventarioAntesDelCierre);
+
+      const detalleError =
+        error?.message ||
+        "No se recibió confirmación de Supabase.";
 
       setMensaje(
-        "La orden se completó localmente, pero no se pudo actualizar en Supabase."
+        lang === "en"
+          ? "The order could not be saved. It remains open. Check your connection and try again."
+          : "No se pudo guardar la orden. La orden permanece abierta. Verifica tu conexión e inténtalo nuevamente."
       );
+
+      window.alert(
+        lang === "en"
+          ? (
+              "ORDER NOT SAVED\n\n" +
+              "The order remains open because the database did not confirm the save.\n\n" +
+              "Check your connection and try again.\n\n" +
+              "Detail: " +
+              detalleError
+            )
+          : (
+              "NO SE PUDO GUARDAR LA ORDEN\n\n" +
+              "La orden permanece abierta porque la base de datos no confirmó el guardado.\n\n" +
+              "Verifica tu conexión e inténtalo nuevamente.\n\n" +
+              "Detalle: " +
+              detalleError
+            )
+      );
+
+      return;
     }
 
     if (duracionAnomala) {
       setMensaje(
-        "Orden cerrada. Las horas quedaron en revisión administrativa y no se incluirán automáticamente en nómina."
+        lang === "en"
+          ? "Order saved successfully. The work hours require administrative review."
+          : "Orden guardada exitosamente. Las horas quedaron en revisión administrativa."
       );
     } else if (usaSesiones) {
       setMensaje(
-        `Orden completada. Tiempo real trabajado: ${horasCalculadasTexto} h. Las pausas no se incluyeron.`
+        lang === "en"
+          ? `Order saved successfully. Actual work time: ${horasCalculadasTexto} h. Pauses were not included.`
+          : `Orden guardada exitosamente. Tiempo real trabajado: ${horasCalculadasTexto} h. Las pausas no se incluyeron.`
+      );
+    } else {
+      setMensaje(
+        lang === "en"
+          ? "Order saved successfully."
+          : "Orden guardada exitosamente."
       );
     }
 
     const capturarConfirmacion =
       window.confirm(
-        "Orden completada. ¿Deseas capturar firma y calificación del cliente?"
+        lang === "en"
+          ? "Order saved successfully.\n\nWould you like to capture the customer's signature and rating?"
+          : "Orden guardada exitosamente.\n\n¿Deseas capturar firma y calificación del cliente?"
       );
 
     if (capturarConfirmacion) {
@@ -4927,7 +4998,7 @@ const compartirOrden = async (orden, metodo) => {
   const ordenProps = { inventario, obtenerMaterial, obtenerTecnico, colorEstado, colorPrioridad, marcarEnRuta, marcarLlegada, iniciarTrabajo, pausarTrabajo, reanudarTrabajo, marcarNecesitaSeguimiento, setFirmaOrdenModal, abrirInformeCO, obtenerInformeCOPorOrden, abrirInformeStartup, obtenerInformeStartupPorOrden, completarOrden: completarOrdenConValidacionCO, cancelarOrden, subirFoto, guardarNotaTecnico, editarOrdenAdmin, guardarPrecioCobradoAdmin, corregirOrdenAdmin, eliminarOrdenAdmin, session, urlGoogleMaps, urlAppleMaps, urlTelefono, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, calcularCostoOrden, materialesTexto, compartirOrden, convertirCitaEnOrden, reprogramarCita, setReprogramarCitaModal, cancelarOrden: (ordenOrId) => {
     const orden = typeof ordenOrId === "object" ? ordenOrId : ordenes.find((o) => o.id === ordenOrId);
     setCancelModalOrden(orden || null);
-  }, t };
+  }, t, lang };
 
   if (!session) return <LoginScreen t={t} lang={lang} setLang={setLang} loginForm={loginForm} setLoginForm={setLoginForm} iniciarSesion={iniciarSesion} mensaje={mensaje} />;
 
@@ -6854,31 +6925,35 @@ function OrdenesGrid({ ordenes, obtenerCliente, ordenProps, ordenInicialAbiertaI
 
       {diasOrdenados.map((diaKey) => (
         <section key={diaKey} className="space-y-4">
-          <div className="sticky top-2 z-20 overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-lg shadow-slate-300/50 backdrop-blur">
-            <div className="flex flex-col gap-2 bg-gradient-to-r from-slate-950 via-blue-950 to-cyan-800 px-5 py-4 text-white sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">
+          <div className="sticky top-2 z-20 overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-sm backdrop-blur">
+            <div className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <p className="text-[9px] font-black uppercase tracking-[0.24em] text-slate-400">
                   {tr("workDay")}
                 </p>
-                <h3 className="text-2xl font-black capitalize tracking-tight">
+
+                <h3 className="mt-0.5 truncate text-lg font-black capitalize tracking-tight text-slate-950 sm:text-xl">
                   {formatDiaTitulo(diaKey)}
                 </h3>
               </div>
 
-              <span className="w-fit rounded-full bg-white/15 px-4 py-2 text-xs font-black ring-1 ring-white/20">
-                {ordenesPorDia[diaKey].length} {ordenesPorDia[diaKey].length === 1 ? tr("orderSingular") : tr("orderPlural")}
+              <span className="w-fit rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-black text-slate-600">
+                {ordenesPorDia[diaKey].length}{" "}
+                {ordenesPorDia[diaKey].length === 1
+                  ? tr("orderSingular")
+                  : tr("orderPlural")}
               </span>
             </div>
           </div>
 
-          <div className="grid gap-4">
+          <div className="grid gap-3">
             {ordenesPorDia[diaKey].map((o, index) => (
               <div key={o.id} className="relative">
-                <div className="absolute left-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white text-sm font-black text-slate-950 shadow-lg ring-1 ring-slate-200">
+                <div className="absolute left-1 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-[11px] font-black text-slate-600 shadow-sm">
                   {index + 1}
                 </div>
 
-                <div className="pl-12">
+                <div className="pl-9">
                   <OrdenCard
                     orden={o}
                     cliente={obtenerCliente(o.clienteId)}
@@ -6911,8 +6986,29 @@ function abrirTraductorTexto(texto, destino = "en") {
   window.open(url, "_blank", "noopener,noreferrer");
 }
 
-function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico, colorEstado, colorPrioridad, marcarEnRuta, marcarLlegada, iniciarTrabajo, pausarTrabajo, reanudarTrabajo, marcarNecesitaSeguimiento, completarOrden, cancelarOrden, subirFoto, guardarNotaTecnico, urlGoogleMaps, urlAppleMaps, urlTelefono, compacta = false, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, calcularCostoOrden, materialesTexto, compartirOrden, abrirInformeCO, obtenerInformeCOPorOrden, abrirInformeStartup, obtenerInformeStartupPorOrden, t, abrirDetallesInicial = false }) {
+function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico, colorEstado, colorPrioridad, marcarEnRuta, marcarLlegada, iniciarTrabajo, pausarTrabajo, reanudarTrabajo, marcarNecesitaSeguimiento, completarOrden, cancelarOrden, subirFoto, guardarNotaTecnico, urlGoogleMaps, urlAppleMaps, urlTelefono, compacta = false, agregarMaterialAOrden, actualizarMaterialOrden, eliminarMaterialOrden, calcularCostoOrden, materialesTexto, compartirOrden, abrirInformeCO, obtenerInformeCOPorOrden, abrirInformeStartup, obtenerInformeStartupPorOrden, t, lang = "es", abrirDetallesInicial = false }) {
   const [verDetalles, setVerDetalles] = useState(abrirDetallesInicial);
+  const [guardandoCierre, setGuardandoCierre] = useState(false);
+
+  const finalizarOrdenConFeedback = async () => {
+    if (guardandoCierre) return;
+
+    setGuardandoCierre(true);
+
+    try {
+      await completarOrden(orden.id);
+    } finally {
+      /*
+       * Si el cierre falla, la orden continúa montada y
+       * el botón vuelve a estar disponible para reintentar.
+       *
+       * Si tuvo éxito, la orden sale de Activas y esta tarjeta
+       * desaparece automáticamente.
+       */
+      setGuardandoCierre(false);
+    }
+  };
+
   const informeCOActual = obtenerInformeCOPorOrden?.(orden.id) || null;
   const informeStartupActual =
     obtenerInformeStartupPorOrden?.(orden.id) || null;
@@ -7132,24 +7228,15 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
     : (cliente?.nombre || t("deletedCustomer"));
   const cuentaCorporativa = esCorporativo ? cliente?.nombre || "" : "";
   const tipoClienteBadge = esCorporativo
-    ? "border-violet-300/40 bg-violet-500/25 text-violet-50"
-    : "border-emerald-300/40 bg-emerald-500/25 text-emerald-50";
+    ? "border-violet-200 bg-violet-50 text-violet-700"
+    : "border-emerald-200 bg-emerald-50 text-emerald-700";
 
   const tipoClienteBarra = esCorporativo
-    ? "from-violet-600 via-indigo-500 to-blue-500"
-    : "from-emerald-500 via-cyan-400 to-blue-500";
+    ? "bg-violet-500"
+    : "bg-emerald-500";
 
-  const tipoClienteFondo = esCorporativo
-    ? "from-slate-950 via-indigo-950 to-violet-800"
-    : "from-slate-950 via-emerald-950 to-cyan-800";
-
-  const tipoClientePanel = esCorporativo
-    ? "bg-white/10 ring-violet-200/20 shadow-lg shadow-violet-950/20 backdrop-blur"
-    : "bg-white/10 ring-emerald-200/20 shadow-lg shadow-emerald-950/20 backdrop-blur";
-
-  const tipoClienteGlow = esCorporativo
-    ? "before:bg-violet-400/20 after:bg-fuchsia-300/15"
-    : "before:bg-emerald-300/20 after:bg-cyan-300/15";
+  const tipoClientePanel =
+    "border-slate-200 bg-slate-50/70";
 
   const telefono = cliente?.telefono || "";
   const tecnico = obtenerTecnico(orden.tecnicoId);
@@ -7180,182 +7267,269 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
   }
 
   return (
-    <article className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl shadow-slate-300/70 transition hover:-translate-y-0.5 hover:shadow-2xl">
-      <div className={`h-2 bg-gradient-to-r ${tipoClienteBarra}`} />
+    <article className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:border-slate-300 hover:shadow-md">
+      <div className={`h-1 ${tipoClienteBarra}`} />
 
-      <div className="p-4">
-        <div className={`overflow-hidden rounded-[1.75rem] border ${tarjetaEstadoClase}`}>
-          <div className={`relative overflow-hidden bg-gradient-to-br ${tipoClienteFondo} p-5 text-white before:absolute before:-left-24 before:-top-24 before:h-72 before:w-72 before:rounded-full before:blur-3xl after:absolute after:-bottom-24 after:right-10 after:h-72 after:w-72 after:rounded-full after:blur-3xl ${tipoClienteGlow}`}>
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(255,255,255,0.16),transparent_28%),linear-gradient(135deg,rgba(255,255,255,0.08),transparent_38%)]" />
-            <div className="relative z-10">
-            <div className="space-y-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div className="inline-flex w-fit items-center gap-3 rounded-2xl bg-white/12 px-4 py-3 text-white ring-1 ring-white/15 shadow-lg">
-                  <Clock3 size={22} strokeWidth={2.6} />
-                  <span className="text-3xl font-black tracking-tight">{horaTexto}</span>
-                </div>
+      <div className="p-3 sm:p-4">
 
-                <div className="flex flex-wrap gap-2 sm:justify-end">
-                  <span className={`rounded-full border px-3 py-1.5 text-xs font-black ${colorEstado(orden.estado)}`}>
-                    {({
-                      "Pendiente": t("pending"),
-                      "Asignada": t("assigned"),
-                      "En ruta": t("onRoute"),
-                      "En sitio": t("onSite"),
-                      "En proceso": t("inProgress"),
-                      "Completado": t("completed"),
-                      "Cancelada": t("cancelled"),
-                      "Necesita seguimiento": t("needsFollowUp"),
-                    }[orden.estado] || orden.estado)}
-                  </span>
+        {/* CABECERA */}
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
 
-                  <span className={`rounded-full border px-3 py-1.5 text-xs font-black ${colorPrioridad(orden.prioridad)}`}>
-                    {t({ Baja: "low", Media: "medium", Alta: "high", Urgente: "urgent" }[orden.prioridad] || "medium")}
-                  </span>
+          <div className="min-w-0">
 
-                  <span className="rounded-full bg-white/90 px-3 py-1.5 text-xs font-black text-slate-700 ring-1 ring-white/40">
-                    #{orden.id}
-                  </span>
-                </div>
-              </div>
+            <div className="flex flex-wrap items-center gap-2">
 
-              <div>
-                <div className={`mb-3 inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-black uppercase tracking-[0.18em] shadow-lg ${tipoClienteBadge}`}>
-                  <span>{esCorporativo ? "🏢" : "🏠"}</span>
-                  <span>{esCorporativo ? t("customerCorporate") : t("customerResidential")}</span>
-                </div>
+              <span className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-black text-slate-900">
+                <Clock3 size={17} strokeWidth={2.6} />
+                {horaTexto}
+              </span>
 
-                <h3 className="truncate text-4xl font-black tracking-tight text-white">
-                  {nombreTrabajo}
-                </h3>
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] ${tipoClienteBadge}`}
+              >
+                <span>{esCorporativo ? "🏢" : "🏠"}</span>
 
-                <div className="mt-3 rounded-3xl bg-white/10 p-4 ring-1 ring-white/10">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <p className="line-clamp-2 text-xl font-black leading-snug text-white">
-                      {orden.problema || t("noReportedProblem")}
-                    </p>
-                  </div>
-                </div>
-              </div>
+                {esCorporativo
+                  ? t("customerCorporate")
+                  : t("customerResidential")}
+              </span>
 
-              <div className="space-y-3">
-
-                <div className="grid gap-3 lg:grid-cols-[1.3fr_.7fr]">
-                  <div className={`rounded-2xl px-4 py-3 ring-1 ${tipoClientePanel}`}>
-                    <p className="flex items-center gap-2 text-lg font-black text-cyan-50">
-                      <MapPin size={20} />
-                      {direccion || t("noAddress")}
-                    </p>
-                  </div>
-
-                  <div className={`rounded-2xl px-4 py-3 ring-1 ${tipoClientePanel}`}>
-                    <p className="flex items-center gap-2 text-sm font-black text-cyan-50">
-                      <User size={17} />
-                      {tecnico?.nombre || t("noTechnician")}
-                      <span className="mx-1 text-white/30">·</span>
-                      <Calendar size={17} />
-                      {fechaTexto ? formatReportDate(fechaTexto) : t("noDate")}
-                    </p>
-                  </div>
-                </div>
-
-                <div className={`rounded-2xl p-4 ring-1 ${tipoClientePanel}`}>
-                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-xs font-black uppercase tracking-[0.25em] text-cyan-200">
-                      {t("accessDetails")}
-                    </p>
-
-                    <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wide ring-1 ${tipoClienteBadge}`}>
-                      {esCorporativo ? t("customerCorporate") : t("customerResidential")}
-                    </span>
-                  </div>
-
-                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                    {apartamentoTrabajo && (
-                      <div className="rounded-xl bg-white/10 p-3">
-                        <p className="text-[10px] font-black uppercase text-cyan-200">
-                          {t("apt")}
-                        </p>
-
-                        <p className="text-sm font-bold text-white">
-                          {apartamentoTrabajo}
-                        </p>
-                      </div>
-                    )}
-
-                    {edificioTrabajo && (
-                      <div className="rounded-xl bg-white/10 p-3">
-                        <p className="text-[10px] font-black uppercase text-cyan-200">
-                          {t("building")}
-                        </p>
-
-                        <p className="text-sm font-bold text-white">
-                          {edificioTrabajo}
-                        </p>
-                      </div>
-                    )}
-
-                    {codigoAccesoTrabajo && (
-                      <div className="rounded-xl bg-white/10 p-3">
-                        <p className="text-[10px] font-black uppercase text-cyan-200">
-                          {t("accessCode")}
-                        </p>
-
-                        <p className="text-sm font-bold text-white">
-                          {codigoAccesoTrabajo}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {notasUbicacion && (
-                    <div className="mt-3 rounded-xl bg-amber-100/20 p-3 ring-1 ring-amber-200/20">
-                      <p className="text-[10px] font-black uppercase tracking-wide text-amber-100">
-                        {t("notes")}
-                      </p>
-                      <p className="mt-1 text-sm font-bold text-white">
-                        {notasUbicacion}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-              </div>
-
-              </div>
-
-              <div className="flex flex-wrap gap-3 pt-1">
-                {telefono && (
-                  <a href={urlTelefono(telefono)} className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-base font-black text-white shadow-lg shadow-emerald-900/20 transition hover:-translate-y-0.5">
-                    <Phone size={20} />
-                    {t("call")}
-                  </a>
-                )}
-
-                {direccion && (
-                  <a href={urlAppleMaps(direccion)} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-base font-black text-slate-950 shadow-lg transition hover:-translate-y-0.5">
-                    <Navigation size={20} />
-                    {t("route")}
-                  </a>
-                )}
-
-
-                <button onClick={() => setVerDetalles(!verDetalles)} className="flex min-w-[220px] flex-1 items-center justify-center gap-3 rounded-[1.35rem] bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-4 text-lg font-black text-white shadow-xl shadow-cyan-900/25 transition hover:-translate-y-0.5">
-                  <ClipboardCheck size={24} strokeWidth={2.7} />
-                  {verDetalles ? t("hideWork") : t("viewWork")}
-                </button>
-              </div>
             </div>
+
+            <h3 className="mt-2.5 truncate text-2xl font-black tracking-tight text-slate-950">
+              {nombreTrabajo}
+            </h3>
+
+            {cuentaCorporativa &&
+              cuentaCorporativa !== nombreTrabajo && (
+                <p className="mt-0.5 truncate text-[10px] font-black uppercase tracking-[0.14em] text-violet-600">
+                  {cuentaCorporativa}
+                </p>
+              )}
+
+            <p className="mt-1 line-clamp-2 max-w-4xl text-sm font-semibold leading-snug text-slate-600">
+              {orden.problema || t("noReportedProblem")}
+            </p>
+
           </div>
 
+
+          {/* ESTADO / PRIORIDAD / ID */}
+          <div className="flex shrink-0 flex-wrap gap-1.5 md:max-w-[430px] md:justify-end">
+
+            <span
+              className={`rounded-xl border px-2.5 py-1.5 text-[10px] font-black ${colorEstado(
+                orden.estado
+              )}`}
+            >
+              {({
+                Pendiente: t("pending"),
+                Asignada: t("assigned"),
+                "En ruta": t("onRoute"),
+                "En sitio": t("onSite"),
+                "En proceso": t("inProgress"),
+                Completado: t("completed"),
+                Cancelada: t("cancelled"),
+                "Necesita seguimiento": t("needsFollowUp"),
+              }[orden.estado] || orden.estado)}
+            </span>
+
+            <span
+              className={`rounded-xl border px-2.5 py-1.5 text-[10px] font-black ${colorPrioridad(
+                orden.prioridad
+              )}`}
+            >
+              {t(
+                {
+                  Baja: "low",
+                  Media: "medium",
+                  Alta: "high",
+                  Urgente: "urgent",
+                }[orden.prioridad] || "medium"
+              )}
+            </span>
+
+            <span
+              title={`#${orden.id}`}
+              className="rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[10px] font-bold text-slate-500"
+            >
+              #{String(orden.id || "").slice(0, 8)}
+            </span>
+
+          </div>
+
+        </div>
+
+
+        {/* DIRECCIÓN + TECNICO/FECHA */}
+        <div className="mt-2.5 grid gap-2 md:grid-cols-[minmax(0,1.45fr)_minmax(250px,.55fr)]">
+
+          <div className="flex min-w-0 items-start gap-2 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5">
+            <MapPin
+              size={17}
+              className="mt-0.5 shrink-0 text-slate-400"
+            />
+
+            <p className="text-sm font-bold leading-snug text-slate-800">
+              {direccion || t("noAddress")}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5 text-xs font-bold text-slate-600">
+
+            <span className="inline-flex items-center gap-1.5">
+              <User size={14} className="text-slate-400" />
+              {tecnico?.nombre || t("noTechnician")}
+            </span>
+
+            <span className="hidden text-slate-300 sm:inline">
+              ·
+            </span>
+
+            <span className="inline-flex items-center gap-1.5">
+              <Calendar size={14} className="text-slate-400" />
+              {fechaTexto
+                ? formatReportDate(fechaTexto)
+                : t("noDate")}
+            </span>
+
+          </div>
+
+        </div>
+
+
+        {/* ACCESO */}
+        {(apartamentoTrabajo ||
+          edificioTrabajo ||
+          codigoAccesoTrabajo ||
+          notasUbicacionVisibles) && (
+
+          <div className={`mt-2 rounded-2xl border p-2.5 ${tipoClientePanel}`}>
+
+            <div className="mb-2 flex items-center justify-between gap-2">
+
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
+                {t("accessDetails")}
+              </p>
+
+              <span
+                className={`rounded-lg border px-2 py-1 text-[8px] font-black uppercase tracking-wide ${tipoClienteBadge}`}
+              >
+                {esCorporativo
+                  ? t("customerCorporate")
+                  : t("customerResidential")}
+              </span>
+
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-[0.7fr_0.9fr_1.5fr_1.2fr]">
+
+              {apartamentoTrabajo && (
+                <div className="min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2">
+                  <p className="text-[8px] font-black uppercase tracking-wide text-slate-400">
+                    {t("apt")}
+                  </p>
+
+                  <p className="mt-0.5 break-words text-xs font-black leading-snug text-slate-800">
+                    {apartamentoTrabajo}
+                  </p>
+                </div>
+              )}
+
+              {edificioTrabajo && (
+                <div className="min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2">
+                  <p className="text-[8px] font-black uppercase tracking-wide text-slate-400">
+                    {t("building")}
+                  </p>
+
+                  <p className="mt-0.5 break-words text-xs font-black leading-snug text-slate-800">
+                    {edificioTrabajo}
+                  </p>
+                </div>
+              )}
+
+              {codigoAccesoTrabajo && (
+                <div className="min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2">
+                  <p className="text-[8px] font-black uppercase tracking-wide text-slate-400">
+                    {t("accessCode")}
+                  </p>
+
+                  <p className="mt-0.5 break-words text-xs font-black leading-snug text-slate-800">
+                    {codigoAccesoTrabajo}
+                  </p>
+                </div>
+              )}
+
+              {notasUbicacionVisibles && (
+                <div className="min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2">
+                  <p className="text-[8px] font-black uppercase tracking-wide text-slate-400">
+                    {t("notes")}
+                  </p>
+
+                  <p className="mt-0.5 break-words text-xs font-bold leading-snug text-slate-700">
+                    {notasUbicacionVisibles}
+                  </p>
+                </div>
+              )}
+
+            </div>
+
+          </div>
+        )}
+
+
+        {/* ACCIONES RÁPIDAS */}
+        <div className="mt-2 grid gap-2 sm:grid-cols-3">
+
+          {telefono && (
+            <a
+              href={urlTelefono(telefono)}
+              className="flex min-h-10 items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-black text-emerald-700 transition hover:bg-emerald-100"
+            >
+              <Phone size={17} />
+              {t("call")}
+            </a>
+          )}
+
+          {direccion && (
+            <a
+              href={urlAppleMaps(direccion)}
+              target="_blank"
+              rel="noreferrer"
+              className="flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-black text-slate-700 transition hover:bg-slate-50"
+            >
+              <Navigation size={17} />
+              {t("route")}
+            </a>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setVerDetalles(!verDetalles)}
+            className="flex min-h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 py-2 text-sm font-black text-white shadow-sm transition hover:bg-slate-800"
+          >
+            <ClipboardCheck
+              size={18}
+              strokeWidth={2.6}
+            />
+
+            {verDetalles
+              ? t("hideWork")
+              : t("viewWork")}
+          </button>
+
+        </div>
+
+      </div>
+
           {orden.estado === "Necesita seguimiento" && orden.seguimientoMotivo && (
-            <div className="m-4 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-900 shadow-sm">
+            <div className="mx-3 mb-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-bold text-slate-700 shadow-sm">
               {t("followUpLabel")}: {orden.seguimientoMotivo}
             </div>
           )}
 
           {verDetalles && (
-            <div className="m-4 space-y-4 rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-inner shadow-slate-100">
+            <div className="mx-3 mb-3 space-y-3 rounded-2xl border border-slate-200 bg-slate-50/60 p-3">
               <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-3 xl:grid-cols-6">
                 <Info icon={ShieldAlert} titulo={t("priorityLabel")} valor={t({ Baja: "low", Media: "medium", Alta: "high", Urgente: "urgent" }[orden.prioridad] || "medium")} extra={colorPrioridad(orden.prioridad)} />
                 <Info icon={Calendar} titulo={t("dateLabel")} valor={orden.fecha} />
@@ -7367,7 +7541,7 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
 
               <Materiales orden={orden} inventario={inventario} agregarMaterialAOrden={agregarMaterialAOrden} actualizarMaterialOrden={actualizarMaterialOrden} eliminarMaterialOrden={eliminarMaterialOrden} t={t} />
 
-              <div className="rounded-[1.5rem] border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-cyan-50 p-4 shadow-sm">
+              <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
                 <p className="mb-3 flex items-center gap-2 text-base font-black text-slate-950">
                   <Images {...iconProps} />
                   {t("photos")}
@@ -7388,7 +7562,7 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
                 value={orden.notasTecnico || ""}
                 onChange={(e) => guardarNotaTecnico(orden.id, e.target.value)}
                 placeholder={t("workDetailsPlaceholder")}
-                className="min-h-24 w-full rounded-2xl border border-cyan-200 bg-gradient-to-br from-blue-50 to-cyan-50 p-3 text-sm font-semibold outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-100"
+                className="min-h-20 w-full rounded-xl border border-slate-200 bg-white p-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
               />
 
               {(mostrarInformeCODentroTrabajo ||
@@ -7589,9 +7763,36 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
                       {t("pauseWork")}
                     </button>
 
-                    <button onClick={() => completarOrden(orden.id)} className="flex items-center justify-center gap-1.5 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-emerald-200 transition hover:-translate-y-0.5">
-                      <CheckCircle2 {...iconProps} />
-                      {t("finishWork")}
+                    <button
+                      type="button"
+                      onClick={finalizarOrdenConFeedback}
+                      disabled={guardandoCierre}
+                      aria-busy={guardandoCierre}
+                      className={
+                        "flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-black text-white transition " +
+                        (
+                          guardandoCierre
+                            ? "cursor-wait bg-emerald-700 shadow-inner opacity-90"
+                            : "bg-emerald-600 shadow-lg shadow-emerald-200 hover:-translate-y-0.5 hover:bg-emerald-500"
+                        )
+                      }
+                    >
+                      {guardandoCierre ? (
+                        <LoaderCircle
+                          {...iconProps}
+                          className="animate-spin"
+                        />
+                      ) : (
+                        <CheckCircle2 {...iconProps} />
+                      )}
+
+                      {guardandoCierre
+                        ? (
+                            lang === "en"
+                              ? "Saving order..."
+                              : "Guardando orden..."
+                          )
+                        : t("finishWork")}
                     </button>
 
                     <button onClick={() => marcarNecesitaSeguimiento(orden.id)} className="flex items-center justify-center gap-1.5 rounded-2xl bg-amber-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-amber-200 transition hover:-translate-y-0.5">
@@ -7621,8 +7822,6 @@ function OrdenCard({ orden, cliente, inventario, obtenerMaterial, obtenerTecnico
               </section>
             </div>
           )}
-        </div>
-      </div>
     </article>
   );
 }
@@ -7919,7 +8118,28 @@ function DashboardUnificadoPage({
 
 
 function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ordenes = [] }) {
+  function inicioDeSemana(fechaBase) {
+    const fecha = new Date(fechaBase);
+    fecha.setHours(0, 0, 0, 0);
+
+    const diaSemana = fecha.getDay();
+    const diferenciaLunes = diaSemana === 0 ? -6 : 1 - diaSemana;
+
+    fecha.setDate(fecha.getDate() + diferenciaLunes);
+
+    return fecha;
+  }
+
   const [periodo, setPeriodo] = useState("mes");
+
+  const [semanaSeleccionada, setSemanaSeleccionada] = useState(() =>
+    inicioDeSemana(new Date())
+  );
+
+  const [mesSemanas, setMesSemanas] = useState(() => {
+    const hoy = new Date();
+    return new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+  });
 
   const MAX_HORAS_TRABAJO_ORDEN = 16;
 
@@ -8008,15 +8228,7 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
       fecha.getMonth() === ahora.getMonth() &&
       fecha.getDate() === ahora.getDate();
 
-    const inicioSemana = new Date(ahora);
-    inicioSemana.setHours(0, 0, 0, 0);
-
-    const diaSemana = inicioSemana.getDay();
-    const diferenciaLunes = diaSemana === 0 ? -6 : 1 - diaSemana;
-
-    inicioSemana.setDate(
-      inicioSemana.getDate() + diferenciaLunes
-    );
+    const inicioSemana = inicioDeSemana(semanaSeleccionada);
 
     const finSemana = new Date(inicioSemana);
     finSemana.setDate(inicioSemana.getDate() + 7);
@@ -8024,10 +8236,11 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
     const mismaSemana = fecha >= inicioSemana && fecha < finSemana;
 
     const mismoMes =
-      fecha.getFullYear() === ahora.getFullYear() &&
-      fecha.getMonth() === ahora.getMonth();
+      fecha.getFullYear() === mesSemanas.getFullYear() &&
+      fecha.getMonth() === mesSemanas.getMonth();
 
-    const mismoAno = fecha.getFullYear() === ahora.getFullYear();
+    const mismoAno =
+      fecha.getFullYear() === mesSemanas.getFullYear();
 
     if (periodo === "hoy") return mismoDia;
     if (periodo === "semana") return mismaSemana;
@@ -8092,17 +8305,189 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
     ["todo", t("all")],
   ];
 
-  const hoyNomina = new Date();
-  const inicioSemanaNomina = new Date(hoyNomina);
-  inicioSemanaNomina.setHours(0, 0, 0, 0);
-
-  const diaSemanaNomina = inicioSemanaNomina.getDay();
-  const diferenciaLunesNomina =
-    diaSemanaNomina === 0 ? -6 : 1 - diaSemanaNomina;
-
-  inicioSemanaNomina.setDate(
-    inicioSemanaNomina.getDate() + diferenciaLunesNomina
+  const inicioMesSemanas = new Date(
+    mesSemanas.getFullYear(),
+    mesSemanas.getMonth(),
+    1
   );
+
+  const finMesSemanas = new Date(
+    mesSemanas.getFullYear(),
+    mesSemanas.getMonth() + 1,
+    0
+  );
+
+  const primeraSemanaMes = inicioDeSemana(inicioMesSemanas);
+
+  const semanasDelMes = [];
+
+  for (
+    let cursor = new Date(primeraSemanaMes);
+    cursor <= finMesSemanas;
+    cursor.setDate(cursor.getDate() + 7)
+  ) {
+    const inicio = new Date(cursor);
+    const fin = new Date(cursor);
+
+    fin.setDate(fin.getDate() + 6);
+
+    semanasDelMes.push({
+      inicio,
+      fin,
+    });
+  }
+
+  const mesesConsulta = Array.from({ length: 12 }, (_, index) => {
+    const fecha = new Date(2026, index, 1);
+
+    return {
+      index,
+      corto: fecha.toLocaleDateString(
+        lang === "en" ? "en-US" : "es-US",
+        { month: "short" }
+      ),
+      largo: fecha.toLocaleDateString(
+        lang === "en" ? "en-US" : "es-US",
+        { month: "long" }
+      ),
+    };
+  });
+
+  const anosDisponibles = Array.from(
+    new Set([
+      new Date().getFullYear(),
+      mesSemanas.getFullYear(),
+      ...ordenes
+        .filter((orden) => orden.estado === "Completado")
+        .map((orden) => {
+          const fecha = new Date(getFechaOrden(orden));
+
+          return Number.isNaN(fecha.getTime())
+            ? null
+            : fecha.getFullYear();
+        })
+        .filter((ano) => Number.isInteger(ano)),
+    ])
+  ).sort((a, b) => b - a);
+
+  const semanaInicialParaMes = (fechaMes) => {
+    const hoy = new Date();
+
+    const esMesActual =
+      fechaMes.getFullYear() === hoy.getFullYear() &&
+      fechaMes.getMonth() === hoy.getMonth();
+
+    if (esMesActual) {
+      return inicioDeSemana(hoy);
+    }
+
+    return inicioDeSemana(
+      new Date(
+        fechaMes.getFullYear(),
+        fechaMes.getMonth(),
+        1
+      )
+    );
+  };
+
+  const seleccionarMesConsulta = (indiceMes) => {
+    const nuevoMes = new Date(
+      mesSemanas.getFullYear(),
+      indiceMes,
+      1
+    );
+
+    setMesSemanas(nuevoMes);
+
+    if (periodo === "semana") {
+      setSemanaSeleccionada(
+        semanaInicialParaMes(nuevoMes)
+      );
+    }
+  };
+
+  const cambiarAnoConsulta = (cantidad) => {
+    const nuevoMes = new Date(
+      mesSemanas.getFullYear() + cantidad,
+      mesSemanas.getMonth(),
+      1
+    );
+
+    setMesSemanas(nuevoMes);
+
+    if (periodo === "semana") {
+      setSemanaSeleccionada(
+        semanaInicialParaMes(nuevoMes)
+      );
+    }
+  };
+
+  const seleccionarAnoConsulta = (ano) => {
+    const nuevoMes = new Date(
+      ano,
+      mesSemanas.getMonth(),
+      1
+    );
+
+    setMesSemanas(nuevoMes);
+
+    if (periodo === "semana") {
+      setSemanaSeleccionada(
+        semanaInicialParaMes(nuevoMes)
+      );
+    }
+  };
+
+  const mismaFecha = (a, b) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+
+  const semanaTocaMesSeleccionado = () => {
+    const inicio = inicioDeSemana(semanaSeleccionada);
+
+    const fin = new Date(inicio);
+    fin.setDate(fin.getDate() + 6);
+
+    return (
+      inicio <= finMesSemanas &&
+      fin >= inicioMesSemanas
+    );
+  };
+
+  const cambiarPeriodoConsulta = (id) => {
+    setPeriodo(id);
+
+    if (
+      id === "semana" &&
+      !semanaTocaMesSeleccionado()
+    ) {
+      setSemanaSeleccionada(
+        semanaInicialParaMes(mesSemanas)
+      );
+    }
+  };
+
+  const mesSemanasLabel = mesSemanas.toLocaleDateString(
+    lang === "en" ? "en-US" : "es-US",
+    {
+      month: "long",
+      year: "numeric",
+    }
+  );
+
+  const formatoSemanaCorto = (fecha) =>
+    fecha.toLocaleDateString(
+      lang === "en" ? "en-US" : "es-US",
+      {
+        month: "short",
+        day: "numeric",
+      }
+    );
+
+  const hoyNomina = new Date();
+
+  const inicioSemanaNomina = inicioDeSemana(semanaSeleccionada);
 
   const finSemanaNomina = new Date(inicioSemanaNomina);
   finSemanaNomina.setDate(inicioSemanaNomina.getDate() + 6);
@@ -8120,16 +8505,16 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
       : periodo === "hoy"
         ? `${t("consultedDay")} · ${formatoNomina(hoyNomina)}`
         : periodo === "mes"
-          ? `${t("consultedMonth")} · ${hoyNomina.toLocaleDateString(lang === "en" ? "en-US" : "es-US", { month: "long", year: "numeric" })}`
+          ? `${t("consultedMonth")} · ${mesSemanas.toLocaleDateString(lang === "en" ? "en-US" : "es-US", { month: "long", year: "numeric" })}`
           : periodo === "ano"
-            ? `${t("consultedYear")} · ${hoyNomina.getFullYear()}`
+            ? `${t("consultedYear")} · ${mesSemanas.getFullYear()}`
             : t("allHistory");
 
   return (
     <section className="space-y-3">
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-md shadow-slate-300/50">
-        <div className="border-b border-blue-100 bg-gradient-to-br from-blue-50 via-indigo-50 to-white px-4 py-3">
-          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-blue-600">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 bg-slate-50/70 px-4 py-3">
+          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-slate-500">
             {t("payrollOperational")}
           </p>
 
@@ -8138,19 +8523,19 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
               <h2 className="text-xl font-black text-slate-950">
                 {t("technicianHoursPay")}
               </h2>
-              <p className="mt-2 inline-flex rounded-full bg-blue-700 px-4 py-1.5 text-sm font-black text-white shadow-sm">
+              <p className="mt-2 inline-flex rounded-full bg-slate-900 px-4 py-1.5 text-sm font-black text-white shadow-sm">
                 {periodoNominaLabel}
               </p>
-              <p className="mt-0.5 text-xs font-semibold text-blue-900/60">
+              <p className="mt-0.5 text-xs font-semibold text-slate-500">
                 {t("realWorkOnly")}
               </p>
             </div>
 
             <div className="flex flex-wrap gap-1.5 text-[11px] font-black">
-              <span className="rounded-full bg-blue-50 px-2.5 py-1 text-blue-700 ring-1 ring-blue-100">
+              <span className="rounded-full bg-white px-2.5 py-1 text-slate-700 ring-1 ring-slate-200">
                 {t("work")} {totalHoras.toFixed(2)} h
               </span>
-              <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-indigo-700 ring-1 ring-indigo-100">
+              <span className="rounded-full bg-white px-2.5 py-1 text-slate-700 ring-1 ring-slate-200">
                 {t("travel")} {totalTraslado.toFixed(2)} h
               </span>
               <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700 ring-1 ring-emerald-100">
@@ -8158,7 +8543,7 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
               </span>
 
               {totalRevisionHoras > 0 && (
-                <span className="rounded-full bg-amber-50 px-2.5 py-1 text-amber-800 ring-1 ring-amber-200">
+                <span className="rounded-full bg-amber-50 px-2.5 py-1 text-amber-700 ring-1 ring-amber-200">
                   ⚠ {totalRevisionHoras} {lang === "en" ? "order(s) to review" : "orden(es) por revisar"}
                 </span>
               )}
@@ -8166,52 +8551,231 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
           </div>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto bg-blue-50/60 p-2">
+        <div className="flex gap-2 overflow-x-auto bg-slate-50 p-2">
           {periodos.map(([id, label]) => (
             <button
               key={id}
-              onClick={() => setPeriodo(id)}
+              onClick={() => cambiarPeriodoConsulta(id)}
               className={
                 "shrink-0 rounded-xl px-3 py-2 text-xs font-black transition " +
                 (periodo === id
-                  ? "bg-gradient-to-r from-blue-700 to-indigo-700 text-white shadow-md shadow-blue-200"
-                  : "bg-white text-slate-700 ring-1 ring-blue-100 hover:bg-blue-50")
+                  ? "bg-slate-900 text-white shadow-sm"
+                  : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50")
               }
             >
               {label}
             </button>
           ))}
         </div>
+
+        {(periodo === "semana" || periodo === "mes") && (
+          <div className="border-t border-slate-200 bg-white px-2 pb-2 pt-2">
+
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => cambiarAnoConsulta(-1)}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-lg font-black text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50"
+                aria-label={lang === "en" ? "Previous year" : "Año anterior"}
+              >
+                ‹
+              </button>
+
+              <div className="min-w-0 text-center">
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                  {lang === "en" ? "Select year" : "Seleccionar año"}
+                </p>
+
+                <p className="text-sm font-black text-slate-900">
+                  {mesSemanas.getFullYear()}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => cambiarAnoConsulta(1)}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-lg font-black text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50"
+                aria-label={lang === "en" ? "Next year" : "Año siguiente"}
+              >
+                ›
+              </button>
+            </div>
+
+            <div className="mb-2 flex gap-1.5 overflow-x-auto pb-1">
+              {mesesConsulta.map((mes) => {
+                const activo =
+                  mesSemanas.getMonth() === mes.index;
+
+                return (
+                  <button
+                    key={mes.index}
+                    type="button"
+                    onClick={() =>
+                      seleccionarMesConsulta(mes.index)
+                    }
+                    className={
+                      "min-w-[68px] shrink-0 rounded-xl px-2 py-2 text-center text-xs font-black capitalize transition " +
+                      (activo
+                        ? "bg-slate-900 text-white shadow-sm"
+                        : "bg-slate-50 text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100")
+                    }
+                  >
+                    {mes.corto}
+                  </button>
+                );
+              })}
+            </div>
+
+            {periodo === "semana" && (
+              <>
+                <div className="mb-1 flex items-center justify-between gap-2 px-1">
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                    {lang === "en" ? "Weeks of" : "Semanas de"}
+                  </p>
+
+                  <p className="text-xs font-black capitalize text-slate-600">
+                    {mesSemanasLabel}
+                  </p>
+                </div>
+
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {semanasDelMes.map((semana, index) => {
+                    const activa = mismaFecha(
+                      inicioDeSemana(semanaSeleccionada),
+                      semana.inicio
+                    );
+
+                    return (
+                      <button
+                        key={semana.inicio.getTime()}
+                        type="button"
+                        onClick={() =>
+                          setSemanaSeleccionada(
+                            new Date(semana.inicio)
+                          )
+                        }
+                        className={
+                          "min-w-[132px] shrink-0 rounded-xl px-3 py-2 text-left transition " +
+                          (activa
+                            ? "bg-slate-900 text-white shadow-sm"
+                            : "bg-slate-50 text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100")
+                        }
+                      >
+                        <span className="block text-xs font-black">
+                          {lang === "en"
+                            ? `Week ${index + 1}`
+                            : `Semana ${index + 1}`}
+                        </span>
+
+                        <span
+                          className={
+                            "mt-0.5 block text-[10px] font-bold " +
+                            (activa
+                              ? "text-blue-100"
+                              : "text-slate-500")
+                          }
+                        >
+                          {formatoSemanaCorto(semana.inicio)} –{" "}
+                          {formatoSemanaCorto(semana.fin)}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {periodo === "ano" && (
+          <div className="border-t border-slate-200 bg-white px-2 pb-2 pt-2">
+
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => cambiarAnoConsulta(-1)}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-lg font-black text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50"
+                aria-label={lang === "en" ? "Previous year" : "Año anterior"}
+              >
+                ‹
+              </button>
+
+              <div className="text-center">
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                  {lang === "en" ? "Year consulted" : "Año consultado"}
+                </p>
+
+                <p className="text-sm font-black text-slate-900">
+                  {mesSemanas.getFullYear()}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => cambiarAnoConsulta(1)}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-lg font-black text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50"
+                aria-label={lang === "en" ? "Next year" : "Año siguiente"}
+              >
+                ›
+              </button>
+            </div>
+
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {anosDisponibles.map((ano) => {
+                const activo =
+                  mesSemanas.getFullYear() === ano;
+
+                return (
+                  <button
+                    key={ano}
+                    type="button"
+                    onClick={() =>
+                      seleccionarAnoConsulta(ano)
+                    }
+                    className={
+                      "min-w-[82px] shrink-0 rounded-xl px-3 py-2 text-center text-xs font-black transition " +
+                      (activo
+                        ? "bg-slate-900 text-white shadow-sm"
+                        : "bg-slate-50 text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100")
+                    }
+                  >
+                    {ano}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filas.map((row) => (
           <article
             key={row.tecnico.id}
-            className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md shadow-slate-200/80 transition-all hover:-translate-y-0.5 hover:shadow-xl"
+            className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
           >
-            <div className="bg-gradient-to-r from-blue-800 via-blue-700 to-cyan-600 p-2.5 text-white">
+            <div className="border-b border-slate-200 bg-slate-50/70 p-3">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-base font-black leading-tight">
+                  <p className="text-base font-black leading-tight text-slate-950">
                     {row.tecnico.nombre}
                   </p>
-                  <p className="mt-1 text-xs font-bold text-blue-100">
+                  <p className="mt-1 text-xs font-bold text-slate-500">
                     {row.ordenes} {t("completedOrdersPeriod")}
                   </p>
 
                   {row.revisionHoras > 0 && (
-                    <p className="mt-1 rounded-lg bg-amber-300/20 px-2 py-1 text-[10px] font-black text-amber-100 ring-1 ring-amber-200/30">
+                    <p className="mt-1 rounded-lg bg-amber-50 px-2 py-1 text-[10px] font-black text-amber-700 ring-1 ring-amber-200">
                       ⚠ {row.revisionHoras} {lang === "en" ? "time record(s) excluded" : "registro(s) de horas excluido(s)"}
                     </p>
                   )}
                 </div>
 
                 <div className="text-right">
-                  <p className="text-[10px] font-black uppercase tracking-wide text-blue-100">
+                  <p className="text-[10px] font-black uppercase tracking-wide text-slate-500">
                     {t("earned")}
                   </p>
-                  <p className="text-lg font-black leading-tight">
+                  <p className="text-lg font-black leading-tight text-slate-950">
                     ${row.totalGanado.toFixed(2)}
                   </p>
                 </div>
@@ -8220,8 +8784,8 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
 
             <div className="p-3">
               <div className="grid grid-cols-2 gap-2.5 text-xs font-black">
-                <div className="rounded-xl bg-blue-50 p-1.5 text-blue-700">
-                  <p className="text-[10px] uppercase tracking-wide text-blue-500">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-2 text-slate-700">
+                  <p className="text-[10px] uppercase tracking-wide text-slate-500">
                     {t("work")}
                   </p>
                   <p className="mt-0.5 text-sm text-slate-950">
@@ -8229,8 +8793,8 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
                   </p>
                 </div>
 
-                <div className="rounded-xl bg-indigo-50 p-1.5 text-indigo-700">
-                  <p className="text-[10px] uppercase tracking-wide text-indigo-500">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-2 text-slate-700">
+                  <p className="text-[10px] uppercase tracking-wide text-slate-500">
                     {t("travel")}
                   </p>
                   <p className="mt-0.5 text-sm text-slate-950">
@@ -8238,7 +8802,7 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
                   </p>
                 </div>
 
-                <div className="rounded-xl bg-slate-50 p-1.5 text-slate-700">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-2 text-slate-700">
                   <p className="text-[10px] uppercase tracking-wide text-slate-500">
                     {t("hourlyPayShort")}
                   </p>
@@ -8247,7 +8811,7 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
                   </p>
                 </div>
 
-                <div className="rounded-xl bg-emerald-50 p-1.5 text-emerald-700">
+                <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-2 text-emerald-700">
                   <p className="text-[10px] uppercase tracking-wide text-emerald-600">
                     {t("totalPay")}
                   </p>
@@ -8404,32 +8968,89 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
 
   return (
     <section className="space-y-3">
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-md shadow-slate-300/50">
-        <div className="bg-slate-950 px-5 py-3 text-white">
-          <p className="text-[10px] font-black uppercase tracking-[0.28em] text-emerald-300">
-            {t("technicianHistoryTitle")}
-          </p>
-          <h2 className="mt-1 flex items-center justify-center gap-2 text-lg font-black">
-            <History size={22} />
-            {t("history")}
-          </h2>
-          <p className="mt-1 text-xs font-semibold text-slate-300">
-            {t("technicianHistoryDescription")}
-          </p>
+
+      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md shadow-slate-200/60">
+
+        <div className="h-1 bg-slate-900" />
+
+        <div className="flex flex-col gap-4 border-b border-slate-200 bg-white px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
+
+          <div className="flex min-w-0 items-center gap-3">
+
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
+              <History size={21} strokeWidth={2.5} />
+            </span>
+
+            <div className="min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-[0.24em] text-slate-400">
+                {t("technicianHistoryTitle")}
+              </p>
+
+              <h2 className="mt-0.5 text-xl font-black tracking-tight text-slate-950">
+                {t("history")}
+              </h2>
+
+              <p className="mt-0.5 text-xs font-semibold text-slate-500">
+                {t("technicianHistoryDescription")}
+              </p>
+            </div>
+
+          </div>
+
+
+          <div className="grid grid-cols-3 gap-2 lg:min-w-[360px]">
+
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-center">
+              <p className="text-[9px] font-black uppercase tracking-wide text-slate-400">
+                {t("all")}
+              </p>
+              <p className="mt-0.5 text-lg font-black text-slate-900">
+                {ordenesPorPeriodo.length}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-center">
+              <p className="text-[9px] font-black uppercase tracking-wide text-emerald-600">
+                {t("completedPlural")}
+              </p>
+              <p className="mt-0.5 text-lg font-black text-slate-900">
+                {completadas.length}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-center">
+              <p className="text-[9px] font-black uppercase tracking-wide text-rose-600">
+                {t("cancelledPlural")}
+              </p>
+              <p className="mt-0.5 text-lg font-black text-slate-900">
+                {canceladas.length}
+              </p>
+            </div>
+
+          </div>
+
         </div>
 
-        <div className="space-y-3 bg-slate-50 p-3">
+
+        <div className="space-y-3 bg-slate-50/70 p-3 sm:p-4">
+
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400" size={18} />
+            <Search
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              size={18}
+            />
+
             <input
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
               placeholder={t("searchTechnicianHistoryPlaceholder")}
-              className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-11 pr-4 text-sm font-semibold outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+              className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pl-11 pr-4 text-sm font-semibold text-slate-800 outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
             />
           </div>
 
-          <div className="flex gap-2 overflow-x-auto">
+
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+
             {[
               ["hoy", t("today")],
               ["semana", t("week")],
@@ -8438,34 +9059,45 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
               ["todo", t("all")],
               ["personalizado", t("customRange")],
             ].map(([id, label]) => (
+
               <button
                 key={id}
+                type="button"
                 onClick={() => setPeriodo(id)}
                 className={
-                  "w-full rounded-xl px-3 py-2 text-xs font-black transition " +
-                  (periodo === id
-                    ? "bg-emerald-700 text-white shadow-lg"
-                    : "bg-white text-slate-700 ring-1 ring-blue-100 hover:bg-blue-50")
+                  "rounded-xl border px-3 py-2 text-xs font-black transition " +
+                  (
+                    periodo === id
+                      ? "border-slate-900 bg-slate-900 text-white shadow-sm"
+                      : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                  )
                 }
               >
                 {label}
               </button>
+
             ))}
+
           </div>
 
+
           {periodo === "personalizado" && (
-            <div className="rounded-2xl border border-emerald-100 bg-white p-3 shadow-sm">
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                <p className="text-xs font-black uppercase tracking-wide text-emerald-700">
+
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">
                   {t("activeRange")}
                 </p>
 
                 <div className="flex flex-wrap gap-2">
+
                   <button
                     type="button"
                     onClick={exportarHistorialCsv}
                     disabled={ordenesFiltradas.length === 0}
-                    className="rounded-xl bg-emerald-700 px-3 py-1.5 text-xs font-black text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+                    className="rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-black text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
                   >
                     {t("exportCsv")}
                   </button>
@@ -8476,54 +9108,72 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
                       setFechaDesde("");
                       setFechaHasta("");
                     }}
-                    className="rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-600 transition hover:bg-slate-200"
+                    className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-black text-slate-600 transition hover:bg-slate-100"
                   >
                     {t("clearRange")}
                   </button>
+
                 </div>
+
               </div>
 
+
               <div className="grid gap-2 sm:grid-cols-2">
-                <label className="text-xs font-black uppercase tracking-wide text-slate-500">
+
+                <label className="text-[10px] font-black uppercase tracking-wide text-slate-500">
                   {t("fromDate")}
+
                   <input
                     type="date"
                     value={fechaDesde}
                     onChange={(e) => setFechaDesde(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 p-2 text-sm font-bold text-slate-700 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 p-2 text-sm font-bold text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
                   />
                 </label>
 
-                <label className="text-xs font-black uppercase tracking-wide text-slate-500">
+                <label className="text-[10px] font-black uppercase tracking-wide text-slate-500">
                   {t("toDate")}
+
                   <input
                     type="date"
                     value={fechaHasta}
                     onChange={(e) => setFechaHasta(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 p-2 text-sm font-bold text-slate-700 outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+                    className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 p-2 text-sm font-bold text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
                   />
                 </label>
+
               </div>
+
             </div>
           )}
 
-          <div className="flex gap-2 overflow-x-auto">
+
+          <div className="grid grid-cols-3 gap-2">
+
             {tabs.map((tab) => (
+
               <button
                 key={tab.id}
+                type="button"
                 onClick={() => setFiltro(tab.id)}
                 className={
-                  "w-full rounded-xl px-3 py-2 text-xs font-black transition " +
-                  (filtro === tab.id
-                    ? "bg-slate-950 text-white shadow-lg"
-                    : "bg-white text-slate-700 ring-1 ring-blue-100 hover:bg-blue-50")
+                  "rounded-xl border px-3 py-2 text-xs font-black transition " +
+                  (
+                    filtro === tab.id
+                      ? "border-slate-900 bg-slate-900 text-white shadow-sm"
+                      : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                  )
                 }
               >
                 {tab.label} ({tab.count})
               </button>
+
             ))}
+
           </div>
+
         </div>
+
       </div>
 
       {ordenesFiltradas.length === 0 ? (
@@ -8565,155 +9215,233 @@ function TecnicoHistorialProfesional({ ordenes = [], obtenerCliente, ordenProps,
                     : "Continuar informe CO"
                 );
 
-            const cardClass = completada
-              ? "border-emerald-300 bg-emerald-50"
-              : "border-rose-300 bg-rose-50";
-
-            const dotClass = completada
-              ? "bg-emerald-500 ring-emerald-100"
-              : "bg-rose-500 ring-rose-100";
+            const accentClass = completada
+              ? "bg-emerald-500"
+              : "bg-rose-500";
 
             const badgeClass = completada
-              ? "bg-emerald-600 text-white"
-              : "bg-rose-600 text-white";
+              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+              : "border-rose-200 bg-rose-50 text-rose-700";
 
             return (
-              <article key={orden.id} className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md shadow-slate-200/70">
-                <div className="absolute bottom-3 left-[78px] top-3 hidden w-px bg-slate-200 sm:block" />
+              <article
+                key={orden.id}
+                className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-md shadow-slate-200/60 transition hover:border-slate-300 hover:shadow-lg"
+              >
 
-                <div className="grid gap-3 p-3 sm:grid-cols-[68px_24px_minmax(0,1fr)] sm:items-start">
-                  <div className="text-sm font-black text-slate-700 sm:pt-4">
-                    {fecha ? formatReportDate(fecha) : t("noDate")}
+                <div className={`h-1 ${accentClass}`} />
+
+
+                <div className="p-3 sm:p-4">
+
+                  {/* FILA SUPERIOR */}
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+
+                    <div className="flex flex-wrap items-center gap-1.5">
+
+                      <span className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[10px] font-black text-slate-600">
+                        <Calendar size={13} />
+                        {fecha
+                          ? formatReportDate(fecha)
+                          : t("noDate")}
+                      </span>
+
+                      <span className={`rounded-xl border px-2.5 py-1.5 text-[10px] font-black ${badgeClass}`}>
+                        {completada
+                          ? t("completed")
+                          : t("cancelled")}
+                      </span>
+
+                      {!completada && orden.cancelTipo && (
+                        <span className="rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[10px] font-black text-rose-600">
+                          {orden.cancelTipo}
+                        </span>
+                      )}
+
+                    </div>
+
+
+                    <span
+                      title={`#${orden.id}`}
+                      className="w-fit rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-[10px] font-bold text-slate-400 shadow-sm"
+                    >
+                      #{String(orden.id || "").slice(0, 8)}
+                    </span>
+
                   </div>
 
-                  <div className="relative hidden justify-center sm:flex sm:pt-5">
-                    <span className={`relative z-10 h-3.5 w-3.5 rounded-full ring-4 ${dotClass}`} />
+
+                  {/* CLIENTE */}
+                  <h3 className="mt-2.5 truncate text-xl font-black tracking-tight text-slate-950 sm:text-2xl">
+                    {cliente?.nombre || t("deletedCustomer")}
+                  </h3>
+
+
+                  {/* PROBLEMA */}
+                  <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5">
+                    <p className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">
+                      {t("reportedProblem")}
+                    </p>
+
+                    <p className="mt-0.5 line-clamp-2 text-sm font-bold leading-relaxed text-slate-800">
+                      {orden.problema || t("noReportedProblem")}
+                    </p>
                   </div>
 
-                  <div className={`rounded-2xl border p-3 ${cardClass}`}>
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                      <div className="pointer-events-none relative z-10 min-w-0">
-                        <div className="flex flex-wrap items-center justify-center gap-1.5">
-                          <span className={`rounded-full px-2.5 py-1 text-[10px] font-black ${badgeClass}`}>
-                            {completada ? t("completed") : t("cancelled")}
-                          </span>
 
-                          <span className="rounded-full bg-white/80 px-2.5 py-1 text-[10px] font-black text-slate-700 ring-1 ring-slate-200">
-                            #{orden.id}
-                          </span>
+                  {/* DATOS PRINCIPALES */}
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-[0.7fr_0.45fr_1.55fr]">
 
-                          {!completada && orden.cancelTipo && (
-                            <span className="rounded-full bg-white/80 px-2.5 py-1 text-[10px] font-black text-rose-700 ring-1 ring-rose-200">
-                              {orden.cancelTipo}
-                            </span>
-                          )}
-                        </div>
+                    {cliente?.telefono && (
+                      <div className="flex min-w-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
+                        <Phone
+                          size={15}
+                          className="shrink-0 text-slate-400"
+                        />
 
-                        <h3 className="mt-2 truncate text-2xl font-black tracking-tight text-slate-950">
-                          {cliente?.nombre || t("deletedCustomer")}
-                        </h3>
+                        <span className="truncate text-xs font-bold text-slate-700">
+                          {cliente.telefono}
+                        </span>
+                      </div>
+                    )}
 
-                        <p className="mt-2 line-clamp-2 rounded-2xl bg-white/80 px-3 py-2 text-sm font-black leading-relaxed text-slate-800 shadow-sm">
-                          {orden.problema || t("noReportedProblem")}
-                        </p>
+                    <div className="flex min-w-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
+                      <Timer
+                        size={15}
+                        className="shrink-0 text-slate-400"
+                      />
 
-                        <div className="mt-2 grid gap-1 text-[11px] font-semibold text-slate-500 sm:grid-cols-2">
-                          {cliente?.telefono && (
-                            <p className="flex items-center justify-center gap-1.5 truncate">
-                              <Phone size={13} />
-                              {cliente.telefono}
-                            </p>
-                          )}
+                      <span className="truncate text-xs font-bold text-slate-700">
+                        {orden.duracionHoras || "0.00"} h
+                      </span>
+                    </div>
 
-                          <p className="flex items-center justify-center gap-1.5 truncate">
-                            <Timer size={13} />
-                            {orden.duracionHoras || "0.00"} h
+                    {direccionHistorial && (
+                      <div className="flex min-w-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 sm:col-span-2 lg:col-span-1">
+                        <MapPin
+                          size={15}
+                          className="shrink-0 text-slate-400"
+                        />
+
+                        <span className="truncate text-xs font-bold text-slate-700">
+                          {direccionHistorial}
+                        </span>
+                      </div>
+                    )}
+
+                  </div>
+
+
+                  {/* NOTAS / CANCELACION */}
+                  {(!completada || orden.notasTecnico) && (
+                    <div className="mt-2 grid gap-2 lg:grid-cols-2">
+
+                      {!completada && (
+                        <div className="rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2">
+                          <p className="text-[9px] font-black uppercase tracking-wide text-rose-600">
+                            {t("reasonLabel")}
                           </p>
 
-                          {direccionHistorial && (
-                            <p className="flex items-center justify-center gap-1.5 truncate sm:col-span-2">
-                              <MapPin size={13} />
-                              {direccionHistorial}
-                            </p>
-                          )}
+                          <p className="mt-0.5 text-xs font-bold leading-relaxed text-slate-700">
+                            {orden.cancelReason || t("noReasonRegistered")}
+                          </p>
                         </div>
+                      )}
 
-                        {!completada && (
-                          <div className="mt-2 rounded-xl border border-rose-200 bg-white/70 p-2 text-xs font-bold text-rose-800">
-                            {t("reasonLabel")}: {orden.cancelReason || t("noReasonRegistered")}
-                          </div>
-                        )}
+                      {orden.notasTecnico && (
+                        <div className="rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2">
+                          <p className="text-[9px] font-black uppercase tracking-wide text-slate-500">
+                            {t("noteLabel")}
+                          </p>
 
-                        {orden.notasTecnico && (
-                          <div className="mt-2 rounded-xl border border-blue-200 bg-white/70 p-2 text-xs font-bold text-blue-900">
-                            {t("noteLabel")}: {orden.notasTecnico}
-                          </div>
-                        )}
-                      </div>
+                          <p className="mt-0.5 text-xs font-bold leading-relaxed text-slate-700">
+                            {orden.notasTecnico}
+                          </p>
+                        </div>
+                      )}
 
-                      <div className="flex flex-wrap gap-1.5 lg:justify-end">
-                        {cliente?.telefono && (
-                          <a
-                            href={`tel:${cliente.telefono}`}
-                            className="flex items-center justify-center gap-1.5 rounded-2xl bg-emerald-600 shadow-lg shadow-emerald-200 transition hover:-translate-y-0.5 px-4 py-3 text-sm font-black text-white"
-                          >
-                            <Phone size={14} />
-                            {t("call")}
-                          </a>
-                        )}
-
-                        {direccionHistorial && (
-                          <a
-                            href={`https://maps.apple.com/?q=${encodeURIComponent(direccionHistorial)}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="flex items-center justify-center gap-1.5 rounded-2xl bg-slate-950 shadow-lg shadow-slate-300 transition hover:-translate-y-0.5 px-4 py-3 text-sm font-black text-white"
-                          >
-                            <Navigation size={14} />
-                            {t("map")}
-                          </a>
-                        )}
-
-                        {informeCO && (
-                          <button
-                            type="button"
-                            data-history-co-button="true"
-                            onClick={() =>
-                              ordenProps?.abrirInformeCO?.(orden)
-                            }
-                            className={
-                              "flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-black text-white shadow-lg transition hover:-translate-y-0.5 " +
-                              (
-                                informeCOFirmado
-                                  ? "bg-gradient-to-r from-emerald-700 to-teal-500 shadow-emerald-200"
-                                  : "bg-gradient-to-r from-amber-600 to-orange-500 shadow-amber-200"
-                              )
-                            }
-                          >
-                            <ShieldAlert size={14} />
-
-                            <span>{etiquetaHistorialCO}</span>
-
-                            {informeCO.numeroInforme && (
-                              <span className="rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-black ring-1 ring-white/20">
-                                {informeCO.numeroInforme}
-                              </span>
-                            )}
-                          </button>
-                        )}
-
-                        {ordenProps?.compartirOrden && (
-                          <button
-                            onClick={() => ordenProps.compartirOrden(orden, "imprimir")}
-                            className="flex items-center justify-center gap-1.5 rounded-2xl bg-blue-600 shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 px-4 py-3 text-sm font-black text-white"
-                          >
-                            <Printer size={14} />
-                            {t("print")}
-                          </button>
-                        )}
-                      </div>
                     </div>
+                  )}
+
+
+                  {/* ACCIONES */}
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+
+                    {cliente?.telefono && (
+                      <a
+                        href={`tel:${cliente.telefono}`}
+                        className="flex min-h-10 items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-700 transition hover:bg-emerald-100"
+                      >
+                        <Phone size={15} />
+                        {t("call")}
+                      </a>
+                    )}
+
+
+                    {direccionHistorial && (
+                      <a
+                        href={`https://maps.apple.com/?q=${encodeURIComponent(
+                          direccionHistorial
+                        )}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 transition hover:bg-slate-50"
+                      >
+                        <Navigation size={15} />
+                        {t("map")}
+                      </a>
+                    )}
+
+
+                    {informeCO && (
+                      <button
+                        type="button"
+                        data-history-co-button="true"
+                        onClick={() =>
+                          ordenProps?.abrirInformeCO?.(orden)
+                        }
+                        className={
+                          "flex min-h-10 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-black transition " +
+                          (
+                            informeCOFirmado
+                              ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                              : "border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100"
+                          )
+                        }
+                      >
+                        <ShieldAlert size={15} />
+
+                        <span className="truncate">
+                          {etiquetaHistorialCO}
+                        </span>
+
+                        {informeCO.numeroInforme && (
+                          <span className="rounded-lg border border-current/10 bg-white/60 px-1.5 py-0.5 text-[8px] font-black">
+                            {informeCO.numeroInforme}
+                          </span>
+                        )}
+                      </button>
+                    )}
+
+
+                    {ordenProps?.compartirOrden && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          ordenProps.compartirOrden(
+                            orden,
+                            "imprimir"
+                          )
+                        }
+                        className="flex min-h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 py-2 text-xs font-black text-white shadow-sm transition hover:bg-slate-800"
+                      >
+                        <Printer size={15} />
+                        {t("print")}
+                      </button>
+                    )}
+
                   </div>
+
                 </div>
               </article>
             );
