@@ -5169,6 +5169,14 @@ const compartirOrden = async (orden, metodo) => {
                 abrirInformeStartup={abrirInformeStartup}
                 informesCO={informesCO}
                 abrirInformeCO={abrirInformeCO}
+                onRevisarOrdenHoras={(ordenId) => {
+                  sessionStorage.setItem(
+                    "hvacRevisionHorasOrdenId",
+                    String(ordenId)
+                  );
+
+                  setAdminPage("historial");
+                }}
               />
             )}
             {adminPage === "configuracion" && <ConfiguracionPage t={t} adminPassword={adminPassword} setAdminPassword={setAdminPassword} setMensaje={setMensaje} />}
@@ -7969,6 +7977,7 @@ function DashboardUnificadoPage({
   abrirInformeStartup,
   informesCO = [],
   abrirInformeCO,
+  onRevisarOrdenHoras,
 }) {
   const [tab, setTab] = useState("general");
 
@@ -8109,6 +8118,7 @@ function DashboardUnificadoPage({
           lang={lang}
           tecnicos={tecnicos}
           ordenes={ordenes}
+          onRevisarOrdenHoras={onRevisarOrdenHoras}
         />
       )}
     </section>
@@ -8117,7 +8127,13 @@ function DashboardUnificadoPage({
 
 
 
-function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ordenes = [] }) {
+function ReportePagoTecnicos({
+  t = (key) => key,
+  lang = "es",
+  tecnicos = [],
+  ordenes = [],
+  onRevisarOrdenHoras,
+}) {
   function inicioDeSemana(fechaBase) {
     const fecha = new Date(fechaBase);
     fecha.setHours(0, 0, 0, 0);
@@ -8131,6 +8147,8 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
   }
 
   const [periodo, setPeriodo] = useState("mes");
+  const [mostrarRevisionHoras, setMostrarRevisionHoras] = useState(false);
+  const [revisionTecnicoFiltroId, setRevisionTecnicoFiltroId] = useState(null);
 
   const [semanaSeleccionada, setSemanaSeleccionada] = useState(() =>
     inicioDeSemana(new Date())
@@ -8254,6 +8272,116 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
     (orden) => orden.estado === "Completado" && estaEnPeriodo(orden)
   );
 
+  const obtenerDetalleRevisionHoras = (orden) => {
+    if (!orden?.horaInicio || !orden?.horaCierre) {
+      return {
+        motivo:
+          lang === "en"
+            ? "Missing work start or closing time."
+            : "Falta la hora de inicio o de cierre.",
+        horasDetectadas: null,
+      };
+    }
+
+    const inicioTrabajo = new Date(orden.horaInicio);
+    const cierreTrabajo = new Date(orden.horaCierre);
+
+    if (
+      Number.isNaN(inicioTrabajo.getTime()) ||
+      Number.isNaN(cierreTrabajo.getTime())
+    ) {
+      return {
+        motivo:
+          lang === "en"
+            ? "Invalid work date or time."
+            : "La fecha u hora registrada no es válida.",
+        horasDetectadas: null,
+      };
+    }
+
+    if (cierreTrabajo <= inicioTrabajo) {
+      return {
+        motivo:
+          lang === "en"
+            ? "Closing time is not after work start."
+            : "La hora de cierre no es posterior al inicio.",
+        horasDetectadas: null,
+      };
+    }
+
+    const calculadas =
+      (cierreTrabajo - inicioTrabajo) / 3600000;
+
+    const guardadas =
+      Number(orden.duracionHoras || 0);
+
+    const horas =
+      Number.isFinite(guardadas) && guardadas > 0
+        ? guardadas
+        : calculadas;
+
+    const tieneSesionesTrabajo =
+      (orden.historialAdmin || []).some(
+        (evento) =>
+          evento?.campo === "sesionTrabajo"
+      );
+
+    if (
+      !Number.isFinite(horas) ||
+      horas <= 0
+    ) {
+      return {
+        motivo:
+          lang === "en"
+            ? "Invalid work duration."
+            : "La duración de trabajo no es válida.",
+        horasDetectadas:
+          Number.isFinite(horas) ? horas : null,
+      };
+    }
+
+    if (
+      horas > MAX_HORAS_TRABAJO_ORDEN ||
+      (
+        !tieneSesionesTrabajo &&
+        calculadas > MAX_HORAS_TRABAJO_ORDEN
+      )
+    ) {
+      return {
+        motivo:
+          lang === "en"
+            ? "Duration exceeds the automatic 16-hour payroll limit."
+            : "La duración supera el límite automático de 16 horas.",
+        horasDetectadas: horas,
+      };
+    }
+
+    return {
+      motivo:
+        lang === "en"
+          ? "Administrative review required."
+          : "Requiere revisión administrativa.",
+      horasDetectadas: horas,
+    };
+  };
+
+  const ordenesRevisionPeriodo =
+    ordenesCerradasPeriodo
+      .map((orden) => {
+        const validacion =
+          validarHorasTrabajoOrden(orden);
+
+        return {
+          orden,
+          validacion,
+          ...obtenerDetalleRevisionHoras(orden),
+        };
+      })
+      .filter(
+        (item) =>
+          item.validacion.revision
+      );
+
   const filas = tecnicos.map((tecnico) => {
     const ordenesTecnico = ordenesCerradasPeriodo.filter(
       (orden) => String(orden.tecnicoId) === String(tecnico.id)
@@ -8295,7 +8423,26 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
   const totalHoras = filas.reduce((sum, row) => sum + row.horasTrabajo, 0);
   const totalTraslado = filas.reduce((sum, row) => sum + row.horasTraslado, 0);
   const totalPagado = filas.reduce((sum, row) => sum + row.totalGanado, 0);
-  const totalRevisionHoras = filas.reduce((sum, row) => sum + Number(row.revisionHoras || 0), 0);
+  const totalRevisionHoras =
+    ordenesRevisionPeriodo.length;
+
+  const ordenesRevisionVisibles =
+    revisionTecnicoFiltroId
+      ? ordenesRevisionPeriodo.filter(
+          ({ orden }) =>
+            String(orden.tecnicoId) ===
+            String(revisionTecnicoFiltroId)
+        )
+      : ordenesRevisionPeriodo;
+
+  const tecnicoRevisionSeleccionado =
+    revisionTecnicoFiltroId
+      ? tecnicos.find(
+          (tecnico) =>
+            String(tecnico.id) ===
+            String(revisionTecnicoFiltroId)
+        ) || null
+      : null;
 
   const periodos = [
     ["hoy", t("today")],
@@ -8543,13 +8690,236 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
               </span>
 
               {totalRevisionHoras > 0 && (
-                <span className="rounded-full bg-amber-50 px-2.5 py-1 text-amber-700 ring-1 ring-amber-200">
-                  ⚠ {totalRevisionHoras} {lang === "en" ? "order(s) to review" : "orden(es) por revisar"}
-                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRevisionTecnicoFiltroId(null);
+                    setMostrarRevisionHoras(
+                      (actual) => !actual
+                    );
+                  }}
+                  className="cursor-pointer rounded-full bg-amber-50 px-2.5 py-1 text-amber-700 ring-1 ring-amber-200 transition hover:bg-amber-100"
+                >
+                  ⚠ {totalRevisionHoras}{" "}
+                  {lang === "en"
+                    ? "order(s) to review"
+                    : "orden(es) por revisar"}
+                  {" · "}
+                  {lang === "en" ? "View" : "Ver"}
+                </button>
               )}
             </div>
           </div>
         </div>
+
+        {mostrarRevisionHoras &&
+        totalRevisionHoras > 0 && (
+          <section className="border-b border-amber-200 bg-amber-50/70 p-4">
+
+            <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-700">
+                  {lang === "en"
+                    ? "Payroll review"
+                    : "Revisión de nómina"}
+                </p>
+
+                <h3 className="mt-1 text-base font-black text-slate-950">
+                  {tecnicoRevisionSeleccionado
+                    ? (
+                        lang === "en"
+                          ? `Orders to review · ${tecnicoRevisionSeleccionado.nombre}`
+                          : `Órdenes por revisar · ${tecnicoRevisionSeleccionado.nombre}`
+                      )
+                    : (
+                        lang === "en"
+                          ? "Orders excluded from payroll"
+                          : "Órdenes excluidas de nómina"
+                      )}
+                </h3>
+
+                <p className="mt-1 text-xs font-semibold text-slate-600">
+                  {lang === "en"
+                    ? "These work hours require administrative review."
+                    : "Estas horas requieren revisión administrativa."}
+                </p>
+              </div>
+
+              <div className="flex gap-2">
+
+                {revisionTecnicoFiltroId && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setRevisionTecnicoFiltroId(null)
+                    }
+                    className="rounded-xl border border-amber-200 bg-white px-3 py-2 text-xs font-black text-amber-800 transition hover:bg-amber-50"
+                  >
+                    {lang === "en"
+                      ? "View all"
+                      : "Ver todas"}
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setMostrarRevisionHoras(false)
+                  }
+                  className="rounded-xl bg-slate-900 px-3 py-2 text-xs font-black text-white transition hover:bg-slate-800"
+                >
+                  {lang === "en"
+                    ? "Close"
+                    : "Cerrar"}
+                </button>
+
+              </div>
+
+            </div>
+
+
+            <div className="grid gap-2">
+
+              {ordenesRevisionVisibles.map(
+                ({
+                  orden,
+                  motivo,
+                  horasDetectadas,
+                }) => {
+
+                  const tecnico =
+                    tecnicos.find(
+                      (item) =>
+                        String(item.id) ===
+                        String(orden.tecnicoId)
+                    ) || null;
+
+                  const fechaRaw =
+                    getFechaOrden(orden);
+
+                  let fechaTexto =
+                    lang === "en"
+                      ? "No date"
+                      : "Sin fecha";
+
+                  if (fechaRaw) {
+                    const fecha =
+                      new Date(fechaRaw);
+
+                    if (
+                      !Number.isNaN(
+                        fecha.getTime()
+                      )
+                    ) {
+                      fechaTexto =
+                        fecha.toLocaleDateString(
+                          lang === "en"
+                            ? "en-US"
+                            : "es-US",
+                          {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          }
+                        );
+                    }
+                  }
+
+                  return (
+                    <article
+                      key={`revision-horas-${orden.id}`}
+                      className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm"
+                    >
+
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+                        <div className="min-w-0">
+
+                          <div className="flex flex-wrap items-center gap-2">
+
+                            <p className="font-black text-slate-950">
+                              {orden.problema ||
+                                (
+                                  lang === "en"
+                                    ? "Work order"
+                                    : "Orden de trabajo"
+                                )}
+                            </p>
+
+                            <span
+                              title={`#${orden.id}`}
+                              className="rounded-lg bg-slate-100 px-2 py-1 text-[10px] font-black text-slate-500"
+                            >
+                              #{String(
+                                orden.id || ""
+                              ).slice(0, 8)}
+                            </span>
+
+                          </div>
+
+                          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs font-bold text-slate-500">
+
+                            <span>
+                              {tecnico?.nombre ||
+                                (
+                                  lang === "en"
+                                    ? "No technician"
+                                    : "Sin técnico"
+                                )}
+                            </span>
+
+                            <span>
+                              {fechaTexto}
+                            </span>
+
+                            <span>
+                              {horasDetectadas == null ||
+                              !Number.isFinite(
+                                horasDetectadas
+                              )
+                                ? (
+                                    lang === "en"
+                                      ? "Hours unavailable"
+                                      : "Horas no disponibles"
+                                  )
+                                : `${horasDetectadas.toFixed(
+                                    2
+                                  )} h`}
+                            </span>
+
+                          </div>
+
+                          <p className="mt-2 w-fit rounded-lg bg-amber-50 px-2 py-1 text-xs font-black text-amber-800 ring-1 ring-amber-200">
+                            ⚠ {motivo}
+                          </p>
+
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onRevisarOrdenHoras?.(orden.id)
+                          }
+                          className="shrink-0 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-black text-white shadow-sm transition hover:bg-slate-800"
+                        >
+                          {lang === "en"
+                            ? "Review order"
+                            : "Revisar orden"}
+                          {" →"}
+                        </button>
+
+                      </div>
+
+                    </article>
+                  );
+                }
+              )}
+
+            </div>
+
+          </section>
+        )}
 
         <div className="flex gap-2 overflow-x-auto bg-slate-50 p-2">
           {periodos.map(([id, label]) => (
@@ -8765,9 +9135,23 @@ function ReportePagoTecnicos({ t = (key) => key, lang = "es", tecnicos = [], ord
                   </p>
 
                   {row.revisionHoras > 0 && (
-                    <p className="mt-1 rounded-lg bg-amber-50 px-2 py-1 text-[10px] font-black text-amber-700 ring-1 ring-amber-200">
-                      ⚠ {row.revisionHoras} {lang === "en" ? "time record(s) excluded" : "registro(s) de horas excluido(s)"}
-                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRevisionTecnicoFiltroId(
+                          String(row.tecnico.id)
+                        );
+                        setMostrarRevisionHoras(true);
+                      }}
+                      className="mt-1 cursor-pointer rounded-lg bg-amber-50 px-2 py-1 text-left text-[10px] font-black text-amber-700 ring-1 ring-amber-200 transition hover:bg-amber-100"
+                    >
+                      ⚠ {row.revisionHoras}{" "}
+                      {lang === "en"
+                        ? "time record(s) excluded"
+                        : "registro(s) de horas excluido(s)"}
+                      {" · "}
+                      {lang === "en" ? "View" : "Ver"}
+                    </button>
                   )}
                 </div>
 

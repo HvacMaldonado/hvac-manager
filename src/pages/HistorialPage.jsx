@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PhotoEvidenceModal from "../components/PhotoEvidenceModal.jsx";
 import OrderDetailModal from "../components/OrderDetailModal.jsx";
 import {
@@ -669,6 +669,40 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
       motivo: "",
     });
   };
+
+  useEffect(() => {
+    const ordenId =
+      sessionStorage.getItem(
+        "hvacRevisionHorasOrdenId"
+      );
+
+    if (!ordenId) return;
+
+    const ordenObjetivo =
+      (ordenes || []).find(
+        (orden) =>
+          String(orden.id) ===
+          String(ordenId)
+      );
+
+    if (!ordenObjetivo) return;
+
+    sessionStorage.removeItem(
+      "hvacRevisionHorasOrdenId"
+    );
+
+    setHorasModalOrden(ordenObjetivo);
+
+    setHorasForm({
+      inicio: toDateTimeLocalValue(
+        ordenObjetivo?.horaInicio
+      ),
+      cierre: toDateTimeLocalValue(
+        ordenObjetivo?.horaCierre
+      ),
+      motivo: "",
+    });
+  }, [ordenes]);
 
   const cerrarRevisionHoras = () => {
     if (guardandoHoras) return;
