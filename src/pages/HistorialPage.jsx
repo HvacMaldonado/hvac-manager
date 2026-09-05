@@ -251,7 +251,15 @@ function ActionButton({ icon: Icon, label, onClick, href, className = "" }) {
   );
 }
 
-export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, obtenerCliente, ordenProps }) {
+export default function HistorialPage({
+  t = (key) => key,
+  lang = "es",
+  ordenes,
+  obtenerCliente,
+  ordenProps,
+  clientes = [],
+  tecnicos = [],
+}) {
   const [busqueda, setBusqueda] = useState("");
   const [evidenciaOrden, setEvidenciaOrden] = useState(null);
   const [detalleOrden, setDetalleOrden] = useState(null);
@@ -285,6 +293,24 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
   const [guardandoHoras, setGuardandoHoras] = useState(false);
   const [soloRevisionHoras, setSoloRevisionHoras] = useState(false);
 
+  const [editarOrdenModal, setEditarOrdenModal] =
+    useState(null);
+
+  const [guardandoEdicionOrden, setGuardandoEdicionOrden] =
+    useState(false);
+
+  const [editarOrdenForm, setEditarOrdenForm] =
+    useState({
+      clienteId: "",
+      ubicacionId: "",
+      tecnicoId: "",
+      problema: "",
+      prioridad: "Media",
+      fechaProgramada: "",
+      horaProgramada: "",
+      motivo: "",
+    });
+
   const {
     obtenerTecnico,
     urlAppleMaps,
@@ -293,9 +319,124 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
     calcularCostoOrden,
     materialesTexto,
     corregirOrdenAdmin,
+    editarOrdenAdmin,
     guardarPrecioCobradoAdmin,
     session,
   } = ordenProps;
+
+  const clienteEdicion =
+    clientes.find(
+      (cliente) =>
+        String(cliente.id) ===
+        String(editarOrdenForm.clienteId)
+    ) ||
+    (
+      editarOrdenForm.clienteId
+        ? obtenerCliente?.(
+            editarOrdenForm.clienteId
+          )
+        : null
+    );
+
+  const ubicacionesEdicion =
+    clienteEdicion?.cliente_direcciones || [];
+
+  const ubicacionSeleccionadaEdicion =
+    ubicacionesEdicion.find(
+      (ubicacion) =>
+        String(ubicacion.id) ===
+        String(editarOrdenForm.ubicacionId)
+    );
+
+  const abrirEditorOrden = (orden) => {
+    if (
+      session?.role !== "admin" ||
+      !editarOrdenAdmin
+    ) {
+      return;
+    }
+
+    setEditarOrdenModal(orden);
+
+    setEditarOrdenForm({
+      clienteId: String(
+        orden.clienteId || ""
+      ),
+      ubicacionId: String(
+        orden.ubicacionId ||
+        orden.direccionId ||
+        ""
+      ),
+      tecnicoId: String(
+        orden.tecnicoId || ""
+      ),
+      problema:
+        orden.problema || "",
+      prioridad:
+        orden.prioridad || "Media",
+      fechaProgramada:
+        orden.fechaProgramada || "",
+      horaProgramada:
+        orden.horaProgramada || "",
+      motivo: "",
+    });
+  };
+
+  const cerrarEditorOrden = () => {
+    if (guardandoEdicionOrden) return;
+
+    setEditarOrdenModal(null);
+
+    setEditarOrdenForm({
+      clienteId: "",
+      ubicacionId: "",
+      tecnicoId: "",
+      problema: "",
+      prioridad: "Media",
+      fechaProgramada: "",
+      horaProgramada: "",
+      motivo: "",
+    });
+  };
+
+  const guardarEditorOrden = async () => {
+    if (
+      !editarOrdenModal ||
+      !editarOrdenAdmin ||
+      guardandoEdicionOrden
+    ) {
+      return;
+    }
+
+    if (
+      !String(
+        editarOrdenForm.motivo || ""
+      ).trim()
+    ) {
+      window.alert(
+        lang === "en"
+          ? "Enter the reason for this administrative edit."
+          : "Escribe el motivo de esta edición administrativa."
+      );
+      return;
+    }
+
+    setGuardandoEdicionOrden(true);
+
+    try {
+      const ok =
+        await editarOrdenAdmin(
+          editarOrdenModal.id,
+          editarOrdenForm
+        );
+
+      if (ok !== false) {
+        cerrarEditorOrden();
+      }
+    } finally {
+      setGuardandoEdicionOrden(false);
+    }
+  };
 
   const getFechaHistorial = (orden) =>
     orden.fechaCompletada ||
@@ -1867,7 +2008,7 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
                             {fotosCount}/3
                           </button>
 
-                          <div className="flex justify-end items-stretch gap-3">
+                          <div className="flex flex-wrap justify-end items-stretch gap-2">
                             {ordenProps?.obtenerInformeCOPorOrden?.(orden.id) && (
                               <ActionButton
                                 icon={Eye}
@@ -1889,9 +2030,50 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
                                 className="min-w-[92px] px-3 bg-blue-700 text-white hover:bg-blue-600"
                               />
                             )}
-                            <ActionButton icon={Eye} label="" onClick={() => setDetalleOrden(orden)} className="min-w-[70px] px-4 bg-slate-950 text-white hover:bg-slate-800" />
-                            <ActionButton icon={Printer} label="" onClick={() => compartirOrden?.(orden, "imprimir")} className="min-w-[70px] px-4 bg-cyan-100 text-cyan-800 hover:bg-cyan-200" />
-                            <ActionButton icon={Share2} label="" onClick={() => compartirOrden?.(orden, "mensaje")} className="min-w-[70px] px-4 bg-blue-50 text-blue-700 hover:bg-blue-100" />
+                            <ActionButton
+                              icon={Eye}
+                              label=""
+                              onClick={() =>
+                                setDetalleOrden(orden)
+                              }
+                              className="min-w-[70px] px-4 bg-slate-950 text-white hover:bg-slate-800"
+                            />
+
+                            {session?.role === "admin" &&
+                              editarOrdenAdmin && (
+                                <ActionButton
+                                  icon={Pencil}
+                                  label=""
+                                  onClick={() =>
+                                    abrirEditorOrden(orden)
+                                  }
+                                  className="min-w-[70px] px-4 bg-amber-50 text-amber-700 ring-1 ring-amber-200 hover:bg-amber-100"
+                                />
+                              )}
+
+                            <ActionButton
+                              icon={Printer}
+                              label=""
+                              onClick={() =>
+                                compartirOrden?.(
+                                  orden,
+                                  "imprimir"
+                                )
+                              }
+                              className="min-w-[70px] px-4 bg-cyan-100 text-cyan-800 hover:bg-cyan-200"
+                            />
+
+                            <ActionButton
+                              icon={Share2}
+                              label=""
+                              onClick={() =>
+                                compartirOrden?.(
+                                  orden,
+                                  "mensaje"
+                                )
+                              }
+                              className="min-w-[70px] px-4 bg-blue-50 text-blue-700 hover:bg-blue-100"
+                            />
                           </div>
                         </article>
                       );
@@ -2158,6 +2340,458 @@ export default function HistorialPage({ t = (key) => key, lang = "es", ordenes, 
           )}
         </div>
       </div>
+
+      {editarOrdenModal && (
+        <div className="fixed inset-0 z-[1500] flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-md">
+          <section className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-[2rem] border border-white/20 bg-white shadow-2xl shadow-slate-950/50">
+
+            <div className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-900 px-5 py-4 text-white">
+              <div className="absolute -right-12 -top-16 h-40 w-40 rounded-full bg-cyan-300/20 blur-3xl" />
+
+              <div className="relative flex items-start justify-between gap-4">
+                <div className="flex min-w-0 items-start gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-300 text-slate-950 shadow-lg">
+                    <Pencil size={20} />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-200">
+                      {lang === "en"
+                        ? "Administrative edit"
+                        : "Edición administrativa"}
+                    </p>
+
+                    <h2 className="mt-1 text-xl font-black">
+                      {lang === "en"
+                        ? "Edit historical order"
+                        : "Editar orden del historial"}
+                    </h2>
+
+                    <p className="mt-1 text-xs font-semibold text-white/65">
+                      #{editarOrdenModal.id}
+                      {" · "}
+                      {editarOrdenModal.estado}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={cerrarEditorOrden}
+                  disabled={guardandoEdicionOrden}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-white ring-1 ring-white/20 transition hover:bg-white/20 disabled:opacity-50"
+                >
+                  <XCircle size={20} />
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-y-auto bg-slate-50 p-4 sm:p-5">
+              <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-bold leading-5 text-amber-900">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle
+                    size={17}
+                    className="mt-0.5 shrink-0"
+                  />
+
+                  <p>
+                    {lang === "en"
+                      ? "This edits administrative details only. The order will remain completed or canceled. Work-hour corrections continue to use the separate administrative hours tool."
+                      : "Aquí solo modificamos datos administrativos. La orden seguirá completada o cancelada. Las correcciones de horas de trabajo continúan usando la herramienta administrativa de horas."}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+
+                <label className="block">
+                  <span className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+                    {lang === "en"
+                      ? "Customer"
+                      : "Cliente"}
+                  </span>
+
+                  <select
+                    value={editarOrdenForm.clienteId}
+                    onChange={(e) =>
+                      setEditarOrdenForm(
+                        (actual) => ({
+                          ...actual,
+                          clienteId:
+                            e.target.value,
+                          ubicacionId: "",
+                        })
+                      )
+                    }
+                    className="w-full rounded-2xl border border-slate-300 bg-white px-3 py-3 text-sm font-bold text-slate-900 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                  >
+                    <option value="">
+                      {lang === "en"
+                        ? "Select customer"
+                        : "Seleccionar cliente"}
+                    </option>
+
+                    {clientes.map((cliente) => (
+                      <option
+                        key={cliente.id}
+                        value={cliente.id}
+                      >
+                        {cliente.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+                    {lang === "en"
+                      ? "Work location"
+                      : "Ubicación del trabajo"}
+                  </span>
+
+                  <select
+                    value={editarOrdenForm.ubicacionId}
+                    disabled={
+                      !editarOrdenForm.clienteId
+                    }
+                    onChange={(e) =>
+                      setEditarOrdenForm(
+                        (actual) => ({
+                          ...actual,
+                          ubicacionId:
+                            e.target.value,
+                        })
+                      )
+                    }
+                    className="w-full rounded-2xl border border-slate-300 bg-white px-3 py-3 text-sm font-bold text-slate-900 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100 disabled:bg-slate-100 disabled:text-slate-400"
+                  >
+                    <option value="">
+                      {lang === "en"
+                        ? "Select location"
+                        : "Seleccionar ubicación"}
+                    </option>
+
+                    {editarOrdenForm.ubicacionId &&
+                      !ubicacionesEdicion.some(
+                        (ubicacion) =>
+                          String(ubicacion.id) ===
+                          String(
+                            editarOrdenForm.ubicacionId
+                          )
+                      ) && (
+                        <option
+                          value={
+                            editarOrdenForm.ubicacionId
+                          }
+                        >
+                          {lang === "en"
+                            ? "Current saved location"
+                            : "Ubicación guardada actual"}
+                        </option>
+                      )}
+
+                    {ubicacionesEdicion.map(
+                      (ubicacion) => (
+                        <option
+                          key={ubicacion.id}
+                          value={ubicacion.id}
+                        >
+                          {ubicacion.etiqueta ||
+                            ubicacion.direccion ||
+                            [
+                              ubicacion.edificio &&
+                                `Edif. ${ubicacion.edificio}`,
+                              ubicacion.apartamento &&
+                                `Apt ${ubicacion.apartamento}`,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ") ||
+                            (lang === "en"
+                              ? "Location"
+                              : "Ubicación")}
+                        </option>
+                      )
+                    )}
+                  </select>
+                </label>
+
+                {ubicacionSeleccionadaEdicion && (
+                  <div className="md:col-span-2 rounded-2xl border border-cyan-100 bg-cyan-50/70 p-3">
+                    <div className="grid gap-2 text-xs font-bold text-slate-700 sm:grid-cols-2 lg:grid-cols-4">
+                      <div>
+                        <p className="text-[9px] font-black uppercase tracking-wide text-slate-400">
+                          {lang === "en"
+                            ? "Address"
+                            : "Dirección"}
+                        </p>
+                        <p className="mt-1">
+                          {ubicacionSeleccionadaEdicion.direccion ||
+                            "—"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-[9px] font-black uppercase tracking-wide text-slate-400">
+                          {lang === "en"
+                            ? "Building"
+                            : "Edificio"}
+                        </p>
+                        <p className="mt-1">
+                          {ubicacionSeleccionadaEdicion.edificio ||
+                            "—"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-[9px] font-black uppercase tracking-wide text-slate-400">
+                          Apt
+                        </p>
+                        <p className="mt-1">
+                          {ubicacionSeleccionadaEdicion.apartamento ||
+                            "—"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-[9px] font-black uppercase tracking-wide text-slate-400">
+                          {lang === "en"
+                            ? "Access code"
+                            : "Código de acceso"}
+                        </p>
+                        <p className="mt-1">
+                          {ubicacionSeleccionadaEdicion.codigo_acceso ||
+                            ubicacionSeleccionadaEdicion.codigoAcceso ||
+                            "—"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <label className="block">
+                  <span className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+                    {lang === "en"
+                      ? "Technician"
+                      : "Técnico"}
+                  </span>
+
+                  <select
+                    value={editarOrdenForm.tecnicoId}
+                    onChange={(e) =>
+                      setEditarOrdenForm(
+                        (actual) => ({
+                          ...actual,
+                          tecnicoId:
+                            e.target.value,
+                        })
+                      )
+                    }
+                    className="w-full rounded-2xl border border-slate-300 bg-white px-3 py-3 text-sm font-bold text-slate-900 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                  >
+                    <option value="">
+                      {lang === "en"
+                        ? "Select technician"
+                        : "Seleccionar técnico"}
+                    </option>
+
+                    {tecnicos.map((tecnico) => (
+                      <option
+                        key={tecnico.id}
+                        value={tecnico.id}
+                      >
+                        {tecnico.nombre}
+                        {tecnico.activo === false
+                          ? lang === "en"
+                            ? " (inactive)"
+                            : " (inactivo)"
+                          : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+                    {lang === "en"
+                      ? "Priority"
+                      : "Prioridad"}
+                  </span>
+
+                  <select
+                    value={editarOrdenForm.prioridad}
+                    onChange={(e) =>
+                      setEditarOrdenForm(
+                        (actual) => ({
+                          ...actual,
+                          prioridad:
+                            e.target.value,
+                        })
+                      )
+                    }
+                    className="w-full rounded-2xl border border-slate-300 bg-white px-3 py-3 text-sm font-bold text-slate-900 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                  >
+                    <option value="Baja">
+                      {lang === "en"
+                        ? "Low"
+                        : "Baja"}
+                    </option>
+                    <option value="Media">
+                      {lang === "en"
+                        ? "Medium"
+                        : "Media"}
+                    </option>
+                    <option value="Alta">
+                      {lang === "en"
+                        ? "High"
+                        : "Alta"}
+                    </option>
+                    <option value="Urgente">
+                      {lang === "en"
+                        ? "Urgent"
+                        : "Urgente"}
+                    </option>
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+                    {lang === "en"
+                      ? "Scheduled date"
+                      : "Fecha programada"}
+                  </span>
+
+                  <input
+                    type="date"
+                    value={
+                      editarOrdenForm.fechaProgramada
+                    }
+                    onChange={(e) =>
+                      setEditarOrdenForm(
+                        (actual) => ({
+                          ...actual,
+                          fechaProgramada:
+                            e.target.value,
+                        })
+                      )
+                    }
+                    className="w-full rounded-2xl border border-slate-300 bg-white px-3 py-3 text-sm font-bold text-slate-900 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+                    {lang === "en"
+                      ? "Scheduled time"
+                      : "Hora programada"}
+                  </span>
+
+                  <input
+                    type="time"
+                    value={
+                      editarOrdenForm.horaProgramada
+                    }
+                    onChange={(e) =>
+                      setEditarOrdenForm(
+                        (actual) => ({
+                          ...actual,
+                          horaProgramada:
+                            e.target.value,
+                        })
+                      )
+                    }
+                    className="w-full rounded-2xl border border-slate-300 bg-white px-3 py-3 text-sm font-bold text-slate-900 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                  />
+                </label>
+
+                <label className="block md:col-span-2">
+                  <span className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+                    {lang === "en"
+                      ? "Reported problem / work description"
+                      : "Problema reportado / descripción del trabajo"}
+                  </span>
+
+                  <textarea
+                    value={
+                      editarOrdenForm.problema
+                    }
+                    onChange={(e) =>
+                      setEditarOrdenForm(
+                        (actual) => ({
+                          ...actual,
+                          problema:
+                            e.target.value,
+                        })
+                      )
+                    }
+                    rows={4}
+                    className="w-full resize-none rounded-2xl border border-slate-300 bg-white px-3 py-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+                  />
+                </label>
+
+                <label className="block md:col-span-2">
+                  <span className="mb-1.5 block text-[10px] font-black uppercase tracking-[0.18em] text-amber-700">
+                    {lang === "en"
+                      ? "Reason for administrative edit"
+                      : "Motivo de la edición administrativa"}
+                  </span>
+
+                  <textarea
+                    value={
+                      editarOrdenForm.motivo
+                    }
+                    onChange={(e) =>
+                      setEditarOrdenForm(
+                        (actual) => ({
+                          ...actual,
+                          motivo:
+                            e.target.value,
+                        })
+                      )
+                    }
+                    rows={2}
+                    placeholder={
+                      lang === "en"
+                        ? "Example: Correcting technician assigned by mistake..."
+                        : "Ejemplo: Corrección del técnico asignado por error..."
+                    }
+                    className="w-full resize-none rounded-2xl border border-amber-300 bg-amber-50/50 px-3 py-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-amber-500 focus:ring-4 focus:ring-amber-100"
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div className="flex flex-col-reverse gap-2 border-t border-slate-200 bg-white p-4 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={cerrarEditorOrden}
+                disabled={guardandoEdicionOrden}
+                className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+              >
+                {lang === "en"
+                  ? "Cancel"
+                  : "Cancelar"}
+              </button>
+
+              <button
+                type="button"
+                onClick={guardarEditorOrden}
+                disabled={guardandoEdicionOrden}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-slate-950 via-blue-900 to-cyan-700 px-6 py-3 text-sm font-black text-white shadow-lg transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Pencil size={15} />
+
+                {guardandoEdicionOrden
+                  ? lang === "en"
+                    ? "Saving..."
+                    : "Guardando..."
+                  : lang === "en"
+                    ? "Save changes"
+                    : "Guardar cambios"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
 
       <PhotoEvidenceModal
         open={Boolean(evidenciaOrden)}

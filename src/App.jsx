@@ -4026,6 +4026,19 @@ export default function App() {
       return false;
     }
 
+    const clienteEditado =
+      obtenerCliente(datos?.clienteId);
+
+    const ubicacionEditada =
+      (clienteEditado?.cliente_direcciones || []).find(
+        (ubicacion) =>
+          String(ubicacion.id) ===
+          String(datos?.ubicacionId || "")
+      );
+
+    const motivoEdicion =
+      String(datos?.motivo || "").trim();
+
     const cambiosOrden = {
       clienteId: String(datos?.clienteId || ""),
       ubicacionId: String(datos?.ubicacionId || ""),
@@ -4034,6 +4047,25 @@ export default function App() {
       prioridad: datos?.prioridad || "Media",
       fechaProgramada: datos?.fechaProgramada || "",
       horaProgramada: datos?.horaProgramada || "",
+
+      ...(ubicacionEditada
+        ? {
+            ubicacionEtiqueta:
+              ubicacionEditada.etiqueta || "",
+            direccionTrabajo:
+              ubicacionEditada.direccion || "",
+            apartamentoTrabajo:
+              ubicacionEditada.apartamento || "",
+            edificioTrabajo:
+              ubicacionEditada.edificio || "",
+            codigoAccesoTrabajo:
+              ubicacionEditada.codigo_acceso ||
+              ubicacionEditada.codigoAcceso ||
+              "",
+            notasUbicacion:
+              ubicacionEditada.notas || "",
+          }
+        : {}),
     };
 
     if (
@@ -4043,6 +4075,18 @@ export default function App() {
       !cambiosOrden.problema
     ) {
       setMensaje("Cliente, ubicación, técnico y problema son obligatorios.");
+      return false;
+    }
+
+    const esOrdenCerrada =
+      ["Completado", "Cancelada"].includes(
+        orden.estado
+      );
+
+    if (esOrdenCerrada && !motivoEdicion) {
+      setMensaje(
+        "Debes indicar el motivo de la edición de una orden histórica."
+      );
       return false;
     }
 
@@ -4101,7 +4145,9 @@ export default function App() {
         nombreCampo,
         anterior: valorLegible(campo, anterior),
         nuevo: valorLegible(campo, nuevo),
-        motivo: "Edición administrativa de orden activa",
+        motivo:
+          motivoEdicion ||
+          "Edición administrativa de orden",
       });
     });
 
@@ -5150,7 +5196,15 @@ const compartirOrden = async (orden, metodo) => {
             {adminPage === "citas" && <CitasPage t={t} citas={citas} setCitas={setCitas} citaForm={citaForm} setCitaForm={setCitaForm} crearCita={crearCita} convertirCitaEnOrden={convertirCitaEnOrden} clientes={clientes} tecnicos={tecnicosActivos} obtenerCliente={obtenerCliente} obtenerTecnico={obtenerTecnico} />}
             {adminPage === "calendario" && <CalendarioPage t={t} lang={lang} citas={citas} ordenes={ordenes} clientes={clientes} tecnicos={tecnicosActivos} obtenerCliente={obtenerCliente} obtenerTecnico={obtenerTecnico} urlAppleMaps={urlAppleMaps} urlTelefono={urlTelefono} />}
             {adminPage === "ordenes" && <OrdenesPage t={t} clientes={clientes} ordenes={ordenesActivasAdmin} obtenerCliente={obtenerCliente} ordenProps={ordenProps} crearOrden={crearOrden} ordenForm={ordenForm} setOrdenForm={setOrdenForm} busquedaClienteOrden={busquedaClienteOrden} setBusquedaClienteOrden={setBusquedaClienteOrden} clientesFiltradosOrden={clientesFiltradosOrden} tecnicos={tecnicosActivos} />}
-            {adminPage === "historial" && <HistorialPage t={t} lang={lang} ordenes={historialAdmin} obtenerCliente={obtenerCliente} ordenProps={ordenProps} />}
+            {adminPage === "historial" && <HistorialPage
+              t={t}
+              lang={lang}
+              ordenes={historialAdmin}
+              obtenerCliente={obtenerCliente}
+              ordenProps={ordenProps}
+              clientes={clientes}
+              tecnicos={tecnicos}
+            />}
             {adminPage === "inventario" && <InventarioGeneralPage t={t} inventario={inventario} inventarioForm={inventarioForm} setInventarioForm={setInventarioForm} agregarInventario={agregarInventario} actualizarInventario={actualizarInventario} setInventario={setInventario} eliminarInventario={eliminarInventario} />}
             {adminPage === "herramientas" && <HerramientasPage t={t} herramientas={herramientas} herramientaForm={herramientaForm} setHerramientaForm={setHerramientaForm} agregarHerramienta={agregarHerramienta} actualizarHerramienta={actualizarHerramienta} setHerramientas={setHerramientas} tecnicos={tecnicosActivos} obtenerTecnico={obtenerTecnico} tecnicoHerramientasSeleccionado={tecnicoHerramientasSeleccionado} setTecnicoHerramientasSeleccionado={setTecnicoHerramientasSeleccionado} eliminarHerramienta={eliminarHerramienta} />}
             {adminPage === "dashboardReportes" && (
